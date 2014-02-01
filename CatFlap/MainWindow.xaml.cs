@@ -1,0 +1,592 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Reflection;
+using System.IO;
+using System.Net;
+using MahApps.Metro.Controls;
+using Newtonsoft.Json;
+using System.ComponentModel;
+using System.Threading;
+using System.Diagnostics;
+using MahApps.Metro;
+using MahApps.Metro.Controls.Dialogs;
+using System.Windows.Shell;
+using System.Windows.Navigation;
+using WpfAnimatedGif;
+
+namespace Catflap
+{
+    public partial class MainWindow : MetroWindow
+    {
+        private Repository repository;
+        private Dictionary<string, string> resolvedVariables = new Dictionary<string, string>();
+       
+        private string rootPath;
+        private string appPath;
+
+        private void Log(String str, bool showMessageBox = false) {
+            Console.WriteLine(str);
+            logTextBox.Text += DateTime.Now.ToString("HH:mm:ss") + "> " + str + "\n";
+
+            if (showMessageBox)
+                this.ShowMessageAsync("Log", str);
+
+            logTextBox.ScrollToEnd();
+        }
+
+        private string bytesToHuman(long bytes)
+        {
+            if (bytes > 1024 * 1024 * 1024)
+                return string.Format("{0:F2} GB", ((float)bytes / 1024 / 1024 / 1024));
+            if (bytes > 1024 * 1024)
+                return string.Format("{0:F1} MB", ((float)bytes / 1024 / 1024));
+            if (bytes > 1024)
+                return string.Format("{0:F1} KB", ((float)bytes / 1024));
+            else
+                return bytes + " B";
+        }
+
+        private string SubstituteVars(string a)
+        {
+            return a.
+                Replace("%app%", appPath).
+                Replace("%root%", rootPath);
+        }
+
+
+        private static string[] resourcesToUnpack = { "rsync.exe" , "cygwin1.dll" /*, "7z.exe", "7z.dll"*/ };
+
+        // UI colour states:
+        // green/blue - all ok, repo up to date
+        private Accent accentOK = new MahApps.Metro.Accent("Olive",
+                new Uri("pack://application:,,,/MahApps.Metro;component/Styles/Accents/Olive.xaml"));
+        // orange     - repo not current
+        private Accent accentWarning = new MahApps.Metro.Accent("Amber",
+                new Uri("pack://application:,,,/MahApps.Metro;component/Styles/Accents/Amber.xaml"));
+        // red        - failure
+        private Accent accentError = new MahApps.Metro.Accent("Crimson",
+                new Uri("pack://application:,,,/MahApps.Metro;component/Styles/Accents/Crimson.xaml"));
+        // mauve     - busy
+        private Accent accentBusy = new MahApps.Metro.Accent("Mauve",
+                new Uri("pack://application:,,,/MahApps.Metro;component/Styles/Accents/Mauve.xaml"));
+
+        private Accent currTheme;
+
+        private Accent SetTheme(Accent t)
+        {
+            Accent c = currTheme;
+            if (currTheme != t)
+            {
+                currTheme = t;
+                ThemeManager.ChangeTheme(this, t, Theme.Light);
+            }
+            return c;
+        }
+
+        private void SetUIState(bool enabled)
+        {
+            btnDownload.IsEnabled = enabled;
+            checkboxSimulate.IsEnabled = enabled;
+
+            if (!enabled)
+                btnRun.IsEnabled = false;
+
+            else
+            {
+                if (repository.CurrentManifest == null)
+                {
+                    btnRun.Content = "sync required";
+                    btnRun.IsEnabled = false;
+                }
+                else
+                    if (repository.CurrentManifest.runAction == null)
+                    {
+                        btnRun.IsEnabled = false;
+                        btnRun.Content = "manifest has no run action";
+                    }
+                    else
+                    {
+                        btnRun.Content = repository.CurrentManifest.runAction.name;
+                        if (repository.Status.current)
+                            btnRun.IsEnabled = true;
+                        else
+                        {
+                            btnRun.Content = "sync required";
+                            btnRun.IsEnabled = repository.LatestManifest.runActionAllowOutdated;
+                        }
+                            
+                    }
+            }
+        }
+
+        private void SetUIProgressState(bool indeterminate, double percentage = -1, string message = null)
+        {
+            globalProgress.IsIndeterminate = indeterminate;
+            if (percentage >= 0)
+                globalProgress.Value = (percentage * 100).Clamp(0, 100);
+            if (message != null)
+                labelDownloadStatus.Text = message;
+
+            if (indeterminate)
+                taskBarItemInfo.ProgressState = TaskbarItemProgressState.Indeterminate;
+            else
+                if (percentage == -1)
+                    taskBarItemInfo.ProgressState = TaskbarItemProgressState.None;
+                else
+                {
+                    taskBarItemInfo.ProgressState = TaskbarItemProgressState.Normal;
+                    taskBarItemInfo.ProgressValue = percentage.Clamp(0, 1);
+                }
+        }
+
+        private void SetGlobalStatus(bool lastOperationOK = true, string message = null, double percent = -1, string progressMsg = null)
+        {
+            //if (repository.IsBusy())
+            //    SetTheme(accentBusy);
+            if (!lastOperationOK)
+                SetTheme(accentError);
+            else if (repository.Status.current)
+                SetTheme(accentOK);
+            else
+                SetTheme(accentWarning);
+
+            var title = repository.LatestManifest != null && repository.LatestManifest.title != null ? repository.LatestManifest.title : "Catflap";
+            if (message != null)
+                this.Title = title + " - " + message;
+            //else if (repository.IsBusy())
+            //    this.Title = title + " - Busy";
+            else
+                this.Title = title;
+
+            labelRepoSize.Text = bytesToHuman(repository.Status.sizeOnRemote);
+            if (repository.LatestManifest != null)
+            {
+                labelDLSize.Text = "";
+                if (repository.Status.guesstimatedBytesToXfer > 0 || repository.Status.maxBytesToXfer > 0)
+                {
+                    if (repository.Status.guesstimatedBytesToXfer == repository.Status.maxBytesToXfer)
+                        labelDLSize.Text = string.Format("{0}",
+                            bytesToHuman(repository.Status.guesstimatedBytesToXfer)
+                        );
+                    else
+                        labelDLSize.Text = string.Format("{0} to {1}",
+                        bytesToHuman(repository.Status.guesstimatedBytesToXfer),
+                        bytesToHuman(repository.Status.maxBytesToXfer)
+                    );
+
+                }
+                if (repository.Status.guesstimatedBytesToVerify > 0 || repository.Status.maxBytesToVerify > 0)
+                {
+                    if (repository.Status.guesstimatedBytesToVerify == repository.Status.maxBytesToVerify)
+                        labelDLSize.Text += string.Format("\n{0}",
+                            bytesToHuman(repository.Status.guesstimatedBytesToVerify)
+                        );                    
+                    else
+                        labelDLSize.Text += string.Format("\n{0} to {1}",
+                            bytesToHuman(repository.Status.guesstimatedBytesToVerify),
+                            bytesToHuman(repository.Status.maxBytesToVerify)
+                        );
+                }
+
+                else
+                {
+                    labelDLSize.Text = "Nothing to do. :)";
+                }
+
+
+            }
+            else
+                labelDLSize.Text = "?";
+        }
+        private void RefreshBackgroundImage()
+        {
+            if (File.Exists(appPath + "/catflap.bgimg"))
+            {
+                var bytes = System.IO.File.ReadAllBytes(appPath + "/catflap.bgimg");
+                var ms = new MemoryStream(bytes);
+                var bi = new BitmapImage();
+                bi.BeginInit();
+                bi.StreamSource = ms;
+                bi.EndInit();
+                //imgHeader.Source = bi;
+                ImageBehavior.SetAnimatedSource(imgHeader, bi);
+            }
+            else
+                imgHeader.Source = new BitmapImage(new Uri("pack://application:,,,/Resources/header.png"));
+
+            if (repository.LatestManifest != null && repository.LatestManifest.textColor != null)
+            {
+                var fgBrush = (SolidColorBrush)(new BrushConverter().ConvertFrom(repository.LatestManifest.textColor));
+                labelRepoSizeLabel.Foreground = fgBrush;
+                labelRepoSize.Foreground = fgBrush;
+                
+                labelRevLabel.Foreground = fgBrush;
+                labelRev.Foreground = fgBrush;
+
+                labelDLSizeLabel.Foreground = fgBrush;
+                labelDLVerifyLabel.Foreground = fgBrush;
+                labelDLSize.Foreground = fgBrush;
+            }
+        }
+
+        private void webBrowser1_Navigating(object sender, NavigatingCancelEventArgs e)
+        {
+            // Internal pages
+            if (e.Uri == null || e.Uri.ToString() == "")
+                return;
+
+            // Urls on the main repo load in-page
+            if (e.Uri.ToString().StartsWith(repository.CurrentManifest.baseUrl))
+                return;
+
+            // all others load in external.
+            e.Cancel = true;
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = e.Uri.ToString()
+            });
+        }
+
+        private SynchronizationContext UiContext;
+        public MainWindow() {
+            InitializeComponent();
+            UiContext = SynchronizationContext.Current;
+
+            webBrowser.Navigating += webBrowser1_Navigating;
+            
+            webBrowser.NavigateToString("<html><head></head><body>Some information about your manifest would be here, if you could be bothered to add one.</body></html>");
+
+            labelDownloadStatus.Text = "";
+            btnCancel.Visibility = System.Windows.Visibility.Hidden;
+
+            var fi = new FileInfo(Assembly.GetExecutingAssembly().Location);
+            rootPath = Directory.GetCurrentDirectory();
+
+            Log("%root% = " + rootPath);
+            appPath = rootPath + "\\" + fi.Name + ".catflap";
+            Log("%app% = " + appPath);
+            Directory.SetCurrentDirectory(rootPath);
+
+            if (!File.Exists(appPath + "\\catflap.json"))
+            {
+                var sw = new SetupWindow();
+                var ret = sw.ShowDialog();
+                if (!ret.Value)
+                {
+                    Application.Current.Shutdown();
+                    return;
+                }
+            }
+
+            Assembly assembly = Assembly.GetExecutingAssembly();
+            FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
+            string version = String.Join(".", fvi.FileVersion.Split('.').Take(3));
+            btnHelp.Content = "v" + version;     
+
+            if (!Directory.Exists(appPath))
+            {
+                Log("Extracting our stuff to '" + appPath + "'. If you want to remove me, just delete '" +
+                    appPath + "' (along with this executable).", true);
+                Directory.CreateDirectory(appPath);
+            }
+
+            foreach (string r in resourcesToUnpack)
+                if (!File.Exists(appPath + "\\" + r))
+                    App.ExtractResource(r, appPath + "\\" + r);
+
+            this.repository = new Repository(rootPath, appPath);
+
+            this.repository.OnDownloadStatusInfoChanged += delegate(Catflap.Repository.DownloadStatusInfo info)
+            {
+                UiContext.Post((status) =>
+                    {
+                        SetUIProgressState(info.globalFileTotal == 0, info.globalPercentage,
+                            info.currentFile != null ? string.Format("{0} - {1}% of {2} at {3}/s",
+                                info.currentFile,
+                                (int)(info.currentPercentage * 100),
+                                bytesToHuman(info.currentTotalBytes),
+                                bytesToHuman(info.currentBps)
+                                ) : null);
+
+                        if (info.globalFileTotal > 0)
+                            SetGlobalStatus(true, string.Format("{0}%", (int)(info.globalPercentage * 100).Clamp(0, 100), info.globalPercentage));
+                        else
+                            SetGlobalStatus(true);
+                    }, null);
+                
+            };
+
+            this.repository.OnDownloadMessage += (string message) => UiContext.Post((state) => Log(message), null);
+            
+            if (App.mArgs.Count() > 0 && App.mArgs[0] == "-run")
+            {
+                UpdateAndRun();
+            }
+            else
+            {
+                UpdateRootManifest();
+            }
+        }
+
+        private async void UpdateAndRun()
+        {
+            await UpdateRootManifest();
+            await Sync(false);
+            if (!repository.Status.current)
+                return;
+            await Task.Delay(500);
+            WindowState = WindowState.Minimized;
+            await RunAction();
+
+            Application.Current.Shutdown();
+        }
+
+        private static FileInfo[] GetDirectoryElements(string parentDirectory)
+        {
+            return new DirectoryInfo(parentDirectory).GetFiles("*", SearchOption.AllDirectories);
+        }
+
+        private async Task UpdateRootManifest(bool setNewAsCurrent = false)
+        {
+            SetUIProgressState(true);
+            SetUIState(false);
+
+            try
+            {
+                await repository.RefreshManifest(setNewAsCurrent);
+            } catch (Exception err)
+            {
+                if (err is WebException)
+                    {
+                        MessageBox.Show("Could not retrieve repository manifest: " + err.Message);
+                    }
+                    else if (err is Repository.ValidationException)
+                    {
+                        MessageBox.Show("There are problems with the repository manifest " +
+                            "(This is probably not your fault, it needs to be fixed in the repository!):" +
+                            "\n\n" + err.Message);
+                    }
+                    else
+                    MessageBox.Show("There has been some problem downloading/parsing the repository manifest:\n\n" +
+                            err.ToString());
+
+                Application.Current.Shutdown();
+                return;
+            }
+            
+            RefreshBackgroundImage();
+
+            SetGlobalStatus(true);
+            SetUIProgressState(false);
+
+            labelRev.Text = string.Format("{0} -> {1}",
+                repository.CurrentManifest != null && repository.CurrentManifest.revision != null ? repository.CurrentManifest.revision.ToString() : "?",
+                repository.LatestManifest != null && repository.LatestManifest.revision != null ? repository.LatestManifest.revision.ToString() : "?"
+            );
+
+            if (null != repository.LatestManifest.infoPaneUrl)
+            {
+                webBrowser.Navigate(repository.LatestManifest.infoPaneUrl);
+            }
+            else
+            {
+                webBrowser.Visibility = System.Windows.Visibility.Hidden;
+            }
+
+            if (repository.Status.current)
+                btnDownload.Content = "full verify";
+            else
+                btnDownload.Content = "sync";
+
+            btnCancel.Visibility = System.Windows.Visibility.Hidden;
+
+            /* Verify if we need to restart ourselves. */
+            if (repository.RequireRestart)
+            {
+                await this.ShowMessageAsync("Restart required", "The updater needs to restart.");
+
+                System.Diagnostics.Process.Start(Application.ResourceAssembly.Location);
+                Application.Current.Shutdown();
+            }
+
+            SetUIState(true);
+        }
+
+        private CancellationTokenSource cts;
+        private async Task Sync(bool fullVerify)
+        {
+            cts = new CancellationTokenSource();
+
+            btnCancel.Visibility = System.Windows.Visibility.Visible;
+            SetUIState(false);
+            SetGlobalStatus(true, null, 0);
+            SetUIProgressState(true);
+
+            try
+            {
+                await repository.UpdateEverything(fullVerify, checkboxSimulate.IsChecked.Value, cts);
+            }
+            catch (Exception eee)
+            {
+                if (eee is AggregateException)
+                    eee = eee.InnerException;
+
+                if (eee.Message.StartsWith("@ERROR: auth failed on module "))
+                {
+                }
+
+                UiContext.Post((o) =>
+                {
+                    SetGlobalStatus(false, "ERROR");
+                    SetUIProgressState(false, -1, null);
+                    Log("Error while downloading: " + eee.Message, true);
+                    Console.WriteLine(eee.ToString());
+                }, null);
+
+                return;
+            }
+            finally
+            {
+                btnCancel.Visibility = System.Windows.Visibility.Hidden;
+                SetUIState(true);
+            }
+            
+
+            if (cts.IsCancellationRequested)
+            {
+                SetGlobalStatus(true, "ABORTED");
+                SetUIProgressState(false, -1, "ABORTED");
+                return;
+            } 
+            else
+            {
+                SetGlobalStatus(true, null, 100);
+                SetUIProgressState(false, 100, "");
+                Log("Verify/download complete.");
+            }
+
+            cts = null;
+
+            await UpdateRootManifest(!checkboxSimulate.IsChecked.Value);
+        }
+
+
+        private async Task ExecuteAction(Catflap.Manifest.ManifestAction ac)
+        {
+            var cmd = SubstituteVars(ac.execute);
+            var args = SubstituteVars(ac.arguments);
+            Log("Run Action: " + cmd + " " + args);
+
+            Process pProcess = new System.Diagnostics.Process();
+            pProcess.StartInfo.FileName = cmd;
+            pProcess.StartInfo.UseShellExecute = true;
+            pProcess.StartInfo.Arguments = args;
+            pProcess.StartInfo.WorkingDirectory = rootPath;
+
+            await Task.Run(delegate()
+            {
+                pProcess.Start();
+                pProcess.WaitForExit();
+                
+            });
+
+        }
+        private async Task RunAction()
+        {
+            Accent old = SetTheme(accentBusy);
+            SetGlobalStatus(true, "Running");
+            SetUIState(false);
+            try
+            {
+                await ExecuteAction(repository.LatestManifest.runAction);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error executing runAction: " + ex.Message);
+            }
+            finally
+            {
+                SetUIState(true);
+                SetTheme(old);
+                SetGlobalStatus(true);
+            }
+        }
+
+        private async void btnDownload_Click(object sender, RoutedEventArgs e)
+        {
+            long free = (long) Native.GetDiskFreeSpace(rootPath);
+            long needed = repository.Status.guesstimatedBytesToVerify + (200 * 1024 * 1024);
+            if (free < needed)
+            {
+                var ret = await this.ShowMessageAsync("Disk space?",
+                        "You seem to be running out of disk space on " + rootPath + ". " +
+                        "Advanced calculations indicate you might not be able to " +
+                        "sync everything: \n\n" +
+                        bytesToHuman(free) +  " free, but \n" +
+                        bytesToHuman(repository.Status.guesstimatedBytesToVerify) + " needed (plus change for temporary files).\n\n" +
+                        "Do you still want to run this sync?",
+                    MessageDialogStyle.AffirmativeAndNegative);
+                if (MessageDialogResult.Negative == ret)
+                    return;
+            }
+
+            if (repository.Status.current)
+            {
+                var ret = await this.ShowMessageAsync("Run a full sync?", "Running a full sync will take longer, " +
+                    "since it will verify checksums and compare synced directories that the manifest doesn't specify contents for explicitly.\n\n" +
+                    "This is usually not needed.  Are you sure this is what you want?",
+                    MessageDialogStyle.AffirmativeAndNegative);
+                if (MessageDialogResult.Negative == ret)
+                    return;
+            }
+            var fullVerify = repository.Status.current;
+
+            if (fullVerify && checkboxSimulate.IsChecked.Value)
+            {
+                await this.ShowMessageAsync("Cannot simulate", "Full verify does not support simulate-mode, sorry!");
+                return;
+            }
+
+            await Sync(fullVerify);
+        }
+
+        private async void btnRun_Click(object sender, RoutedEventArgs e)
+        {
+            if (!repository.Status.current)
+            {
+                var ret = await this.ShowMessageAsync("Warning", "Warning, your files are outdated or incomplete. Do you still want to run?",
+                    MessageDialogStyle.AffirmativeAndNegative);
+
+                if (MessageDialogResult.Negative == ret)
+                    return;
+            }
+
+            await RunAction();
+        }
+
+        private void btnShowHideLog_Click(object sender, RoutedEventArgs e)
+        {
+            var flyout = this.Flyouts.Items[0] as Flyout;
+            flyout.IsOpen = !flyout.IsOpen;
+        }
+
+        private void btnCancel_Click(object sender, RoutedEventArgs e)
+        {
+            if (cts != null && !cts.IsCancellationRequested)
+                cts.Cancel();
+        }
+
+        private void btnHelp_Click(object sender, RoutedEventArgs e)
+        {
+            Process myProcess = new Process();
+            myProcess.StartInfo.UseShellExecute = true;
+            myProcess.StartInfo.FileName = "http://niv.github.io/catflap";
+            myProcess.Start();
+        }
+    }
+}
