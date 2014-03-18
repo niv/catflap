@@ -288,16 +288,14 @@ namespace Catflap
             string version = String.Join(".", fvi.FileVersion.Split('.').Take(3));
             btnHelp.Content = "v" + version;     
 
-            if (!Directory.Exists(appPath))
-            {
-                Log("Extracting our stuff to '" + appPath + "'. If you want to remove me, just delete '" +
-                    appPath + "' (along with this executable).", true);
-                Directory.CreateDirectory(appPath);
-            }
-
             foreach (string r in resourcesToUnpack)
-                if (!File.Exists(appPath + "\\" + r))
+                if (!File.Exists(appPath + "\\" + r) || File.GetLastWriteTime(appPath + "\\" + r) != File.GetLastWriteTime(fi.FullName))
+                {
+                    Log("Extracting updated bundled file: " + r);
                     App.ExtractResource(r, appPath + "\\" + r);
+                    File.SetLastWriteTime(appPath + "\\" + r, File.GetLastWriteTime(fi.FullName));
+                }
+                    
 
             this.repository = new Repository(rootPath, appPath);
 
