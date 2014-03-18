@@ -66,7 +66,7 @@ namespace Catflap
         // under baseUrl. Make sure the webserver observes If-Modified-Since or clients will re-
         // download it on each check!
         // Supported file formats: jpg, png, gif, animated-gif, and everything else wpf-Image does.
-        // This fills the white background completely, so maximum/optimal size is 400x500(454 w/ progressbar) px.
+        // This fills the white background completely, so maximum/optimal size is 400x454 px.
         // Leave empty to not set a bg img.
 
         // Text Color in hexadecimal notation (for example, "#ffee33").

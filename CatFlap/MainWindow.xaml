@@ -51,7 +51,7 @@
             <ColumnDefinition/>
         </Grid.ColumnDefinitions>
 
-        <Image x:Name="imgHeader" Grid.ColumnSpan="2" Panel.ZIndex="-1" VerticalAlignment="Top" Stretch="UniformToFill" />
+        <Image x:Name="imgHeader" Grid.ColumnSpan="2" Panel.ZIndex="-1" Height="452" VerticalAlignment="Top" Width="400" HorizontalAlignment="Left" Margin="0,0,0,0" Stretch="Uniform" />
 
         <Button x:Name="btnRun" Content="Run" Margin="10,0,10,26" Click="btnRun_Click" FontWeight="Bold" IsEnabled="False" Grid.Column="1"  Style="{StaticResource AccentedSquareButtonStyle}" Height="34" VerticalAlignment="Bottom" />
 
