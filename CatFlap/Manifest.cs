@@ -85,7 +85,7 @@ namespace Catflap
             // Uncompressed size in bytes
             public long   size;
             // Compressed size in bytes
-            public long   csize;
+            // public long   csize;
 
             // Dir only: Number of files/directories in directory.
             public long   count;

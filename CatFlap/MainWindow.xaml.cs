@@ -167,7 +167,7 @@ namespace Catflap
             if (repository.LatestManifest != null)
             {
                 labelDLSize.Text = "";
-                if (repository.Status.guesstimatedBytesToXfer > 0 || repository.Status.maxBytesToXfer > 0)
+                /*if (repository.Status.guesstimatedBytesToXfer > 0 || repository.Status.maxBytesToXfer > 0)
                 {
                     if (repository.Status.guesstimatedBytesToXfer == repository.Status.maxBytesToXfer)
                         labelDLSize.Text = string.Format("{0}",
@@ -179,15 +179,15 @@ namespace Catflap
                         bytesToHuman(repository.Status.maxBytesToXfer)
                     );
 
-                }
+                }*/
                 if (repository.Status.guesstimatedBytesToVerify > 0 || repository.Status.maxBytesToVerify > 0)
                 {
                     if (repository.Status.guesstimatedBytesToVerify == repository.Status.maxBytesToVerify)
-                        labelDLSize.Text += string.Format("\n{0}",
+                        labelDLSize.Text += string.Format("{0}",
                             bytesToHuman(repository.Status.guesstimatedBytesToVerify)
                         );                    
                     else
-                        labelDLSize.Text += string.Format("\n{0} to {1}",
+                        labelDLSize.Text += string.Format("{0} to {1}",
                             bytesToHuman(repository.Status.guesstimatedBytesToVerify),
                             bytesToHuman(repository.Status.maxBytesToVerify)
                         );

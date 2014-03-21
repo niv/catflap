@@ -83,9 +83,9 @@ namespace Catflap
             public long guesstimatedBytesToVerify;
 
             // How much we need to transfer (on the wire) in the worst case.
-            public long maxBytesToXfer;
+            // public long maxBytesToXfer = -1;
             // How many bytes we're guessing at having to transfer (on the wire) really.
-            public long guesstimatedBytesToXfer;
+            // public long guesstimatedBytesToXfer = -1;
 
             // How many files (estimatedly) are outdated.
             public long fileCountToVerify;
@@ -224,6 +224,7 @@ namespace Catflap
                 filesToCheck.Select(n => n.size).Sum() + 
                 dirsToCheck.Select(n => n.size).Sum();
 
+            /*
             ret.guesstimatedBytesToXfer =
                 // All the data we have, we assume to be correct, so we just take the diff.
                 // We're also guessing at some compression ratio by comparing size and csize.
@@ -234,12 +235,12 @@ namespace Catflap
             ret.maxBytesToXfer =
                 filesToCheck.Select(n => n.csize).Sum() +
                 dirsToCheck.Select(n => n.csize).Sum();
-
+            */
 
             ret.maxBytesToVerify = ret.maxBytesToVerify.Clamp(0);
             ret.guesstimatedBytesToVerify = ret.guesstimatedBytesToVerify.Clamp(0);
-            ret.maxBytesToXfer = ret.maxBytesToXfer.Clamp(0);
-            ret.guesstimatedBytesToXfer = ret.guesstimatedBytesToXfer.Clamp(0);
+            // ret.maxBytesToXfer = ret.maxBytesToXfer.Clamp(0);
+            // ret.guesstimatedBytesToXfer = ret.guesstimatedBytesToXfer.Clamp(0);
 
 
             ret.directoryCountToVerify = dirsToCheck.Count();

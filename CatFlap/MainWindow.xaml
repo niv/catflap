@@ -61,7 +61,7 @@
         <ProgressBar x:Name="globalProgress" Height="18" BorderBrush="Black" Grid.ColumnSpan="2" BorderThickness="0" VerticalAlignment="Bottom" Background="#FF898989" />
         <TextBlock x:Name="labelRev" Text="(to check)" Margin="10,0,0,107" VerticalAlignment="Bottom" RenderTransformOrigin="0.868,0.192" Height="27" Grid.Column="1" HorizontalAlignment="Left" Width="171"/>
         <Label x:Name="labelRevLabel" Content="Version (you/remote)" Margin="0,0,10,107" VerticalAlignment="Bottom" RenderTransformOrigin="0.868,0.192" Height="27" FontWeight="Bold" HorizontalContentAlignment="Right" HorizontalAlignment="Right" Width="159" Padding="0,0,5,0"/>
-        <Label x:Name="labelDLSizeLabel" Content="Download size" Margin="0,0,10,87" RenderTransformOrigin="0.868,0.192" FontWeight="Bold" HorizontalContentAlignment="Right" ToolTip="Files or directories we found lacking in either size, count, or modification time." Padding="0,0,5,0" Height="22" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="159"/>
+        <Label x:Name="labelDLSizeLabel" Content="Size to-verify" Margin="0,0,10,87" RenderTransformOrigin="0.868,0.192" FontWeight="Bold" HorizontalContentAlignment="Right" ToolTip="Files or directories we found lacking in either size, count, or modification time." Padding="0,0,5,0" Height="22" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="159"/>
         <TextBlock x:Name="labelDLSize" Text="(to check)" HorizontalAlignment="Left" Margin="10,0,0,64" VerticalAlignment="Bottom" RenderTransformOrigin="0.868,0.192" Width="171" Height="45" Grid.Column="1"/>
         <TextBlock x:Name="labelRepoSize" Text="(to check)" Margin="10,0,0,132" RenderTransformOrigin="0.868,0.192" Grid.Column="1" Height="27" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="171"/>
         <Label x:Name="labelRepoSizeLabel" Content="Repository size" Margin="0,0,10,132" VerticalAlignment="Bottom" RenderTransformOrigin="0.868,0.192" Height="27" HorizontalContentAlignment="Right" FontWeight="Bold" ToolTip="The total repository size. Actual bytes transferred will be lower, depending on the data (due to compression)." HorizontalAlignment="Right" Width="151" Background="Transparent" Foreground="Black" Padding="0,0,5,0"/>
@@ -73,8 +73,7 @@
                 </Rectangle.Fill>
             </Rectangle>
         </Button>
-        <Image Grid.Column="1" HorizontalAlignment="Left" Height="100" Margin="675,402,-576,-31" Grid.RowSpan="2" VerticalAlignment="Top" Width="100"/>
-        <Label x:Name="labelDLVerifyLabel" Content="to-verify/size on disk" Margin="0,0,10,68" VerticalAlignment="Bottom" RenderTransformOrigin="0.868,0.192" Height="25" HorizontalContentAlignment="Right" ToolTip="Files or directories we found lacking in either size, count, or modification time." Padding="0,0,5,0" FontWeight="Bold" HorizontalAlignment="Right" Width="159"/>
+        <Label x:Name="labelDLVerifyLabel" Content="to-download" Margin="0,0,10,68" VerticalAlignment="Bottom" RenderTransformOrigin="0.868,0.192" Height="25" HorizontalContentAlignment="Right" ToolTip="Files or directories we found lacking in either size, count, or modification time." Padding="0,0,5,0" FontWeight="Bold" HorizontalAlignment="Right" Width="159" Visibility="Hidden"/>
     </Grid>
 
 
