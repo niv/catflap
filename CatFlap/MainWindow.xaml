@@ -57,7 +57,7 @@
 
         <Button x:Name="btnDownload" Content="sync" Margin="10,0,10,26" FontWeight="Bold" IsEnabled="False" Click="btnDownload_Click" BorderThickness="1" Style="{DynamicResource SquareButtonStyle}" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Height="36" VerticalAlignment="Bottom" />
 
-        <TextBlock x:Name="labelDownloadStatus" Margin="10,0" Text="{}{0} - {1}% of {2} at {3}/s" Padding="5,0" Foreground="White" RenderTransformOrigin="0.489,-0.039" Panel.ZIndex="100" FontSize="11" Grid.ColumnSpan="2" Height="18" VerticalAlignment="Bottom"/>
+        <TextBlock x:Name="labelDownloadStatus" Margin="0,0,0,0" Text="{}{0} - {1}% of {2} at {3}/s" Padding="5,0" Foreground="White" RenderTransformOrigin="0.489,-0.039" Panel.ZIndex="100" FontSize="10" Grid.ColumnSpan="2" Height="17" VerticalAlignment="Bottom"/>
         <ProgressBar x:Name="globalProgress" Height="18" BorderBrush="Black" Grid.ColumnSpan="2" BorderThickness="0" VerticalAlignment="Bottom" Background="#FF898989" />
         <TextBlock x:Name="labelRev" Text="(to check)" Margin="10,0,0,107" VerticalAlignment="Bottom" RenderTransformOrigin="0.868,0.192" Height="27" Grid.Column="1" HorizontalAlignment="Left" Width="171"/>
         <Label x:Name="labelRevLabel" Content="Version (you/remote)" Margin="0,0,10,107" VerticalAlignment="Bottom" RenderTransformOrigin="0.868,0.192" Height="27" FontWeight="Bold" HorizontalContentAlignment="Right" HorizontalAlignment="Right" Width="159" Padding="0,0,5,0"/>

@@ -211,7 +211,7 @@ namespace Catflap
                                 {
                                     case '*': action = "deleting"; break;
                                     case '<': action = "sending"; break;
-                                    case '>': action = "receiving"; break;
+                                    case '>': action = ""; break;
                                     case 'c': action = "creating"; break;
                                 }
 

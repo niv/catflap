@@ -130,7 +130,7 @@ namespace Catflap
             if (percentage >= 0)
                 globalProgress.Value = (percentage * 100).Clamp(0, 100);
             if (message != null)
-                labelDownloadStatus.Text = message;
+                labelDownloadStatus.Text = message.Trim();
 
             if (indeterminate)
                 taskBarItemInfo.ProgressState = TaskbarItemProgressState.Indeterminate;
@@ -583,7 +583,7 @@ namespace Catflap
         {
             Process myProcess = new Process();
             myProcess.StartInfo.UseShellExecute = true;
-            myProcess.StartInfo.FileName = "http://niv.github.io/catflap";
+            myProcess.StartInfo.FileName = "https://github.com/niv/catflap";
             myProcess.Start();
         }
     }
