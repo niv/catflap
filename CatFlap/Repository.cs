@@ -169,14 +169,14 @@ namespace Catflap
         public RepositoryStatus Status { get; private set; }
 
 
-        private DateTime updateLimiterLast = new DateTime();
+        private DateTime updateLimiterLast = DateTime.Now;
         private void UpdateStatus(bool limit = false)
         {
             // Limit checks to x/second.
-            if (limit && Status.directoriesToVerify != null && (new DateTime() - updateLimiterLast) < TimeSpan.FromSeconds(1))
+            if (limit && Status.directoriesToVerify != null && (DateTime.Now - updateLimiterLast) < TimeSpan.FromSeconds(1))
                 return;
-                
-            updateLimiterLast = new DateTime();
+
+            updateLimiterLast = DateTime.Now;
 
             RepositoryStatus ret = new RepositoryStatus();
 
