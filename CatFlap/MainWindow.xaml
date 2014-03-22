@@ -6,7 +6,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:gif="http://wpfanimatedgif.codeplex.com"
         ShowTitleBar="true" 
-        Title="Catflap" Height="500" Width="400" WindowStartupLocation="CenterScreen" ResizeMode="CanMinimize" BorderThickness="0" BorderBrush="Gray" Background="White" WindowTransitionsEnabled="False">
+        Title="Catflap" Height="500" Width="400" WindowStartupLocation="CenterScreen" ResizeMode="CanMinimize" BorderThickness="0" BorderBrush="Gray" Background="White" WindowTransitionsEnabled="False" ShowIconOnTitleBar="False">
 
     <i:Interaction.Behaviors>
         <behaviours:BorderlessWindowBehavior ResizeWithGrip="False" EnableDWMDropShadow="True" AllowsTransparency="False" />
@@ -23,10 +23,8 @@
             <Controls:Flyout Header="Log" Position="Right" Width="400" x:Name="logFlyout" Opacity="0.9" >
                 <Grid Margin="0,0,0,0">
                     <TextBox x:Name="logTextBox" Height="356" TextWrapping="Wrap" Text="" VerticalAlignment="Bottom" Margin="0,0,0,50" IsReadOnly="True" VerticalScrollBarVisibility="Visible" FontSize="9"/>
-                    <CheckBox x:Name="checkboxSimulate" Content="Simulate only (--dry-run)" Margin="10,372,10,10" />
-
-                    <Label x:Name="labelVersion" Content="" HorizontalAlignment="Left" Margin="308,401,0,0" VerticalAlignment="Top" Width="92" FontSize="11" HorizontalContentAlignment="Right" Height="23" Grid.RowSpan="2" Grid.Column="1" Foreground="White"/>
-
+                    <CheckBox x:Name="checkboxSimulate" Content="Simulate only (--dry-run)" VerticalAlignment="Bottom"  HorizontalAlignment="Left" Margin="10" Height="18" />
+                    <Button x:Name="btnMakeShortcut" Content="create desktop shortcut" Click="btnMakeShortcut_Click" VerticalAlignment="Bottom"  HorizontalAlignment="Right" Margin="10" Height="18" />
                 </Grid>
             </Controls:Flyout>
         </Controls:FlyoutsControl>
@@ -41,7 +39,7 @@
     </Controls:MetroWindow.WindowCommands>
 
 
-    <Grid Margin="0,0,0,0">
+    <Grid x:Name="gridMainWindow" Margin="0,0,0,0">
         <Grid.RowDefinitions>
             <RowDefinition/>
             <RowDefinition Height="0*"/>
@@ -51,29 +49,20 @@
             <ColumnDefinition/>
         </Grid.ColumnDefinitions>
 
-        <Image x:Name="imgHeader" Grid.ColumnSpan="2" Panel.ZIndex="-1" Height="452" VerticalAlignment="Top" Width="400" HorizontalAlignment="Left" Margin="0,0,0,0" Stretch="Uniform" />
+        <Button x:Name="btnRun" Content="Run" Margin="10,0,10,10" Click="btnRun_Click" FontWeight="Bold" IsEnabled="False" Grid.Column="1"  Style="{StaticResource AccentedSquareButtonStyle}" Height="36" VerticalAlignment="Bottom" Opacity="0.8" IsDefault="True" />
 
-        <Button x:Name="btnRun" Content="Run" Margin="10,0,10,26" Click="btnRun_Click" FontWeight="Bold" IsEnabled="False" Grid.Column="1"  Style="{StaticResource AccentedSquareButtonStyle}" Height="34" VerticalAlignment="Bottom" />
+        <Button x:Name="btnDownload" Content="sync" Margin="10,0,10,10" FontWeight="Bold" IsEnabled="False" Click="btnDownload_Click" BorderThickness="1" Style="{DynamicResource SquareButtonStyle}" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Height="36" VerticalAlignment="Bottom" Opacity="0.8" />
 
-        <Button x:Name="btnDownload" Content="sync" Margin="10,0,10,26" FontWeight="Bold" IsEnabled="False" Click="btnDownload_Click" BorderThickness="1" Style="{DynamicResource SquareButtonStyle}" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Height="36" VerticalAlignment="Bottom" />
-
-        <TextBlock x:Name="labelDownloadStatus" Margin="0,0,0,0" Text="{}{0} - {1}% of {2} at {3}/s" Padding="5,0" Foreground="White" RenderTransformOrigin="0.489,-0.039" Panel.ZIndex="100" FontSize="10" Grid.ColumnSpan="2" Height="17" VerticalAlignment="Bottom"/>
-        <ProgressBar x:Name="globalProgress" Height="18" BorderBrush="Black" Grid.ColumnSpan="2" BorderThickness="0" VerticalAlignment="Bottom" Background="#FF898989" />
-        <TextBlock x:Name="labelRev" Text="(to check)" Margin="10,0,0,107" VerticalAlignment="Bottom" RenderTransformOrigin="0.868,0.192" Height="27" Grid.Column="1" HorizontalAlignment="Left" Width="171"/>
-        <Label x:Name="labelRevLabel" Content="Version (you/remote)" Margin="0,0,10,107" VerticalAlignment="Bottom" RenderTransformOrigin="0.868,0.192" Height="27" FontWeight="Bold" HorizontalContentAlignment="Right" HorizontalAlignment="Right" Width="159" Padding="0,0,5,0"/>
-        <Label x:Name="labelDLSizeLabel" Content="Size to-verify" Margin="0,0,10,87" RenderTransformOrigin="0.868,0.192" FontWeight="Bold" HorizontalContentAlignment="Right" ToolTip="Files or directories we found lacking in either size, count, or modification time." Padding="0,0,5,0" Height="22" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="159"/>
-        <TextBlock x:Name="labelDLSize" Text="(to check)" HorizontalAlignment="Left" Margin="10,0,0,64" VerticalAlignment="Bottom" RenderTransformOrigin="0.868,0.192" Width="171" Height="45" Grid.Column="1"/>
-        <TextBlock x:Name="labelRepoSize" Text="(to check)" Margin="10,0,0,132" RenderTransformOrigin="0.868,0.192" Grid.Column="1" Height="27" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="171"/>
-        <Label x:Name="labelRepoSizeLabel" Content="Repository size" Margin="0,0,10,132" VerticalAlignment="Bottom" RenderTransformOrigin="0.868,0.192" Height="27" HorizontalContentAlignment="Right" FontWeight="Bold" ToolTip="The total repository size. Actual bytes transferred will be lower, depending on the data (due to compression)." HorizontalAlignment="Right" Width="151" Background="Transparent" Foreground="Black" Padding="0,0,5,0"/>
-        <WebBrowser x:Name="webBrowser" Height="210" Margin="10,94,10,0" VerticalAlignment="Top" Grid.ColumnSpan="2" ScrollViewer.VerticalScrollBarVisibility="Auto" Visibility="Hidden" />
-        <Button x:Name="btnCancel" Style="{DynamicResource MetroCircleButtonStyle}" HorizontalAlignment="Left" Margin="2,0,0,20" Width="50" Click="btnCancel_Click" Background="#FFF7F7F7" Panel.ZIndex="2" Height="50" VerticalAlignment="Bottom">
+        <TextBlock x:Name="labelDownloadStatus" Margin="0,0,0,50" Text="{}{0} - {1}% of {2} at {3}/s" Padding="5,0" RenderTransformOrigin="0.489,-0.039" Panel.ZIndex="100" FontSize="10" Grid.ColumnSpan="2" Height="17" VerticalAlignment="Bottom" TextAlignment="Center"/>
+        <!--<ProgressBar x:Name="globalProgress" Height="3" BorderBrush="Black" Grid.ColumnSpan="2" BorderThickness="0" VerticalAlignment="Top" Background="#FF898989" />-->
+        <TextBlock x:Name="labelDLSize" Text="(to check)" Margin="10,0,10,64" VerticalAlignment="Bottom" RenderTransformOrigin="0.868,0.192" Height="30" TextAlignment="Center" Grid.ColumnSpan="2" FontSize="20" FontFamily="Segoe UI Light"/>
+        <Button x:Name="btnCancel" Style="{DynamicResource MetroCircleButtonStyle}" HorizontalAlignment="Left" Margin="2,0,0,3" Width="50" Click="btnCancel_Click" Background="#FFF7F7F7" Panel.ZIndex="2" Height="50" VerticalAlignment="Bottom">
             <Rectangle Width="20" Height="20">
                 <Rectangle.Fill>
                     <VisualBrush Stretch="Fill" Visual="{StaticResource appbar_stop}" />
                 </Rectangle.Fill>
             </Rectangle>
         </Button>
-        <Label x:Name="labelDLVerifyLabel" Content="to-download" Margin="0,0,10,68" VerticalAlignment="Bottom" RenderTransformOrigin="0.868,0.192" Height="25" HorizontalContentAlignment="Right" ToolTip="Files or directories we found lacking in either size, count, or modification time." Padding="0,0,5,0" FontWeight="Bold" HorizontalAlignment="Right" Width="159" Visibility="Hidden"/>
     </Grid>
 
 

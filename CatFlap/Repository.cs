@@ -256,8 +256,8 @@ namespace Catflap
                 ).Sum();
 
             ret.current = LatestManifest != null && CurrentManifest != null &&
-                LatestManifest.revision == CurrentManifest.revision && ret.fileCountToVerify == 0 &&
-                    ret.directoryCountToVerify == 0;
+                ret.fileCountToVerify == 0 &&
+                ret.directoryCountToVerify == 0;
 
             /*foreach (var x in dirsToCheck)
             {
@@ -311,6 +311,52 @@ namespace Catflap
             return mf;
         }
 
+        private void RefreshManifestResource(string filename)
+        {
+            try
+            {
+                var req = (HttpWebRequest)WebRequest.Create(CurrentManifest.baseUrl + "/" + filename);
+                if (File.Exists(appPath + "/" + filename))
+                    req.IfModifiedSince = new FileInfo(appPath + "/" + filename).LastWriteTime;
+                if (Username != null)
+                    req.Credentials = new NetworkCredential(Username, Password);
+                req.Proxy = null;
+
+                using (HttpWebResponse res = (HttpWebResponse)req.GetResponse())
+                {
+                    using (Stream responseStream = res.GetResponseStream())
+                    {
+                        using (MemoryStream memoryStream = new MemoryStream())
+                        {
+                            byte[] buffer = new byte[4096];
+                            int count = 0;
+                            do
+                            {
+                                count = responseStream.Read(buffer, 0, buffer.Length);
+                                memoryStream.Write(buffer, 0, count);
+                            } while (count != 0);
+
+                            System.IO.File.WriteAllBytes(appPath + "/" + filename, memoryStream.ToArray());
+                            File.SetLastWriteTime(appPath + "/" + filename, res.LastModified);
+                        }
+                    }
+                }
+            }
+            catch (WebException wex)
+            {
+                switch (((HttpWebResponse)wex.Response).StatusCode)
+                {
+                    case HttpStatusCode.Forbidden:
+                    case HttpStatusCode.NotFound:
+                        if (File.Exists(appPath + "/" + filename))
+                            File.Delete(appPath + "/" + filename);
+                        break;
+                }
+
+                Console.WriteLine("while getting manifest resource: " + wex.ToString());
+            }
+        }
+
         // Refresh the remote manifest.
         public Task RefreshManifest(bool setNewAsCurrent = false)
         {
@@ -328,49 +374,8 @@ namespace Catflap
                      if (File.Exists(appPath + "\\catflap.json"))
                          CurrentManifest = JsonConvert.DeserializeObject<Manifest>(System.IO.File.ReadAllText(appPath + "\\catflap.json"));
 
-                 try
-                 {
-                     var req = (HttpWebRequest)WebRequest.Create(CurrentManifest.baseUrl + "/catflap.bgimg");
-                     if (File.Exists(appPath + "/catflap.bgimg"))
-                         req.IfModifiedSince = new FileInfo(appPath + "/catflap.bgimg").LastWriteTime;
-                     if (Username != null)
-                         req.Credentials = new NetworkCredential(Username, Password);
-                     req.Proxy = null;
-
-                     using (HttpWebResponse res = (HttpWebResponse)req.GetResponse())
-                     {
-                         using (Stream responseStream = res.GetResponseStream())
-                         {
-                             using (MemoryStream memoryStream = new MemoryStream())
-                             {
-                                 byte[] buffer = new byte[4096];
-                                 int count = 0;
-                                 do
-                                 {
-                                     count = responseStream.Read(buffer, 0, buffer.Length);
-                                     memoryStream.Write(buffer, 0, count);
-                                 } while (count != 0);
-
-                                 Console.WriteLine("Got new background");
-                                 System.IO.File.WriteAllBytes(appPath + "/catflap.bgimg", memoryStream.ToArray());
-                                 File.SetLastWriteTime(appPath + "/catflap.bgimg", res.LastModified);
-                             }
-                         }
-                     }
-                 }
-                 catch (WebException wex)
-                 {
-                     switch (((HttpWebResponse)wex.Response).StatusCode)
-                     {
-                         case HttpStatusCode.Forbidden:
-                         case HttpStatusCode.NotFound:
-                             if (File.Exists(appPath + "/catflap.bgimg"))
-                                 File.Delete(appPath + "/catflap.bgimg");
-                             break;
-                     }
-
-                     Console.WriteLine("while getting background: " + wex.ToString());
-                 }
+                 RefreshManifestResource("catflap.bgimg");
+                 RefreshManifestResource("favicon.ico");
 
                  UpdateStatus();
              });
@@ -446,7 +451,8 @@ namespace Catflap
             info.globalFileCurrent = 0;
             info.globalBytesTotal = Status.maxBytesToVerify;
 
-            var toCheck = verifyUpdateFull ? LatestManifest.sync :
+            var toCheck = verifyUpdateFull ?
+                LatestManifest.sync.Where((syncItem) => !(syncItem.ignoreExisting && File.Exists(syncItem.name))) :
                 (Status.filesToVerify.Concat(Status.directoriesToVerify));
 
             /*var globalFileTotalStart = verifyUpdateFull ?

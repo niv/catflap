@@ -143,6 +143,8 @@ namespace Catflap
 
             long thisFileTotalSize = 0;
             string thisFilename = targetFileName;
+
+            dm.Invoke("(rsync) " + va);
             
             Process pProcess = new System.Diagnostics.Process();
             pProcess.StartInfo.FileName = appPath + "\\rsync.exe";

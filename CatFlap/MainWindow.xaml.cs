@@ -17,7 +17,8 @@ using MahApps.Metro;
 using MahApps.Metro.Controls.Dialogs;
 using System.Windows.Shell;
 using System.Windows.Navigation;
-using WpfAnimatedGif;
+using System.Windows.Controls;
+using vbAccelerator.Components.Shell;
 
 namespace Catflap
 {
@@ -42,7 +43,7 @@ namespace Catflap
         private string bytesToHuman(long bytes)
         {
             if (bytes > 1024 * 1024 * 1024)
-                return string.Format("{0:F2} GB", ((float)bytes / 1024 / 1024 / 1024));
+                return string.Format("{0:F1} GB", ((float)bytes / 1024 / 1024 / 1024));
             if (bytes > 1024 * 1024)
                 return string.Format("{0:F1} MB", ((float)bytes / 1024 / 1024));
             if (bytes > 1024)
@@ -55,7 +56,8 @@ namespace Catflap
         {
             return a.
                 Replace("%app%", appPath).
-                Replace("%root%", rootPath);
+                Replace("%root%", rootPath).
+                Replace("%user%", repository.Username);
         }
 
 
@@ -126,9 +128,14 @@ namespace Catflap
 
         private void SetUIProgressState(bool indeterminate, double percentage = -1, string message = null)
         {
-            globalProgress.IsIndeterminate = indeterminate;
+            // globalProgress.IsIndeterminate = indeterminate;
             if (percentage >= 0)
-                globalProgress.Value = (percentage * 100).Clamp(0, 100);
+            {
+                // int p = (int) (percentage * 100).Clamp(0, 100);
+                // labelDLSize.Text = p + "%";
+                // globalProgress.Value = (percentage * 100).Clamp(0, 100);
+            }
+                
             if (message != null)
                 labelDownloadStatus.Text = message.Trim();
 
@@ -157,13 +164,13 @@ namespace Catflap
 
             var title = repository.LatestManifest != null && repository.LatestManifest.title != null ? repository.LatestManifest.title : "Catflap";
             if (message != null)
-                this.Title = title + " - " + message;
+                this.Title = message;
             //else if (repository.IsBusy())
             //    this.Title = title + " - Busy";
             else
                 this.Title = title;
 
-            labelRepoSize.Text = bytesToHuman(repository.Status.sizeOnRemote);
+            // labelRepoSize.Text = bytesToHuman(repository.Status.sizeOnRemote);
             if (repository.LatestManifest != null)
             {
                 labelDLSize.Text = "";
@@ -182,20 +189,25 @@ namespace Catflap
                 }*/
                 if (repository.Status.guesstimatedBytesToVerify > 0 || repository.Status.maxBytesToVerify > 0)
                 {
-                    if (repository.Status.guesstimatedBytesToVerify == repository.Status.maxBytesToVerify)
-                        labelDLSize.Text += string.Format("{0}",
+                    // labelDLSize.Visibility = System.Windows.Visibility.Visible;
+                    if (repository.Status.guesstimatedBytesToVerify < 1) //  true || repository.Status.guesstimatedBytesToVerify == repository.Status.maxBytesToVerify)
+                        labelDLSize.Text = "objects need syncing";
+                    else
+                        labelDLSize.Text += string.Format("{0} need syncing",
                             bytesToHuman(repository.Status.guesstimatedBytesToVerify)
                         );                    
+                    /*
                     else
                         labelDLSize.Text += string.Format("{0} to {1}",
                             bytesToHuman(repository.Status.guesstimatedBytesToVerify),
                             bytesToHuman(repository.Status.maxBytesToVerify)
-                        );
+                        );*/
                 }
 
                 else
                 {
-                    labelDLSize.Text = "Nothing to do. :)";
+                    //labelDLSize.Visibility = System.Windows.Visibility.Hidden;
+                    labelDLSize.Text = bytesToHuman(repository.Status.sizeOnRemote) + " are current"; // "0 GB ";
                 }
 
 
@@ -205,6 +217,10 @@ namespace Catflap
         }
         private void RefreshBackgroundImage()
         {
+            ImageBrush myBrush = new ImageBrush();
+            myBrush.Stretch = Stretch.Uniform;
+            Image image = new Image();
+
             if (File.Exists(appPath + "/catflap.bgimg"))
             {
                 var bytes = System.IO.File.ReadAllBytes(appPath + "/catflap.bgimg");
@@ -213,24 +229,34 @@ namespace Catflap
                 bi.BeginInit();
                 bi.StreamSource = ms;
                 bi.EndInit();
-                //imgHeader.Source = bi;
-                ImageBehavior.SetAnimatedSource(imgHeader, bi);
+                image.Source = bi;
             }
             else
-                imgHeader.Source = new BitmapImage(new Uri("pack://application:,,,/Resources/header.png"));
+                image.Source = new BitmapImage(new Uri("pack://application:,,,/Resources/bgimg.png"));
+
+            myBrush.ImageSource = image.Source;
+            gridMainWindow.Background = myBrush;
 
             if (repository.LatestManifest != null && repository.LatestManifest.textColor != null)
             {
                 var fgBrush = (SolidColorBrush)(new BrushConverter().ConvertFrom(repository.LatestManifest.textColor));
-                labelRepoSizeLabel.Foreground = fgBrush;
-                labelRepoSize.Foreground = fgBrush;
-                
-                labelRevLabel.Foreground = fgBrush;
-                labelRev.Foreground = fgBrush;
-
-                labelDLSizeLabel.Foreground = fgBrush;
-                labelDLVerifyLabel.Foreground = fgBrush;
                 labelDLSize.Foreground = fgBrush;
+                labelDownloadStatus.Foreground = fgBrush;
+            }
+
+            if (File.Exists(appPath + "/favicon.ico"))
+            {
+                var bytes = System.IO.File.ReadAllBytes(appPath + "/favicon.ico");
+                var ms = new MemoryStream(bytes);
+                var bi = new BitmapImage();
+                bi.BeginInit();
+                bi.StreamSource = ms;
+                bi.EndInit();
+                this.Icon = bi;
+            }
+            else
+            {
+                this.Icon = new BitmapImage(new Uri("pack://application:,,,/Resources/app.ico"));
             }
         }
 
@@ -256,10 +282,6 @@ namespace Catflap
         public MainWindow() {
             InitializeComponent();
             UiContext = SynchronizationContext.Current;
-
-            webBrowser.Navigating += webBrowser1_Navigating;
-            
-            webBrowser.NavigateToString("<html><head></head><body>Some information about your manifest would be here, if you could be bothered to add one.</body></html>");
 
             labelDownloadStatus.Text = "";
             btnCancel.Visibility = System.Windows.Visibility.Hidden;
@@ -303,13 +325,27 @@ namespace Catflap
             {
                 UiContext.Post((status) =>
                     {
-                        SetUIProgressState(info.globalFileTotal == 0, info.globalPercentage,
+                        if (info.currentFile != null)
+                        {
+                            var msg = info.currentFile;
+                            if (info.currentBps > 0)
+                                msg += " - " + bytesToHuman(info.currentBps) + "/s";
+
+                            SetUIProgressState(info.globalFileTotal == 0, info.globalPercentage, msg);
+                        }
+                        else
+                        {
+                            SetUIProgressState(info.globalFileTotal == 0, info.globalPercentage, null);
+                        }
+                        
+                        
+                        /*SetUIProgressState(info.globalFileTotal == 0, info.globalPercentage,
                             info.currentFile != null ? string.Format("{0} - {1}% of {2} at {3}/s",
-                                info.currentFile,
+                                info.currentFile.PathEllipsis(),
                                 (int)(info.currentPercentage * 100),
                                 bytesToHuman(info.currentTotalBytes),
                                 bytesToHuman(info.currentBps)
-                                ) : null);
+                                ) : null);*/
 
                         if (info.globalFileTotal > 0)
                             SetGlobalStatus(true, string.Format("{0}%", (int)(info.globalPercentage * 100).Clamp(0, 100), info.globalPercentage));
@@ -382,22 +418,14 @@ namespace Catflap
             SetGlobalStatus(true);
             SetUIProgressState(false);
 
-            labelRev.Text = string.Format("{0} -> {1}",
+            var revText = string.Format("{0} -> {1}",
                 repository.CurrentManifest != null && repository.CurrentManifest.revision != null ? repository.CurrentManifest.revision.ToString() : "?",
                 repository.LatestManifest != null && repository.LatestManifest.revision != null ? repository.LatestManifest.revision.ToString() : "?"
             );
-
-            if (null != repository.LatestManifest.infoPaneUrl)
-            {
-                webBrowser.Navigate(repository.LatestManifest.infoPaneUrl);
-            }
-            else
-            {
-                webBrowser.Visibility = System.Windows.Visibility.Hidden;
-            }
+            Log("Revision: " + revText);
 
             if (repository.Status.current)
-                btnDownload.Content = "full verify";
+                btnDownload.Content = "verify";
             else
                 btnDownload.Content = "sync";
 
@@ -457,7 +485,7 @@ namespace Catflap
 
             if (cts.IsCancellationRequested)
             {
-                SetGlobalStatus(true, "ABORTED");
+                SetGlobalStatus(true);
                 SetUIProgressState(false, -1, "ABORTED");
                 return;
             } 
@@ -535,9 +563,10 @@ namespace Catflap
 
             if (repository.Status.current)
             {
-                var ret = await this.ShowMessageAsync("Run a full sync?", "Running a full sync will take longer, " +
-                    "since it will verify checksums and compare synced directories that the manifest doesn't specify contents for explicitly.\n\n" +
-                    "This is usually not needed.  Are you sure this is what you want?",
+                var ret = await this.ShowMessageAsync("Verify?", "Running a full sync will take longer, " +
+                    "since it will verify checksums.\n\n" +
+                    "This is usually not needed, except when you suspect corruption. You can cancel at any time.\n\n" +
+                    "Are you sure this is what you want?",
                     MessageDialogStyle.AffirmativeAndNegative);
                 if (MessageDialogResult.Negative == ret)
                     return;
@@ -585,6 +614,36 @@ namespace Catflap
             myProcess.StartInfo.UseShellExecute = true;
             myProcess.StartInfo.FileName = "https://github.com/niv/catflap";
             myProcess.Start();
+        }
+
+        private void btnMakeShortcut_Click(object sender, RoutedEventArgs e)
+        {
+            using (ShellLink shortcut = new ShellLink())
+            {
+                var fi = new FileInfo(Assembly.GetExecutingAssembly().Location);
+                string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+
+                shortcut.Target = fi.FullName;
+                shortcut.Arguments = "-run";
+                shortcut.WorkingDirectory = rootPath;
+                if (repository.CurrentManifest != null)
+                    shortcut.Description = repository.CurrentManifest.title;
+                else
+                    shortcut.Description = fi.Name + " - run";
+                shortcut.DisplayMode = ShellLink.LinkDisplayMode.edmNormal;
+                shortcut.Save(desktopPath + "/" + shortcut.Description + ".lnk");
+
+                if (File.Exists(appPath + "/favicon.ico"))
+                {
+                    shortcut.IconPath = appPath + "\\favicon.ico";
+                    shortcut.IconIndex = 0;
+                    Console.WriteLine("setting icon to " + shortcut.IconPath);
+                }
+                    
+            }
+
+            this.ShowMessageAsync("Shortcut created", "A shortcut to update & run this repository was created on your Desktop.\n\n" +
+                "Feel free to rename it and/or change the icon.");
         }
     }
 }

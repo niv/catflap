@@ -33,6 +33,15 @@ namespace Catflap
                 new MahApps.Metro.Accent("Steel",
                     new Uri("pack://application:,,,/MahApps.Metro;component/Styles/Accents/Steel.xaml")),
                 Theme.Light);
+
+            ImageBrush myBrush = new ImageBrush();
+            myBrush.Stretch = Stretch.Uniform;
+            Image image = new Image();
+            image.Source = new BitmapImage(new Uri("pack://application:,,,/Resources/bgimg.png"));
+            myBrush.ImageSource = image.Source;
+            gridSetupWindow.Background = myBrush;
+
+            txtUrl.Focus();
         }
 
         private void btnGo_Click(object sender, RoutedEventArgs e)
@@ -55,7 +64,6 @@ namespace Catflap
             try
             {
                 mf = repo.AuthPolicy.Execute(() => repo.GetManifestFromRemote());
-                mf.revision = null;
             }
             catch (Exception ex)
             {
