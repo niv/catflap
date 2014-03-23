@@ -308,7 +308,7 @@ namespace Catflap
             Assembly assembly = Assembly.GetExecutingAssembly();
             FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
             string version = String.Join(".", fvi.FileVersion.Split('.').Take(3));
-            btnHelp.Content = "v" + version;     
+            btnHelp.Content = version;     
 
             foreach (string r in resourcesToUnpack)
                 if (!File.Exists(appPath + "\\" + r) || File.GetLastWriteTime(appPath + "\\" + r) != File.GetLastWriteTime(fi.FullName))
@@ -375,7 +375,8 @@ namespace Catflap
                 return;
             await Task.Delay(500);
             WindowState = WindowState.Minimized;
-            await RunAction();
+
+            await RunAction(App.mArgs.Skip(1).ToArray());
 
             Application.Current.Shutdown();
         }
@@ -502,10 +503,10 @@ namespace Catflap
         }
 
 
-        private async Task ExecuteAction(Catflap.Manifest.ManifestAction ac)
+        private async Task ExecuteAction(Catflap.Manifest.ManifestAction ac, string[] additionalArgs)
         {
             var cmd = SubstituteVars(ac.execute);
-            var args = SubstituteVars(ac.arguments);
+            var args = SubstituteVars(ac.arguments) + (" " + string.Join(" ", additionalArgs)).TrimEnd(' ');
             Log("Run Action: " + cmd + " " + args);
 
             Process pProcess = new System.Diagnostics.Process();
@@ -518,18 +519,17 @@ namespace Catflap
             {
                 pProcess.Start();
                 pProcess.WaitForExit();
-                
             });
-
         }
-        private async Task RunAction()
+
+        private async Task RunAction(string[] additionalArgs)
         {
             Accent old = SetTheme(accentBusy);
             SetGlobalStatus(true, "Running");
             SetUIState(false);
             try
             {
-                await ExecuteAction(repository.LatestManifest.runAction);
+                await ExecuteAction(repository.LatestManifest.runAction, additionalArgs);
             }
             catch (Exception ex)
             {
@@ -593,7 +593,7 @@ namespace Catflap
                     return;
             }
 
-            await RunAction();
+            await RunAction(new string[]{});
         }
 
         private void btnShowHideLog_Click(object sender, RoutedEventArgs e)
@@ -631,15 +631,11 @@ namespace Catflap
                 else
                     shortcut.Description = fi.Name + " - run";
                 shortcut.DisplayMode = ShellLink.LinkDisplayMode.edmNormal;
-                shortcut.Save(desktopPath + "/" + shortcut.Description + ".lnk");
 
                 if (File.Exists(appPath + "/favicon.ico"))
-                {
                     shortcut.IconPath = appPath + "\\favicon.ico";
-                    shortcut.IconIndex = 0;
-                    Console.WriteLine("setting icon to " + shortcut.IconPath);
-                }
-                    
+
+                shortcut.Save(desktopPath + "/" + shortcut.Description + ".lnk");
             }
 
             this.ShowMessageAsync("Shortcut created", "A shortcut to update & run this repository was created on your Desktop.\n\n" +
