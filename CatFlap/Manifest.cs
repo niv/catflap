@@ -14,7 +14,7 @@ namespace Catflap
 {
     public class Manifest
     {
-        public const int VERSION = 4;
+        public const int VERSION = 5;
 
         public static JsonSchema Schema = JsonSchema.Parse(@"{
 	'$schema': 'http://json-schema.org/draft-04/schema#',
