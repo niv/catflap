@@ -351,9 +351,11 @@ namespace Catflap
                         if (info.globalFileTotal > 0)
                             SetGlobalStatus(true, string.Format("{0}%", (int)(info.globalPercentage * 100).Clamp(0, 100), info.globalPercentage));
                         else
+                        {
                             SetGlobalStatus(true);
+
+                        }                            
                     }, null);
-                
             };
 
             this.repository.OnDownloadMessage += (string message) => UiContext.Post((state) => Log(message), null);
@@ -455,9 +457,10 @@ namespace Catflap
             SetGlobalStatus(true, null, 0);
             SetUIProgressState(true);
 
+            long bytesOnNetwork = 0;
             try
             {
-                await repository.UpdateEverything(fullVerify, checkboxSimulate.IsChecked.Value, cts);
+                bytesOnNetwork = await repository.UpdateEverything(fullVerify, checkboxSimulate.IsChecked.Value, cts);
             }
             catch (Exception eee)
             {
@@ -488,13 +491,14 @@ namespace Catflap
             if (cts.IsCancellationRequested)
             {
                 SetGlobalStatus(true);
-                SetUIProgressState(false, -1, "ABORTED");
+                SetUIProgressState(false, -1, "ABORTED (" + bytesToHuman(bytesOnNetwork) + " of actual network traffic)");
                 return;
             } 
             else
             {
                 SetGlobalStatus(true, null, 100);
-                SetUIProgressState(false, 100, "");
+                // SetUIProgressState(false, 100, "");
+                SetUIProgressState(false, 100, "Done (" + bytesToHuman(bytesOnNetwork) + " of actual network traffic)");
                 Log("Verify/download complete.");
             }
 

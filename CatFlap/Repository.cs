@@ -66,6 +66,7 @@ namespace Catflap
             public long currentBytes;
             public long currentTotalBytes;
             public long currentBps;
+            public long currentBytesOnNetwork;
         }
         
         public struct RepositoryStatus
@@ -100,7 +101,7 @@ namespace Catflap
 
         public delegate void DownloadStatusInfoChanged(DownloadStatusInfo dsi);
         public delegate void DownloadProgressChanged(string fullFileName, int percentage = -1, long bytesReceived = -1, long bytesTotal = -1, long bytesPerSecond = -1);
-        public delegate void DownloadEnd(bool wasError, string message);
+        public delegate void DownloadEnd(bool wasError, string message, long bytesOnNetwork);
         public delegate void DownloadMessage(string message);
 
         public event DownloadStatusInfoChanged OnDownloadStatusInfoChanged;
@@ -432,16 +433,16 @@ namespace Catflap
             return null;
         }
 
-        public Task UpdateEverything(bool verify, bool simulate,
+        public Task<long> UpdateEverything(bool verify, bool simulate,
                 CancellationTokenSource cts)
         {
             this.verifyUpdateFull = verify;
             this.simulate = simulate;
 
             return RunAllSyncItems(cts);
-        }       
+        }
 
-        private Task RunAllSyncItems(CancellationTokenSource cts)
+        private Task<long> RunAllSyncItems(CancellationTokenSource cts)
         {
             string basePath = rootPath;
 
@@ -464,9 +465,10 @@ namespace Catflap
                 info.globalBytesTotal;
 
 
-            return Task.Run(delegate()
+            return Task<long>.Factory.StartNew(delegate()
             {
                 long bytesTotalPrev = 0;
+
                 foreach (Manifest.ManifestSyncItem f in toCheck)
                 {
                     info.currentFile = f.name;
@@ -496,7 +498,7 @@ namespace Catflap
 
                         OnDownloadStatusInfoChanged(info);
 
-                    }, delegate(bool wasError, string str)
+                    }, delegate(bool wasError, string str, long bytesOnNetwork)
                     {
                         if (wasError)
                         {
@@ -505,6 +507,7 @@ namespace Catflap
                         UpdateStatus();
 
                         info.currentFile = null;
+                        info.currentBytesOnNetwork += bytesOnNetwork;
 
                         OnDownloadStatusInfoChanged(info);
 
@@ -537,6 +540,8 @@ namespace Catflap
 
                     OnDownloadStatusInfoChanged(info);
                 }
+
+                return info.currentBytesOnNetwork;
             }, cts.Token);
         }
     }

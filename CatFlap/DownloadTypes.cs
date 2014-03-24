@@ -57,9 +57,16 @@ namespace Catflap
         //  Literal data: 0 bytes
         private Regex rxRsyncLiteralData = new Regex(@"^Literal data: (\d+) bytes$");
 
+        // Total bytes sent: 77270
+        private Regex rxRsyncTotalBytesSent = new Regex(@"^Total bytes sent: (\d+)");
+
+        // Total bytes received: 1286
+        private Regex rxRsyncTotalBytesReceived = new Regex(@"^Total bytes received: (\d+)");
+
         private bool currentRunWasChanged;
 
         private string stdErr;
+        private long bytesOnNetwork = 0;
 
         private Repository repository;
 
@@ -96,8 +103,8 @@ namespace Catflap
                     else
                         Thread.Sleep(500);
                 }
-                p.WaitForExit();                
-                de.Invoke(p.ExitCode != 0, stdErr);
+                p.WaitForExit();
+                de.Invoke(p.ExitCode != 0, stdErr, bytesOnNetwork);
 
                 return currentRunWasChanged;
             }, ct);
@@ -241,6 +248,19 @@ namespace Catflap
                                     currentRunWasChanged = true;
                             }
 
+                            // Total bytes received
+                            else if ((mr = rxRsyncTotalBytesReceived.Match(ee.Data)).Success)
+                            {
+                                if (mr.Groups[1].Value != "0")
+                                    bytesOnNetwork += long.Parse(mr.Groups[1].Value);
+                            }
+
+                            // Total bytes sent
+                            else if ((mr = rxRsyncTotalBytesSent.Match(ee.Data)).Success)
+                            {
+                                if (mr.Groups[1].Value != "0")
+                                    bytesOnNetwork += long.Parse(mr.Groups[1].Value);
+                            }
 
                             // Send the rest to the log as-is.
                             else
