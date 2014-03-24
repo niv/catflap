@@ -19,6 +19,7 @@ using System.Windows.Shell;
 using System.Windows.Navigation;
 using System.Windows.Controls;
 using vbAccelerator.Components.Shell;
+using System.Text;
 
 namespace Catflap
 {
@@ -635,7 +636,8 @@ namespace Catflap
                 if (File.Exists(appPath + "/favicon.ico"))
                     shortcut.IconPath = appPath + "\\favicon.ico";
 
-                shortcut.Save(desktopPath + "/" + shortcut.Description + ".lnk");
+                var fname = new string(shortcut.Description.Where(ch => !Path.GetInvalidFileNameChars().Contains(ch)).ToArray());
+                shortcut.Save(desktopPath + "/" + fname + ".lnk");
             }
 
             this.ShowMessageAsync("Shortcut created", "A shortcut to update & run this repository was created on your Desktop.\n\n" +
