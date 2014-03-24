@@ -196,6 +196,11 @@
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
     <AppDesigner Include="Properties\" />
+    <EmbeddedResource Include="Resources\cygiconv-2.dll.gz" />
+    <EmbeddedResource Include="Resources\cygintl-8.dll.gz" />
+    <EmbeddedResource Include="Resources\cygpopt-0.dll.gz" />
+    <EmbeddedResource Include="Resources\cygwin1.dll.gz" />
+    <EmbeddedResource Include="Resources\rsync.exe.gz" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources\Entypo.ttf" />
@@ -222,10 +227,6 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Resources\app.ico" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Resources\rsync.exe" />
-    <EmbeddedResource Include="Resources\cygwin1.dll" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="FodyWeavers.xml" />

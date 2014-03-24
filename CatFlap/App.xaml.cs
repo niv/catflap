@@ -6,6 +6,7 @@ using System.Data;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Management;
 using System.Reflection;
@@ -56,6 +57,18 @@ namespace Catflap
         }
 
 
+        public static void ExtractResource(string resource, string destination)
+        {
+            Stream stream = Application.Current.GetType().Assembly.GetManifestResourceStream("Catflap.Resources." + resource);
+            if (resource.EndsWith(".gz"))
+                stream = new GZipStream(stream, CompressionMode.Decompress);
+
+            var dest = File.Create(destination);
+            stream.CopyTo(dest);
+            dest.Close();
+        }
+
+
         private Job job = new Job();
         private List<Process> trackedProcesses = new List<Process>();
         protected override void OnExit(ExitEventArgs e)
@@ -83,19 +96,6 @@ namespace Catflap
         {
             job.AddProcess(p.Handle);
             trackedProcesses.Add(p);
-        }
-
-        public static byte[] GetResourceData(string resource)
-        {
-            Stream stream = Application.Current.GetType().Assembly.GetManifestResourceStream("Catflap.Resources." + resource);
-            byte[] bytes = new byte[(int)stream.Length];
-            stream.Read(bytes, 0, bytes.Length);
-            return bytes;
-        }
-
-        public static void ExtractResource(string resource, string path)
-        {
-            File.WriteAllBytes(path, GetResourceData(resource));
         }
 
         public static void KillProcessAndChildren(int pid, bool sendCtrlC = false)

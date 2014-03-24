@@ -62,7 +62,10 @@ namespace Catflap
         }
 
 
-        private static string[] resourcesToUnpack = { "rsync.exe" , "cygwin1.dll" /*, "7z.exe", "7z.dll"*/ };
+        private static string[] resourcesToUnpack =
+        {
+            "rsync.exe.gz" , "cygwin1.dll.gz", "cygiconv-2.dll.gz", "cygintl-8.dll.gz", "cygpopt-0.dll.gz"
+        };
 
         // UI colour states:
         // green/blue - all ok, repo up to date
@@ -311,13 +314,19 @@ namespace Catflap
             string version = String.Join(".", fvi.FileVersion.Split('.').Take(3));
             btnHelp.Content = version;     
 
-            foreach (string r in resourcesToUnpack)
-                if (!File.Exists(appPath + "\\" + r) || File.GetLastWriteTime(appPath + "\\" + r) != File.GetLastWriteTime(fi.FullName))
+            foreach (string src in resourcesToUnpack)
+            {
+                var dst = src;
+                if (dst.EndsWith(".gz"))
+                    dst = dst.Substring(0, dst.Length - 3);
+
+                if (!File.Exists(appPath + "\\" + dst) || File.GetLastWriteTime(appPath + "\\" + dst) != File.GetLastWriteTime(fi.FullName))
                 {
-                    Log("Extracting updated bundled file: " + r);
-                    App.ExtractResource(r, appPath + "\\" + r);
-                    File.SetLastWriteTime(appPath + "\\" + r, File.GetLastWriteTime(fi.FullName));
+                    Log("Extracting bundled file: " + src);
+                    App.ExtractResource(src, appPath + "\\" + dst);
+                    File.SetLastWriteTime(appPath + "\\" + dst, File.GetLastWriteTime(fi.FullName));
                 }
+            }
                     
 
             this.repository = new Repository(rootPath, appPath);
