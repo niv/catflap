@@ -453,7 +453,7 @@ namespace Catflap
             info.globalBytesTotal = Status.maxBytesToVerify;
 
             var toCheck = verifyUpdateFull ?
-                LatestManifest.sync.Where((syncItem) => !(syncItem.ignoreExisting && File.Exists(syncItem.name))) :
+                LatestManifest.sync.Where((syncItem) => !(syncItem.ignoreExisting && (File.Exists(syncItem.name) || Directory.Exists(syncItem.name)))) :
                 (Status.filesToVerify.Concat(Status.directoriesToVerify));
 
             /*var globalFileTotalStart = verifyUpdateFull ?
