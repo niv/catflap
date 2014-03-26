@@ -110,14 +110,14 @@ namespace Catflap
                     btnRun.IsEnabled = false;
                 }
                 else
-                    if (repository.CurrentManifest.runAction == null)
+                    if (repository.LatestManifest.runAction == null)
                     {
                         btnRun.IsEnabled = false;
                         btnRun.Content = "manifest has no run action";
                     }
                     else
                     {
-                        btnRun.Content = repository.CurrentManifest.runAction.name;
+                        btnRun.Content = repository.LatestManifest.runAction.name;
                         if (repository.Status.current)
                             btnRun.IsEnabled = true;
                         else
