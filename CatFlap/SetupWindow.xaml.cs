@@ -72,6 +72,34 @@ namespace Catflap
                 return;
             }
 
+            if (mf.warnWhenSetupWithUntracked)
+            {
+                var currentContents =
+                    Directory.GetFiles(rootPath).
+                        Select(x => System.IO.Path.GetFileName(x)).
+                    Concat(
+                        Directory.GetDirectories(rootPath).
+                        Select(x => System.IO.Path.GetFileName(x)).
+                        Select(x => x + "/")
+                    ).Select(x => x.ToLower());
+
+                var skip = new string[] { fi.Name.ToLower(), fi.Name.ToLower() + ".catflap/" };
+
+                var untracked = currentContents.Except(mf.sync.Select(x => x.name.ToLower())).Except(skip);
+                
+                if (untracked.Count() > 0)
+                {
+                    var ret = MessageBox.Show(
+                        "THIS REPOSITORY RECOMMENDS TO START IN A EMPTY DIRECTORY.\n\n" +
+                        "You are setting up in a directory that already contains data that is not tracked by this repository:\n\n" +
+                        String.Join("\n", untracked.Take(10)) + "\n..\n\n" +
+                        "Do you want to continue anyways?",
+                        "Untracked files in directory, continue anyways?", MessageBoxButton.YesNo);
+                    if (ret == MessageBoxResult.No)
+                        return;
+                }
+            }
+
             Directory.CreateDirectory(appPath);
             System.IO.File.WriteAllText(appPath + "\\catflap.json", JsonConvert.SerializeObject(mf));
 

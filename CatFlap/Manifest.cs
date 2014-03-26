@@ -28,6 +28,8 @@ namespace Catflap
         'revision': { 'type': 'string', 'required': false },
         'textColor': { 'type': 'string', 'required': false },
 
+        'warnWhenSetupWithUntracked': { 'type': 'boolean', 'required': false },
+
         'runActionAllowOutdated': { 'type': 'boolean', 'required': false },
         'runAction': { 'type': 'object', 'required': false },
 
@@ -79,6 +81,9 @@ namespace Catflap
         // A optional revision string, which will be printed to the log, but has no bearing on syncing.
         // Useful for debugging or informational displays on clients.
         public string revision;
+
+        // Warn the user if he's doing setup in a directory that contains data not tracked by this repository.
+        public Boolean warnWhenSetupWithUntracked = false;
 
         public List<ManifestSyncItem> sync;
 
