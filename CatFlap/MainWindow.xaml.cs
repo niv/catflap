@@ -301,11 +301,14 @@ namespace Catflap
             if (!File.Exists(appPath + "\\catflap.json"))
             {
                 var sw = new SetupWindow();
-                var ret = sw.ShowDialog();
-                if (!ret.Value)
+                if (!sw.SetupOk)
                 {
-                    Application.Current.Shutdown();
-                    return;
+                    var ret = sw.ShowDialog();
+                    if (!ret.Value)
+                    {
+                        Application.Current.Shutdown();
+                        return;
+                    }
                 }
             }
 
@@ -385,7 +388,7 @@ namespace Catflap
             await Sync(false);
             if (!repository.Status.current)
                 return;
-            await Task.Delay(500);
+            await Task.Delay(100);
             WindowState = WindowState.Minimized;
 
             await RunAction(App.mArgs.Skip(1).ToArray());

@@ -25,6 +25,8 @@ namespace Catflap
 {
     public partial class SetupWindow : MetroWindow
     {
+        public bool SetupOk = false;
+
         public SetupWindow()
         {
             InitializeComponent();
@@ -42,14 +44,41 @@ namespace Catflap
             gridSetupWindow.Background = myBrush;
 
             txtUrl.Focus();
+
+            var fi = new FileInfo(Assembly.GetExecutingAssembly().Location);
+            var rootPath = Directory.GetCurrentDirectory();
+            var setupFile = System.IO.Path.Combine(rootPath, fi.Name + ".setup");
+            if (File.Exists(setupFile))
+            {
+                var url = File.ReadAllText(setupFile);
+                if (setup(url))
+                {
+                    File.Delete(setupFile);
+                    // this.DialogResult = true;
+                    // this.Close();
+                    SetupOk = true;
+                }
+                    
+            }
         }
 
         private void btnGo_Click(object sender, RoutedEventArgs e)
         {
-            if (txtUrl.Text == null || txtUrl.Text.Trim() == "") 
+            if (txtUrl.Text == null || txtUrl.Text.Trim() == "")
                 return;
 
-            var url = txtUrl.Text.Trim().TrimEnd('/') + "/";
+            if (setup(txtUrl.Text))
+            {
+                this.DialogResult = true;
+                this.Close();
+                SetupOk = true;
+            }
+        }
+
+
+        private bool setup(string url)
+        {
+            url = url.Trim().TrimEnd('/') + "/";
 
             if (!url.StartsWith("http://") || !!url.StartsWith("https://"))
                 url = "http://" + url;
@@ -69,7 +98,7 @@ namespace Catflap
             {
                 MessageBox.Show(ex.Message, "This doesn't look like a valid repository");
                 Console.WriteLine(ex.ToString());
-                return;
+                return false;
             }
 
             if (mf.warnWhenSetupWithUntracked)
@@ -83,7 +112,7 @@ namespace Catflap
                         Select(x => x + "/")
                     ).Select(x => x.ToLower());
 
-                var skip = new string[] { fi.Name.ToLower(), fi.Name.ToLower() + ".catflap/" };
+                var skip = new string[] { fi.Name.ToLower(), fi.Name.ToLower() + ".catflap/", fi.Name.ToLower() + ".setup" };
 
                 var untracked = currentContents.Except(mf.sync.Select(x => x.name.ToLower())).Except(skip);
                 
@@ -96,15 +125,14 @@ namespace Catflap
                         "Do you want to continue anyways?",
                         "Untracked files in directory, continue anyways?", MessageBoxButton.YesNo);
                     if (ret == MessageBoxResult.No)
-                        return;
+                        return false;
                 }
             }
 
             Directory.CreateDirectory(appPath);
-            System.IO.File.WriteAllText(appPath + "\\catflap.json", JsonConvert.SerializeObject(mf));
 
-            this.DialogResult = true;
-            this.Close();
+            System.IO.File.WriteAllText(appPath + "\\catflap.json", JsonConvert.SerializeObject(mf));
+            return true;
         }
 
         private void txtUrl_TextChanged(object sender, TextChangedEventArgs e)
