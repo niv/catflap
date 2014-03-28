@@ -24,6 +24,8 @@ namespace Catflap
 
         protected override void OnStartup(StartupEventArgs e)
         {
+            this.ShutdownMode = System.Windows.ShutdownMode.OnMainWindowClose;
+
             if (e.Args.Length > 0)
                 mArgs = e.Args;
 
