@@ -5,9 +5,11 @@ using Polly;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -280,7 +282,8 @@ namespace Catflap
 
         public Manifest GetManifestFromRemote()
         {
-            string jsonStr = wc.DownloadString("catflap.json");
+            FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location);
+            string jsonStr = wc.DownloadString("catflap.json?catflap=" + fvi.FileVersion);
             JsonTextReader reader = new JsonTextReader(new StringReader(jsonStr));
 
             JsonValidatingReader validatingReader = new JsonValidatingReader(reader);
@@ -316,7 +319,8 @@ namespace Catflap
         {
             try
             {
-                var req = (HttpWebRequest)WebRequest.Create(CurrentManifest.baseUrl + "/" + filename);
+                FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location);
+                var req = (HttpWebRequest)WebRequest.Create(CurrentManifest.baseUrl + "/" + filename + "?catflap=" + fvi.FileVersion);
                 if (File.Exists(appPath + "/" + filename))
                     req.IfModifiedSince = new FileInfo(appPath + "/" + filename).LastWriteTime;
                 if (Username != null)
