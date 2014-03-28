@@ -44,11 +44,11 @@ namespace Catflap
         private string bytesToHuman(long bytes)
         {
             if (bytes > 1024 * 1024 * 1024)
-                return string.Format("{0:F1} GB", ((float)bytes / 1024 / 1024 / 1024));
+                return string.Format("{0:F2} GB", ((float)bytes / 1024 / 1024 / 1024));
             if (bytes > 1024 * 1024)
-                return string.Format("{0:F1} MB", ((float)bytes / 1024 / 1024));
+                return string.Format("{0:F2} MB", ((float)bytes / 1024 / 1024));
             if (bytes > 1024)
-                return string.Format("{0:F1} KB", ((float)bytes / 1024));
+                return string.Format("{0:F2} KB", ((float)bytes / 1024));
             else
                 return bytes + " B";
         }
