@@ -391,7 +391,9 @@ namespace Catflap
             await Task.Delay(100);
             WindowState = WindowState.Minimized;
 
-            await RunAction(App.mArgs.Skip(1).ToArray());
+            RunAction(App.mArgs.Skip(1).ToArray());
+
+            await Task.Delay(1000);
 
             Application.Current.Shutdown();
         }
