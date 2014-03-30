@@ -371,10 +371,14 @@ namespace Catflap
             };
 
             this.repository.OnDownloadMessage += (string message) => UiContext.Post((state) => Log(message), null);
-            
-            if (App.mArgs.Count() > 0 && App.mArgs[0] == "-run")
+
+            if (App.mArgs.Count() > 0 && App.mArgs[0].ToLower() == "-run")
             {
-                UpdateAndRun();
+                UpdateAndRun(false);
+            }
+            else if (App.mArgs.Count() > 0 && App.mArgs[0].ToLower() == "-runwait")
+            {
+                UpdateAndRun(false);
             }
             else
             {
@@ -382,7 +386,7 @@ namespace Catflap
             }
         }
 
-        private async void UpdateAndRun()
+        private async void UpdateAndRun(bool waitForExit)
         {
             await UpdateRootManifest();
             await Sync(false);
@@ -391,9 +395,11 @@ namespace Catflap
             await Task.Delay(100);
             WindowState = WindowState.Minimized;
 
-            RunAction(App.mArgs.Skip(1).ToArray());
-
-            await Task.Delay(1000);
+            var t = RunAction(App.mArgs.Skip(1).ToArray());
+            if (waitForExit)
+                await t;
+            else
+                await Task.Delay(1000);
 
             Application.Current.Shutdown();
         }
