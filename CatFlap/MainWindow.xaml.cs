@@ -64,7 +64,11 @@ namespace Catflap
 
         private static string[] resourcesToUnpack =
         {
-            "rsync.exe.gz" , "cygwin1.dll.gz", "cygiconv-2.dll.gz", "cygintl-8.dll.gz", "cygpopt-0.dll.gz"
+            "rsync.exe.gz" , "cygwin1.dll.gz",  "cyggcc_s-1.dll.gz"
+        };
+        private static string[] resourcesToPurge =
+        {
+            "cygintl-8.dll", "cygpopt-0.dll", "cygiconv-2.dll"
         };
 
         // UI colour states:
@@ -315,7 +319,17 @@ namespace Catflap
             Assembly assembly = Assembly.GetExecutingAssembly();
             FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
             string version = String.Join(".", fvi.FileVersion.Split('.').Take(3));
-            btnHelp.Content = version;     
+            btnHelp.Content = version;
+
+            foreach (string src in resourcesToPurge)
+            {
+                var x = appPath + "\\" + src;
+                if (File.Exists(x))
+                {
+                    Log("Deleting obsolete bundled file: " + src);
+                    File.Delete(x);
+                }                    
+            }
 
             foreach (string src in resourcesToUnpack)
             {

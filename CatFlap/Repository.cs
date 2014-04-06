@@ -312,6 +312,14 @@ namespace Catflap
                 throw new ValidationException("Your catflap.exe is of a different version than this repository (Expected: " +
                     mf.version + ", you: " + Manifest.VERSION + "). Please make sure you're using the right version.");
 
+            if (mf.ignoreCase)
+                foreach (var syncItem in mf.sync)
+                    syncItem.ignoreCase = true;
+
+            if (mf.fuzzy)
+                foreach (var syncItem in mf.sync)
+                    syncItem.fuzzy = true;
+
             return mf;
         }
 

@@ -30,6 +30,9 @@ namespace Catflap
 
         'warnWhenSetupWithUntracked': { 'type': 'boolean', 'required': false },
 
+        'fuzzy': { 'type': 'boolean', 'required': false },
+        'ignoreCase': { 'type': 'boolean', 'required': false },
+
         'runActionAllowOutdated': { 'type': 'boolean', 'required': false },
         'runAction': { 'type': 'object', 'required': false },
 
@@ -43,6 +46,8 @@ namespace Catflap
                     'count': { 'type': 'integer', 'required': false, 'minimum': 0 },
                     'purge': { 'type': 'boolean', 'required': false },
                     'mtime': { 'type': 'string', 'required': true },
+                    'fuzzy': { 'type': 'boolean', 'required': false },
+                    'ignoreCase': { 'type': 'boolean', 'required': false },
                     'ignoreExisting': { 'type': 'boolean', 'required': false }
                 }
             }
@@ -85,6 +90,12 @@ namespace Catflap
         // Warn the user if he's doing setup in a directory that contains data not tracked by this repository.
         public Boolean warnWhenSetupWithUntracked = false;
 
+        // Same as setting fuzzy for all sync items
+        public bool fuzzy;
+
+        // Same as setting ignoreCase for all sync items
+        public bool ignoreCase;
+
         public List<ManifestSyncItem> sync;
 
         public class ManifestSyncItem
@@ -114,6 +125,13 @@ namespace Catflap
             // Makes the updater skip syncing this file or directory if it
             // exists on the client. Can be used for initial config-file syncs.
             public bool  ignoreExisting;
+
+            // Do fuzzy-matching on the target. (--fuzzy)
+            public bool fuzzy;
+
+            // Ignore case when updating/copying files (--ignore-case).
+            // Note: This needs a special patch on the server!
+            public bool ignoreCase;
         }
 
         public ManifestAction runAction;

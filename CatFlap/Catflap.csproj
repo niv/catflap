@@ -197,11 +197,9 @@
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
     <AppDesigner Include="Properties\" />
-    <EmbeddedResource Include="Resources\cygiconv-2.dll.gz" />
-    <EmbeddedResource Include="Resources\cygintl-8.dll.gz" />
-    <EmbeddedResource Include="Resources\cygpopt-0.dll.gz" />
     <EmbeddedResource Include="Resources\cygwin1.dll.gz" />
     <EmbeddedResource Include="Resources\rsync.exe.gz" />
+    <EmbeddedResource Include="Resources\cyggcc_s-1.dll.gz" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.5">

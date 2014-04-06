@@ -29,6 +29,7 @@ namespace Catflap
         //private string rsyncPath  = appPath + "/rsync.exe"; // new FileInfo(Assembly.GetExecutingAssembly().Location).DirectoryName + "\\catflap\\rsync.exe";
         private string rsyncFlags =
             "--safe-links --one-file-system --copy-links --perms --executability " +
+            "--no-human-readable " +
             "--prune-empty-dirs " +
             "--stats --itemize-changes --out-format 'NEWFILE %i %l %n' --progress " +
             "--times --compress";
@@ -135,7 +136,10 @@ namespace Catflap
             if (syncItem.ignoreExisting) va += " --ignore-existing";
 
             // Only ever allow purge on directories, obviously.
-            if (isDir && syncItem.purge) va += " --delete";
+            if (isDir && syncItem.purge) va += " --delete-after";
+
+            if (syncItem.ignoreCase) va += " --ignore-case";
+            if (syncItem.fuzzy) va += " --fuzzy";
 
             switch (syncItem.mode)
             {
@@ -172,8 +176,13 @@ namespace Catflap
             {
                 if (ee.Data != null)
                 {
+                    /* Send everything to the log as-is. */
+                    Console.WriteLine("(stdout) " + ee.Data);
+                    dm.Invoke("(stdout) " + ee.Data);
+
                     switch (ee.Data)
                     {
+                        case "receiving file list ... ":
                         case "receiving incremental file list":
                             dpc.Invoke("<receiving list>");
                             break;
@@ -252,22 +261,16 @@ namespace Catflap
                             else if ((mr = rxRsyncTotalBytesReceived.Match(ee.Data)).Success)
                             {
                                 if (mr.Groups[1].Value != "0")
-                                    bytesOnNetwork += long.Parse(mr.Groups[1].Value);
+                                    bytesOnNetwork += long.Parse(mr.Groups[1].Value, CultureInfo.InvariantCulture);
                             }
 
                             // Total bytes sent
                             else if ((mr = rxRsyncTotalBytesSent.Match(ee.Data)).Success)
                             {
                                 if (mr.Groups[1].Value != "0")
-                                    bytesOnNetwork += long.Parse(mr.Groups[1].Value);
+                                    bytesOnNetwork += long.Parse(mr.Groups[1].Value, CultureInfo.InvariantCulture);
                             }
 
-                            // Send the rest to the log as-is.
-                            else
-                            {
-                                dm.Invoke("(stdout) " + ee.Data);
-                                Console.WriteLine("(stdout) " + ee.Data);
-                            }
                             break;
 
                     }
