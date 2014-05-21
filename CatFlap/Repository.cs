@@ -460,6 +460,8 @@ namespace Catflap
         {
             string basePath = rootPath;
 
+            var updaterBinaryLastWriteTimeBefore = new FileInfo(Assembly.GetExecutingAssembly().Location).LastWriteTime;
+
             var info = new DownloadStatusInfo();
 
             info.globalFileTotal = Status.fileCountToVerify;
@@ -554,6 +556,12 @@ namespace Catflap
 
                     OnDownloadStatusInfoChanged(info);
                 }
+
+                // This is a really ugly hackyhack to check if running binary was touched while we were upating.
+                // We just ASSUME that the binary was touched by the sync itself.
+                var updaterBinaryLastWriteTimeAfter = new FileInfo(Assembly.GetExecutingAssembly().Location).LastWriteTime;
+                if (Math.Abs((updaterBinaryLastWriteTimeAfter - updaterBinaryLastWriteTimeBefore).TotalSeconds) > 1)
+                    RequireRestart = true;
 
                 return info.currentBytesOnNetwork;
             }, cts.Token);
