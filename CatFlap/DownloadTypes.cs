@@ -102,7 +102,7 @@ namespace Catflap
                         ct.ThrowIfCancellationRequested();
                     }
                     else
-                        Thread.Sleep(500);
+                        Thread.Sleep(100);
                 }
                 p.WaitForExit();
                 de.Invoke(p.ExitCode != 0, stdErr, bytesOnNetwork);
