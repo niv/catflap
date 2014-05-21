@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -20,6 +21,13 @@ namespace Catflap
             if (val.CompareTo(min) < 0) return min;
             else if (val.CompareTo(max) > 0) return max;
             else return val;
+        }
+
+        public static string NormalizePath(this string path)
+        {
+            string result = Path.GetFullPath(path.Replace("/", "\\")).ToLowerInvariant();
+            result = result.TrimEnd('\\');
+            return result;
         }
 
         public static string PathEllipsis(this string rawString, int maxLength = 30, char delimiter = '/')

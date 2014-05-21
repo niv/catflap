@@ -124,8 +124,8 @@ namespace Catflap
         {
             Directory.CreateDirectory(appPath);
 
-            this.rootPath = Path.GetFullPath(rootPath);
-            this.appPath = Path.GetFullPath(appPath); 
+            this.rootPath = rootPath.NormalizePath();
+            this.appPath = appPath.NormalizePath();
             
             wc = new WebClient();
             wc.Proxy = null;
@@ -299,10 +299,21 @@ namespace Catflap
             if (messages.Count > 0)
                 throw new ValidationException("manifest is not valid: " + string.Join("\n", messages));
 
-            // Basic sanity checks
-            var invalidSyncs = mf.sync.Where(f => !Path.GetFullPath(rootPath + "/" + f.name).Contains(rootPath)).Select(f => f.name);
-            if (invalidSyncs.Count() > 0)
-                throw new ValidationException("would place synced items outside of root path: " + string.Join("\n", invalidSyncs));
+            // Basic sanity checks for all sync items
+            foreach (var syncItem in mf.sync)
+            {
+                var fullPath = (rootPath + "/" + syncItem.name).NormalizePath();
+
+                if (fullPath == rootPath)
+                    throw new ValidationException("cannot sync the root path directly at " + syncItem.name);
+
+                if (!fullPath.StartsWith(rootPath))
+                    throw new ValidationException("would place synced item outside of root path: " + syncItem.name);
+
+                if (syncItem.type != "delete" && syncItem.type != "rsync")
+                    throw new ValidationException("invalid sync item type: " + syncItem.type + " for " + syncItem.name);
+            }
+
             if (!mf.baseUrl.StartsWith("http://") && !mf.baseUrl.StartsWith("https://"))
                 throw new ValidationException("baseUrl does not start with http(s)://");
             if (!mf.rsyncUrl.StartsWith("rsync://"))
