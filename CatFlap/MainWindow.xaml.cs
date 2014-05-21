@@ -218,7 +218,7 @@ namespace Catflap
                 else
                 {
                     //labelDLSize.Visibility = System.Windows.Visibility.Hidden;
-                    labelDLSize.Text = bytesToHuman(repository.Status.sizeOnRemote) + " are current"; // "0 GB ";
+                    labelDLSize.Text = bytesToHuman(repository.Status.sizeOnRemote) + " in sync"; // "0 GB ";
                 }
 
 
