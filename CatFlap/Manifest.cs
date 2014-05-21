@@ -42,10 +42,10 @@ namespace Catflap
                     'name': { 'type': 'string', 'required': true },
                     'type': { 'type': 'string', 'required': false },
                     'mode': { 'type': 'string', 'required': false },
-                    'size': { 'type': 'integer', 'required': true, 'minimum': 0 },
+                    'size': { 'type': 'integer', 'required': false, 'minimum': 0 },
                     'count': { 'type': 'integer', 'required': false, 'minimum': 0 },
                     'purge': { 'type': 'boolean', 'required': false },
-                    'mtime': { 'type': 'string', 'required': true },
+                    'mtime': { 'type': 'string', 'required': false },
                     'fuzzy': { 'type': 'boolean', 'required': false },
                     'ignoreCase': { 'type': 'boolean', 'required': false },
                     'ignoreExisting': { 'type': 'boolean', 'required': false }
@@ -100,8 +100,15 @@ namespace Catflap
 
         public class SyncItem
         {
+            // The filename or dirname of the sync item in question.
+            // Make sure that directories ALWAYS terminate with a /.
             public string name;
-            public string type;
+
+            // The sync type. Currently supported:
+            // * "rsync": Download the given item via rsync (default).
+            // * "delete": Delete the given directory or file from the local repository.
+            public string type = "rsync";
+
             // Uncompressed size in bytes
             public long   size;
 

@@ -187,21 +187,25 @@ namespace Catflap
             var dirsToCheck = LatestManifest.sync.
                 Where(f => f.name.EndsWith("/")).
                 Where(f =>
-                        // Always check dirs that ..
+                        (f.type == "rsync" && (
+                            // Always check dirs that ..
 
-                        // don't exist locally yet
-                        !Directory.Exists(rootPath + "/" + f.name) ||
+                            // don't exist locally yet
+                            !Directory.Exists(rootPath + "/" + f.name) ||
 
-                        (!f.ignoreExisting && (
+                            (!f.ignoreExisting && (
 
-                            // are not young enough mtime
-                            Math.Abs((new FileInfo(rootPath + "/" + f.name).LastWriteTime - f.mtime).TotalSeconds) > 1 ||
+                                // are not young enough mtime
+                                Math.Abs((new FileInfo(rootPath + "/" + f.name).LastWriteTime - f.mtime).TotalSeconds) > 1 ||
 
-                            // have mismatching item count
-                            GetDirectoryElements(rootPath + "/" + f.name).Count() < f.count ||
+                                // have mismatching item count
+                                GetDirectoryElements(rootPath + "/" + f.name).Count() < f.count ||
 
-                            // are not big enough
-                            GetDirectoryElements(rootPath + "/" + f.name).Sum(file => file.Length) < f.size
+                                // are not big enough
+                                GetDirectoryElements(rootPath + "/" + f.name).Sum(file => file.Length) < f.size
+                            ))
+                        )) || (f.type == "delete" && (
+                            Directory.Exists(rootPath + "/" + f.name)
                         ))
                 );
 
@@ -209,12 +213,16 @@ namespace Catflap
             var filesToCheck = LatestManifest.sync.
                 Where(f => !f.name.EndsWith("/")).
                 Where(f =>
-                        !File.Exists(rootPath + "/" + f.name) ||
+                        (f.type == "rsync" && (
+                            !File.Exists(rootPath + "/" + f.name) ||
 
-                        (!f.ignoreExisting && (
-                            (f.mtime != null && Math.Abs((new FileInfo(rootPath + "/" + f.name).LastWriteTime - f.mtime).TotalSeconds) > 1) ||
+                            (!f.ignoreExisting && (
+                                (f.mtime != null && Math.Abs((new FileInfo(rootPath + "/" + f.name).LastWriteTime - f.mtime).TotalSeconds) > 1) ||
 
-                            (new FileInfo(rootPath + "/" + f.name).Length != f.size)
+                                (new FileInfo(rootPath + "/" + f.name).Length != f.size)
+                            ))
+                        )) || (f.type == "delete" && (
+                            File.Exists(rootPath + "/" + f.name)
                         ))
                 );
 
@@ -413,7 +421,6 @@ namespace Catflap
         {
             switch (f.type)
             {
-                case null:
                 case "rsync":
                     RSyncDownloader dd = new RSyncDownloader(this);
                     dd.appPath = appPath;
@@ -422,38 +429,22 @@ namespace Catflap
                     return dd.Download(LatestManifest.rsyncUrl + "/" + f.name, f, rootPath,
                         dpc, de, dm, cts, overrideDestination);
 
-                /*case "delete":
-                    if (f.wildcard)
+                case "delete":
+                    return Task<bool>.Run(() =>
                     {
-                        // Root directory of wildcard
-                        var searchDir = Path.GetDirectoryName(f.name);
-                        var wc = Path.GetFileName(f.name);
-                        if (searchDir == "" || wc == "")
-                            return;
-
-                        var files = new DirectoryInfo(searchDir).GetFiles(wc, SearchOption.AllDirectories);
-                        foreach (var file in files)
-                            if (!simulate)
-                                File.Delete(file.FullName);
-
-                    }
-                    else
-                    {
-                        string fn = rootPath + "/" + f.name;
-                        // if (File.Exists)
-
-                        if (File.Exists(fn))
-                        {
-                            dpc.Invoke(fn + "(forced delete)");
-                            dm.Invoke("~> " + fn + " (forced delete)");
-                            if (!simulate)
-                                File.Delete(fn);
+                        if (f.name.EndsWith("/") && Directory.Exists(rootPath + "/" + f.name)) {
+                            dm.Invoke("Deleting directory " + f.name);
+                            Directory.Delete(rootPath + "/" + f.name, true);
+                        } else if (File.Exists(rootPath + "/" + f.name)) {
+                            dm.Invoke("Deleting file " + f.name);
+                            File.Delete(rootPath + "/" + f.name);
                         }
-                    }
-                    break;
-                */
+                        return true;
+                    });
+
+                default:
+                    return null;
             }
-            return null;
         }
 
         public Task<long> UpdateEverything(bool verify, bool simulate,
