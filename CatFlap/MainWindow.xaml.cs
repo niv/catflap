@@ -33,12 +33,15 @@ namespace Catflap
 
         private void Log(String str, bool showMessageBox = false) {
             Console.WriteLine(str);
+
+            logTextBox.Dispatcher.BeginInvoke((Action)(() =>
+            {
             logTextBox.Text += DateTime.Now.ToString("HH:mm:ss") + "> " + str + "\n";
+                logTextBox.ScrollToEnd();
 
             if (showMessageBox)
                 this.ShowMessageAsync("Log", str);
-
-            logTextBox.ScrollToEnd();
+            }));
         }
 
         private string bytesToHuman(long bytes)
@@ -286,10 +289,8 @@ namespace Catflap
             });
         }
 
-        private SynchronizationContext UiContext;
         public MainWindow() {
             InitializeComponent();
-            UiContext = SynchronizationContext.Current;
 
             labelDownloadStatus.Text = "";
             btnCancel.Visibility = System.Windows.Visibility.Hidden;
@@ -350,7 +351,7 @@ namespace Catflap
 
             this.repository.OnDownloadStatusInfoChanged += delegate(Catflap.Repository.DownloadStatusInfo info)
             {
-                UiContext.Post((status) =>
+                Dispatcher.BeginInvoke((Action)(() =>
                     {
                         if (info.currentFile != null)
                         {
@@ -381,10 +382,10 @@ namespace Catflap
                             SetGlobalStatus(true);
 
                         }                            
-                    }, null);
+                     }));
             };
 
-            this.repository.OnDownloadMessage += (string message) => UiContext.Post((state) => Log(message), null);
+            this.repository.OnDownloadMessage += (string message) => Log(message);
 
             if (App.mArgs.Count() > 0 && App.mArgs[0].ToLower() == "-run")
             {
@@ -505,13 +506,13 @@ namespace Catflap
                 {
                 }
 
-                UiContext.Post((o) =>
+                Dispatcher.BeginInvoke((Action)(() =>
                 {
                     SetGlobalStatus(false, "ERROR");
                     SetUIProgressState(false, -1, null);
                     Log("Error while downloading: " + eee.Message, true);
                     Console.WriteLine(eee.ToString());
-                }, null);
+                }));
 
                 return;
             }
