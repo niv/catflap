@@ -77,7 +77,7 @@ namespace Catflap
         }
         
         // Returns true if the file was changed in any way.
-        public Task<bool> Download(string source, Manifest.ManifestSyncItem syncItem, string modPath,
+        public Task<bool> Download(string source, Manifest.SyncItem syncItem, string modPath,
             Catflap.Repository.DownloadProgressChanged dpc, Catflap.Repository.DownloadEnd de, Catflap.Repository.DownloadMessage dm,
             CancellationTokenSource cts, string overrideDestination = null)
         {
@@ -111,7 +111,7 @@ namespace Catflap
             }, ct);
         }
 
-        private Process RunRSync(String rsyncUrl, Manifest.ManifestSyncItem syncItem, string modPath,
+        private Process RunRSync(String rsyncUrl, Manifest.SyncItem syncItem, string modPath,
             Catflap.Repository.DownloadProgressChanged dpc, Catflap.Repository.DownloadMessage dm, string overrideDestination = null)
         {
             var targetFileName = syncItem.name;

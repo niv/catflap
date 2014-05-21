@@ -94,8 +94,8 @@ namespace Catflap
             public long fileCountToVerify;
             public long directoryCountToVerify;
 
-            public List<Manifest.ManifestSyncItem> directoriesToVerify;
-            public List<Manifest.ManifestSyncItem> filesToVerify;
+            public List<Manifest.SyncItem> directoriesToVerify;
+            public List<Manifest.SyncItem> filesToVerify;
         }
 
         /* Can be set to true to have the updater restart after checking for new manifests. */
@@ -394,7 +394,7 @@ namespace Catflap
              });
         }
 
-        private Task<bool> RunSyncItem(Manifest.ManifestSyncItem f,
+        private Task<bool> RunSyncItem(Manifest.SyncItem f,
             bool verify, bool simulate,
             DownloadProgressChanged dpc, DownloadEnd de, DownloadMessage dm,
             CancellationTokenSource cts,
@@ -481,7 +481,7 @@ namespace Catflap
             {
                 long bytesTotalPrev = 0;
 
-                foreach (Manifest.ManifestSyncItem f in toCheck)
+                foreach (Manifest.SyncItem f in toCheck)
                 {
                     info.currentFile = f.name;
 

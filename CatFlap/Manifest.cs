@@ -96,9 +96,9 @@ namespace Catflap
         // Same as setting ignoreCase for all sync items
         public bool ignoreCase;
 
-        public List<ManifestSyncItem> sync;
+        public List<SyncItem> sync;
 
-        public class ManifestSyncItem
+        public class SyncItem
         {
             public string name;
             public string type;
