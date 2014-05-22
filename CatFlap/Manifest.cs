@@ -21,6 +21,7 @@ namespace Catflap
 	'description': 'Catflap Manifest',
 	'type': 'object',
 	'properties': {
+        'locked': { 'type': 'string', 'required': false },
         'version':  { 'type': 'integer', 'required': true, 'minimum': 1 },
         'title': { 'type': 'string', 'required': false },
         'baseUrl': { 'type': 'string', 'required': true },
@@ -54,6 +55,9 @@ namespace Catflap
         },
     },
 }");
+        // Repositories can be locked so that clients will be denied with a
+        // appropriate message. Set to "" to unlock.
+        public string locked = "";
 
         // The manifest file version. Do not touch.
         public int version;

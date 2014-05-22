@@ -479,6 +479,12 @@ namespace Catflap
                 Application.Current.Shutdown();
             }
 
+            if (repository.LatestManifest.locked != "")
+            {
+                await this.ShowMessageAsync("Repository locked", repository.LatestManifest.locked);
+                Application.Current.Shutdown();
+            }
+
             SetUIState(true);
         }
 
