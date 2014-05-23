@@ -29,10 +29,9 @@ namespace Catflap
         {
             InitializeComponent();
 
-            ThemeManager.ChangeTheme(this,
-                new MahApps.Metro.Accent("Crimson",
-                    new Uri("pack://application:,,,/MahApps.Metro;component/Styles/Accents/Crimson.xaml")),
-                Theme.Light);
+            ThemeManager.ChangeAppStyle(Application.Current,
+                ThemeManager.Accents.First(x => x.Name == "Crimson"),
+                ThemeManager.AppThemes.First(x => x.Name == "BaseLight"));
 
             repo = r;
             txtUser.Text = r.Username;

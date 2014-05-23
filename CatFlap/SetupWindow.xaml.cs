@@ -30,11 +30,9 @@ namespace Catflap
         public SetupWindow()
         {
             InitializeComponent();
-
-            ThemeManager.ChangeTheme(this,
-                new MahApps.Metro.Accent("Steel",
-                    new Uri("pack://application:,,,/MahApps.Metro;component/Styles/Accents/Steel.xaml")),
-                Theme.Light);
+            ThemeManager.ChangeAppStyle(Application.Current,
+                ThemeManager.Accents.First(x => x.Name == "Steel"),
+                ThemeManager.AppThemes.First(x => x.Name == "BaseLight"));
 
             ImageBrush myBrush = new ImageBrush();
             myBrush.Stretch = Stretch.Uniform;

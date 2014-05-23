@@ -34,7 +34,7 @@ namespace Catflap
         private void Log(String str, bool showMessageBox = false) {
             Console.WriteLine(str);
 
-            logTextBox.Dispatcher.BeginInvoke((Action)(() =>
+            logTextBox.Dispatcher.Invoke((Action)(() =>
             {
             logTextBox.Text += DateTime.Now.ToString("HH:mm:ss") + "> " + str + "\n";
                 logTextBox.ScrollToEnd();
@@ -76,17 +76,13 @@ namespace Catflap
 
         // UI colour states:
         // green/blue - all ok, repo up to date
-        private Accent accentOK = new MahApps.Metro.Accent("Olive",
-                new Uri("pack://application:,,,/MahApps.Metro;component/Styles/Accents/Olive.xaml"));
+        private Accent accentOK = ThemeManager.Accents.First(x => x.Name == "Olive");
         // orange     - repo not current
-        private Accent accentWarning = new MahApps.Metro.Accent("Amber",
-                new Uri("pack://application:,,,/MahApps.Metro;component/Styles/Accents/Amber.xaml"));
+        private Accent accentWarning = ThemeManager.Accents.First(x => x.Name == "Amber");
         // red        - failure
-        private Accent accentError = new MahApps.Metro.Accent("Crimson",
-                new Uri("pack://application:,,,/MahApps.Metro;component/Styles/Accents/Crimson.xaml"));
+        private Accent accentError = ThemeManager.Accents.First(x => x.Name == "Crimson");
         // mauve     - busy
-        private Accent accentBusy = new MahApps.Metro.Accent("Mauve",
-                new Uri("pack://application:,,,/MahApps.Metro;component/Styles/Accents/Mauve.xaml"));
+        private Accent accentBusy = ThemeManager.Accents.First(x => x.Name == "Mauve");
 
         private Accent currTheme;
 
@@ -96,7 +92,11 @@ namespace Catflap
             if (currTheme != t)
             {
                 currTheme = t;
-                ThemeManager.ChangeTheme(this, t, Theme.Light);
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    ThemeManager.ChangeAppStyle(Application.Current, t,
+                        ThemeManager.AppThemes.First(x => x.Name == "BaseLight"));
+                });
             }
             return c;
         }
@@ -146,20 +146,23 @@ namespace Catflap
                 // labelDLSize.Text = p + "%";
                 // globalProgress.Value = (percentage * 100).Clamp(0, 100);
             }
-                
-            if (message != null)
-                labelDownloadStatus.Text = message.Trim();
 
-            if (indeterminate)
-                taskBarItemInfo.ProgressState = TaskbarItemProgressState.Indeterminate;
-            else
-                if (percentage == -1)
-                    taskBarItemInfo.ProgressState = TaskbarItemProgressState.None;
+            if (message != null)
+                labelDownloadStatus.Dispatcher.Invoke((Action)(() => labelDownloadStatus.Text = message.Trim()));
+
+            taskBarItemInfo.Dispatcher.Invoke((Action)(() =>
+            {
+                if (indeterminate)
+                    taskBarItemInfo.ProgressState = TaskbarItemProgressState.Indeterminate;
                 else
-                {
-                    taskBarItemInfo.ProgressState = TaskbarItemProgressState.Normal;
-                    taskBarItemInfo.ProgressValue = percentage.Clamp(0, 1);
-                }
+                    if (percentage == -1)
+                        taskBarItemInfo.ProgressState = TaskbarItemProgressState.None;
+                    else
+                    {
+                        taskBarItemInfo.ProgressState = TaskbarItemProgressState.Normal;
+                        taskBarItemInfo.ProgressValue = percentage.Clamp(0, 1);
+                    }
+            }));
         }
 
         private void SetGlobalStatus(bool lastOperationOK = true, string message = null, double percent = -1, string progressMsg = null)
@@ -173,59 +176,66 @@ namespace Catflap
             else
                 SetTheme(accentWarning);
 
-            var title = repository.LatestManifest != null && repository.LatestManifest.title != null ? repository.LatestManifest.title : "Catflap";
-            if (message != null)
-                this.Title = message;
-            //else if (repository.IsBusy())
-            //    this.Title = title + " - Busy";
-            else
-                this.Title = title;
-
-            // labelRepoSize.Text = bytesToHuman(repository.Status.sizeOnRemote);
-            if (repository.LatestManifest != null)
+            this.Dispatcher.Invoke(() =>
             {
-                labelDLSize.Text = "";
-                /*if (repository.Status.guesstimatedBytesToXfer > 0 || repository.Status.maxBytesToXfer > 0)
-                {
-                    if (repository.Status.guesstimatedBytesToXfer == repository.Status.maxBytesToXfer)
-                        labelDLSize.Text = string.Format("{0}",
-                            bytesToHuman(repository.Status.guesstimatedBytesToXfer)
-                        );
-                    else
-                        labelDLSize.Text = string.Format("{0} to {1}",
-                        bytesToHuman(repository.Status.guesstimatedBytesToXfer),
-                        bytesToHuman(repository.Status.maxBytesToXfer)
-                    );
-
-                }*/
-                if (repository.Status.guesstimatedBytesToVerify > 0 || repository.Status.maxBytesToVerify > 0)
-                {
-                    // labelDLSize.Visibility = System.Windows.Visibility.Visible;
-                    if (repository.Status.guesstimatedBytesToVerify < 1) //  true || repository.Status.guesstimatedBytesToVerify == repository.Status.maxBytesToVerify)
-                        labelDLSize.Text = "objects need syncing";
-                    else
-                        labelDLSize.Text += string.Format("{0} need syncing",
-                            bytesToHuman(repository.Status.guesstimatedBytesToVerify)
-                        );                    
-                    /*
-                    else
-                        labelDLSize.Text += string.Format("{0} to {1}",
-                            bytesToHuman(repository.Status.guesstimatedBytesToVerify),
-                            bytesToHuman(repository.Status.maxBytesToVerify)
-                        );*/
-                }
-
+                var title = repository.LatestManifest != null && repository.LatestManifest.title != null ? repository.LatestManifest.title : "Catflap";
+                if (message != null)
+                    this.Title = message;
+                //else if (repository.IsBusy())
+                //    this.Title = title + " - Busy";
                 else
+                    this.Title = title;
+            });
+
+            labelDLSize.Dispatcher.Invoke(() =>
+            {
+                // labelRepoSize.Text = bytesToHuman(repository.Status.sizeOnRemote);
+                if (repository.LatestManifest != null)
                 {
-                    //labelDLSize.Visibility = System.Windows.Visibility.Hidden;
-                    labelDLSize.Text = bytesToHuman(repository.Status.sizeOnRemote) + " in sync"; // "0 GB ";
+                    labelDLSize.Text = "";
+                    /*if (repository.Status.guesstimatedBytesToXfer > 0 || repository.Status.maxBytesToXfer > 0)
+                    {
+                        if (repository.Status.guesstimatedBytesToXfer == repository.Status.maxBytesToXfer)
+                            labelDLSize.Text = string.Format("{0}",
+                                bytesToHuman(repository.Status.guesstimatedBytesToXfer)
+                            );
+                        else
+                            labelDLSize.Text = string.Format("{0} to {1}",
+                            bytesToHuman(repository.Status.guesstimatedBytesToXfer),
+                            bytesToHuman(repository.Status.maxBytesToXfer)
+                        );
+
+                    }*/
+                    if (repository.Status.guesstimatedBytesToVerify > 0 || repository.Status.maxBytesToVerify > 0)
+                    {
+                        // labelDLSize.Visibility = System.Windows.Visibility.Visible;
+                        if (repository.Status.guesstimatedBytesToVerify < 1) //  true || repository.Status.guesstimatedBytesToVerify == repository.Status.maxBytesToVerify)
+                            labelDLSize.Text = "objects need syncing";
+                        else
+                            labelDLSize.Text += string.Format("{0} need syncing",
+                                bytesToHuman(repository.Status.guesstimatedBytesToVerify)
+                            );
+                        /*
+                        else
+                            labelDLSize.Text += string.Format("{0} to {1}",
+                                bytesToHuman(repository.Status.guesstimatedBytesToVerify),
+                                bytesToHuman(repository.Status.maxBytesToVerify)
+                            );*/
+                    }
+
+                    else
+                    {
+                        //labelDLSize.Visibility = System.Windows.Visibility.Hidden;
+                        labelDLSize.Text = bytesToHuman(repository.Status.sizeOnRemote) + " in sync"; // "0 GB ";
+                    }
+
+
                 }
-
-
-            }
-            else
-                labelDLSize.Text = "?";
+                else
+                    labelDLSize.Text = "?";
+            });
         }
+
         private void RefreshBackgroundImage()
         {
             ImageBrush myBrush = new ImageBrush();
@@ -351,38 +361,34 @@ namespace Catflap
 
             this.repository.OnDownloadStatusInfoChanged += delegate(Catflap.Repository.DownloadStatusInfo info)
             {
-                Dispatcher.BeginInvoke((Action)(() =>
-                    {
-                        if (info.currentFile != null)
-                        {
-                            var msg = info.currentFile;
-                            if (info.currentBps > 0)
-                                msg += " - " + bytesToHuman(info.currentBps) + "/s";
+                if (info.currentFile != null)
+                {
+                    var msg = info.currentFile;
+                    if (info.currentBps > 0)
+                        msg += " - " + bytesToHuman(info.currentBps) + "/s";
 
-                            SetUIProgressState(info.globalFileTotal == 0, info.globalPercentage, msg);
-                        }
-                        else
-                        {
-                            SetUIProgressState(info.globalFileTotal == 0, info.globalPercentage, null);
-                        }
+                    SetUIProgressState(info.globalFileTotal == 0, info.globalPercentage, msg);
+                }
+                else
+                {
+                    SetUIProgressState(info.globalFileTotal == 0, info.globalPercentage, null);
+                }
                         
                         
-                        /*SetUIProgressState(info.globalFileTotal == 0, info.globalPercentage,
-                            info.currentFile != null ? string.Format("{0} - {1}% of {2} at {3}/s",
-                                info.currentFile.PathEllipsis(),
-                                (int)(info.currentPercentage * 100),
-                                bytesToHuman(info.currentTotalBytes),
-                                bytesToHuman(info.currentBps)
-                                ) : null);*/
+                /*SetUIProgressState(info.globalFileTotal == 0, info.globalPercentage,
+                    info.currentFile != null ? string.Format("{0} - {1}% of {2} at {3}/s",
+                        info.currentFile.PathEllipsis(),
+                        (int)(info.currentPercentage * 100),
+                        bytesToHuman(info.currentTotalBytes),
+                        bytesToHuman(info.currentBps)
+                        ) : null);*/
 
-                        if (info.globalFileTotal > 0)
-                            SetGlobalStatus(true, string.Format("{0}%", (int)(info.globalPercentage * 100).Clamp(0, 100), info.globalPercentage));
-                        else
-                        {
-                            SetGlobalStatus(true);
-
-                        }                            
-                     }));
+                if (info.globalFileTotal > 0)
+                    SetGlobalStatus(true, string.Format("{0}%", (int)(info.globalPercentage * 100).Clamp(0, 100), info.globalPercentage));
+                else
+                {
+                    SetGlobalStatus(true);
+                }                            
             };
 
             this.repository.OnDownloadMessage += (string message) => Log(message);
@@ -513,13 +519,10 @@ namespace Catflap
                 {
                 }
 
-                Dispatcher.BeginInvoke((Action)(() =>
-                {
-                    SetGlobalStatus(false, "ERROR");
-                    SetUIProgressState(false, -1, null);
-                    Log("Error while downloading: " + eee.Message, true);
-                    Console.WriteLine(eee.ToString());
-                }));
+                SetGlobalStatus(false, "ERROR");
+                SetUIProgressState(false, -1, null);
+                Log("Error while downloading: " + eee.Message, true);
+                Console.WriteLine(eee.ToString());
 
                 return;
             }
