@@ -502,6 +502,7 @@ namespace Catflap
             try
             {
                 bytesOnNetwork = await repository.UpdateEverything(fullVerify, checkboxSimulate.IsChecked.Value, cts);
+                SetUIProgressState(false, 1, null);
             }
             catch (Exception eee)
             {
@@ -531,15 +532,14 @@ namespace Catflap
 
             if (cts.IsCancellationRequested)
             {
-                SetGlobalStatus(true);
+                SetGlobalStatus(true, "ABORTED");
                 SetUIProgressState(false, -1, "ABORTED (" + bytesToHuman(bytesOnNetwork) + " of actual network traffic)");
                 return;
             } 
             else
             {
-                SetGlobalStatus(true, null, 100);
-                // SetUIProgressState(false, 100, "");
-                SetUIProgressState(false, 100, "Done (" + bytesToHuman(bytesOnNetwork) + " of actual network traffic)");
+                SetGlobalStatus(true, "100%", 1);
+                SetUIProgressState(false, 1, "Done (" + bytesToHuman(bytesOnNetwork) + " of actual network traffic)");
                 Log("Verify/download complete.");
             }
 
