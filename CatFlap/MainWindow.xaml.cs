@@ -20,6 +20,7 @@ using System.Windows.Navigation;
 using System.Windows.Controls;
 using vbAccelerator.Components.Shell;
 using System.Text;
+using System.Windows.Input;
 
 namespace Catflap
 {
@@ -355,41 +356,28 @@ namespace Catflap
                     File.SetLastWriteTime(appPath + "\\" + dst, File.GetLastWriteTime(fi.FullName));
                 }
             }
-                    
+            
+            this.Activated += new EventHandler((o, ea) =>
+            {
+                if (repository.LatestManifest != null)
+                {
+                    repository.UpdateStatus();
+                    this.SetGlobalStatus();
+                }
+            });
+
+            this.KeyDown += new KeyEventHandler(async (o, kea) => {
+                if (kea.Key == Key.F5)
+                {
+                    await UpdateRootManifest(!checkboxSimulate.IsChecked.Value);
+                    repository.UpdateStatus();
+                    this.SetGlobalStatus();
+                }
+            });
 
             this.repository = new Repository(rootPath, appPath);
 
-            this.repository.OnDownloadStatusInfoChanged += delegate(Catflap.Repository.DownloadStatusInfo info)
-            {
-                if (info.currentFile != null)
-                {
-                    var msg = info.currentFile;
-                    if (info.currentBps > 0)
-                        msg += " - " + bytesToHuman(info.currentBps) + "/s";
-
-                    SetUIProgressState(info.globalFileTotal == 0, info.globalPercentage, msg);
-                }
-                else
-                {
-                    SetUIProgressState(info.globalFileTotal == 0, info.globalPercentage, null);
-                }
-                        
-                        
-                /*SetUIProgressState(info.globalFileTotal == 0, info.globalPercentage,
-                    info.currentFile != null ? string.Format("{0} - {1}% of {2} at {3}/s",
-                        info.currentFile.PathEllipsis(),
-                        (int)(info.currentPercentage * 100),
-                        bytesToHuman(info.currentTotalBytes),
-                        bytesToHuman(info.currentBps)
-                        ) : null);*/
-
-                if (info.globalFileTotal > 0)
-                    SetGlobalStatus(true, string.Format("{0}%", (int)(info.globalPercentage * 100).Clamp(0, 100), info.globalPercentage));
-                else
-                {
-                    SetGlobalStatus(true);
-                }                            
-            };
+            this.repository.OnDownloadStatusInfoChanged += OnDownloadStatusInfoChangedHandler;
 
             this.repository.OnDownloadMessage += (string message) => Log(message);
 
@@ -405,6 +393,29 @@ namespace Catflap
             {
                 UpdateRootManifest();
             }
+        }
+
+        private void OnDownloadStatusInfoChangedHandler(Catflap.Repository.DownloadStatusInfo info)
+        {
+            if (info.currentFile != null)
+            {
+                var msg = info.currentFile.PathEllipsis(60);
+                if (info.currentBps > 0)
+                    msg += " - " + bytesToHuman(info.currentBps) + "/s";
+
+                SetUIProgressState(info.globalFileTotal == 0, info.globalPercentage, msg);
+            }
+            else
+            {
+                SetUIProgressState(info.globalFileTotal == 0, info.globalPercentage, null);
+            }
+
+            if (info.globalFileTotal > 0)
+                SetGlobalStatus(true, string.Format("{0}%", (int)(info.globalPercentage * 100).Clamp(0, 100), info.globalPercentage));
+            else
+            {
+                SetGlobalStatus(true);
+            }              
         }
 
         private async void UpdateAndRun(bool waitForExit)

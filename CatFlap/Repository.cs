@@ -173,7 +173,7 @@ namespace Catflap
 
 
         private DateTime updateLimiterLast = DateTime.Now;
-        private void UpdateStatus(bool limit = false)
+        public void UpdateStatus(bool limit = false)
         {
             // Limit checks to x/second.
             if (limit && Status.directoriesToVerify != null && (DateTime.Now - updateLimiterLast) < TimeSpan.FromSeconds(1))
