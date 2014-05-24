@@ -133,13 +133,13 @@ namespace Catflap
             
             if (isDir) va += " " + rsyncFlagsDirectory;
 
-            if (syncItem.ignoreExisting) va += " --ignore-existing";
+            if (syncItem.ignoreExisting.GetValueOrDefault()) va += " --ignore-existing";
 
             // Only ever allow purge on directories, obviously.
-            if (isDir && syncItem.purge) va += " --delete-after";
+            if (isDir && syncItem.purge.GetValueOrDefault()) va += " --delete-after";
 
-            if (syncItem.ignoreCase) va += " --ignore-case";
-            if (syncItem.fuzzy) va += " --fuzzy";
+            if (syncItem.ignoreCase.GetValueOrDefault()) va += " --ignore-case";
+            if (syncItem.fuzzy.GetValueOrDefault()) va += " --fuzzy";
 
             switch (syncItem.mode)
             {

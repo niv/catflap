@@ -193,7 +193,7 @@ namespace Catflap
                             // don't exist locally yet
                             !Directory.Exists(rootPath + "/" + f.name) ||
 
-                            (!f.ignoreExisting && (
+                            (!f.ignoreExisting.GetValueOrDefault() && (
 
                                 // are not young enough mtime
                                 Math.Abs((new FileInfo(rootPath + "/" + f.name).LastWriteTime - f.mtime).TotalSeconds) > 1 ||
@@ -216,7 +216,7 @@ namespace Catflap
                         (f.type == "rsync" && (
                             !File.Exists(rootPath + "/" + f.name) ||
 
-                            (!f.ignoreExisting && (
+                            (!f.ignoreExisting.GetValueOrDefault() && (
                                 (f.mtime != null && Math.Abs((new FileInfo(rootPath + "/" + f.name).LastWriteTime - f.mtime).TotalSeconds) > 1) ||
 
                                 (new FileInfo(rootPath + "/" + f.name).Length != f.size)
@@ -331,13 +331,25 @@ namespace Catflap
                 throw new ValidationException("Your catflap.exe is of a different version than this repository (Expected: " +
                     mf.version + ", you: " + Manifest.VERSION + "). Please make sure you're using the right version.");
 
-            if (mf.ignoreCase)
+            if (mf.ignoreCase.HasValue)
                 foreach (var syncItem in mf.sync)
-                    syncItem.ignoreCase = true;
+                    if (!syncItem.ignoreCase.HasValue)
+                        syncItem.ignoreCase = mf.ignoreCase.Value;
 
-            if (mf.fuzzy)
+            if (mf.fuzzy.HasValue)
                 foreach (var syncItem in mf.sync)
-                    syncItem.fuzzy = true;
+                    if (!syncItem.fuzzy.HasValue)
+                        syncItem.fuzzy = mf.fuzzy.Value;
+
+            if (mf.ignoreExisting.HasValue)
+                foreach (var syncItem in mf.sync)
+                    if (!syncItem.ignoreExisting.HasValue)
+                        syncItem.ignoreExisting = mf.ignoreExisting.Value;
+
+            if (mf.purge.HasValue)
+                foreach (var syncItem in mf.sync)
+                    if (!syncItem.purge.HasValue)
+                        syncItem.purge = mf.purge.Value;
 
             return mf;
         }
@@ -469,7 +481,7 @@ namespace Catflap
             info.globalBytesTotal = Status.maxBytesToVerify;
 
             var toCheck = verifyUpdateFull ?
-                LatestManifest.sync.Where((syncItem) => !(syncItem.ignoreExisting && (File.Exists(syncItem.name) || Directory.Exists(syncItem.name)))) :
+                LatestManifest.sync.Where((syncItem) => !(syncItem.ignoreExisting.GetValueOrDefault() && (File.Exists(syncItem.name) || Directory.Exists(syncItem.name)))) :
                 (Status.filesToVerify.Concat(Status.directoriesToVerify));
 
             /*var globalFileTotalStart = verifyUpdateFull ?

@@ -33,6 +33,8 @@ namespace Catflap
 
         'fuzzy': { 'type': 'boolean', 'required': false },
         'ignoreCase': { 'type': 'boolean', 'required': false },
+        'ignoreExisting': { 'type': 'boolean', 'required': false },
+        'purge': { 'type': 'boolean', 'required': false },
 
         'runActionAllowOutdated': { 'type': 'boolean', 'required': false },
         'runAction': { 'type': 'object', 'required': false },
@@ -94,11 +96,17 @@ namespace Catflap
         // Warn the user if he's doing setup in a directory that contains data not tracked by this repository.
         public Boolean warnWhenSetupWithUntracked = false;
 
-        // Same as setting fuzzy for all sync items
-        public bool fuzzy;
+        // This sets a default for "fuzzy" on all sync items, unless otherwise given in each item.
+        public bool? fuzzy;
 
-        // Same as setting ignoreCase for all sync items
-        public bool ignoreCase;
+        // This sets a default for "ignoreCase" on all sync items, unless otherwise given in each item.
+        public bool? ignoreCase;
+
+        // This sets a default for "ignoreExisting" on all sync items, unless otherwise given in each item.
+        public bool? ignoreExisting;
+
+        // This sets a default for "purge" on all sync items, unless otherwise given in each item.
+        public bool? purge;
 
         public List<SyncItem> sync;
 
@@ -121,7 +129,7 @@ namespace Catflap
             // Dir only: Pass --delete to rsync when syncing directory/ items.
             // Will remove all untracked files that are not present
             // in the repository.
-            public bool purge;
+            public bool? purge;
 
             // Transfer mode. one of 'inplace' (default), 'replace'
             // Note that 'replace' may leave stray temp files if the user
@@ -135,14 +143,14 @@ namespace Catflap
 
             // Makes the updater skip syncing this file or directory if it
             // exists on the client. Can be used for initial config-file syncs.
-            public bool  ignoreExisting;
+            public bool? ignoreExisting;
 
             // Do fuzzy-matching on the target. (--fuzzy)
-            public bool fuzzy;
+            public bool? fuzzy;
 
             // Ignore case when updating/copying files (--ignore-case).
             // Note: This needs a special patch on the server!
-            public bool ignoreCase;
+            public bool? ignoreCase;
         }
 
         public ManifestAction runAction;
