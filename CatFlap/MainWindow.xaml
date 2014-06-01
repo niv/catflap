@@ -13,8 +13,7 @@
     </i:Interaction.Behaviors>
 
     <Window.TaskbarItemInfo>
-        <TaskbarItemInfo x:Name="taskBarItemInfo"
-                     ThumbnailClipMargin="80,0,80,140">
+        <TaskbarItemInfo x:Name="taskBarItemInfo">
         </TaskbarItemInfo>
     </Window.TaskbarItemInfo>
 

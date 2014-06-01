@@ -30,7 +30,7 @@ namespace Catflap
                 mArgs = e.Args;
 
             ToolTipService.InitialShowDelayProperty.OverrideMetadata(
-                typeof(FrameworkElement), new FrameworkPropertyMetadata(300));
+                typeof(FrameworkElement), new FrameworkPropertyMetadata(0));
             ToolTipService.ShowDurationProperty.OverrideMetadata(
                typeof(FrameworkElement), new FrameworkPropertyMetadata(int.MaxValue));
 

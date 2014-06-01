@@ -154,8 +154,11 @@ namespace Catflap
             taskBarItemInfo.Dispatcher.Invoke((Action)(() =>
             {
                 if (indeterminate)
+                {
                     taskBarItemInfo.ProgressState = TaskbarItemProgressState.Indeterminate;
+                }                    
                 else
+                {
                     if (percentage == -1)
                         taskBarItemInfo.ProgressState = TaskbarItemProgressState.None;
                     else
@@ -163,13 +166,12 @@ namespace Catflap
                         taskBarItemInfo.ProgressState = TaskbarItemProgressState.Normal;
                         taskBarItemInfo.ProgressValue = percentage.Clamp(0, 1);
                     }
+                }
             }));
         }
 
         private void SetGlobalStatus(bool lastOperationOK = true, string message = null, double percent = -1, string progressMsg = null)
         {
-            //if (repository.IsBusy())
-            //    SetTheme(accentBusy);
             if (!lastOperationOK)
                 SetTheme(accentError);
             else if (repository.Status.current)
@@ -182,52 +184,35 @@ namespace Catflap
                 var title = repository.LatestManifest != null && repository.LatestManifest.title != null ? repository.LatestManifest.title : "Catflap";
                 if (message != null)
                     this.Title = message;
-                //else if (repository.IsBusy())
-                //    this.Title = title + " - Busy";
                 else
                     this.Title = title;
             });
 
             labelDLSize.Dispatcher.Invoke(() =>
             {
-                // labelRepoSize.Text = bytesToHuman(repository.Status.sizeOnRemote);
                 if (repository.LatestManifest != null)
                 {
-                    labelDLSize.Text = "";
-                    /*if (repository.Status.guesstimatedBytesToXfer > 0 || repository.Status.maxBytesToXfer > 0)
-                    {
-                        if (repository.Status.guesstimatedBytesToXfer == repository.Status.maxBytesToXfer)
-                            labelDLSize.Text = string.Format("{0}",
-                                bytesToHuman(repository.Status.guesstimatedBytesToXfer)
-                            );
-                        else
-                            labelDLSize.Text = string.Format("{0} to {1}",
-                            bytesToHuman(repository.Status.guesstimatedBytesToXfer),
-                            bytesToHuman(repository.Status.maxBytesToXfer)
-                        );
+                    
+                    labelDLSize.ToolTip = string.Format("{0} files in {1} sync items, last updated {2}",
+                        repository.LatestManifest.sync.Select(f => f.count > 0 ? f.count : 1).Sum(),
+                        repository.LatestManifest.sync.Count(),
+                        repository.LatestManifest.sync.Select(f => f.mtime).Max().PrettyInterval()
+                    );
 
-                    }*/
+                    labelDLSize.Text = "";
+
                     if (repository.Status.guesstimatedBytesToVerify > 0 || repository.Status.maxBytesToVerify > 0)
                     {
-                        // labelDLSize.Visibility = System.Windows.Visibility.Visible;
-                        if (repository.Status.guesstimatedBytesToVerify < 1) //  true || repository.Status.guesstimatedBytesToVerify == repository.Status.maxBytesToVerify)
+                        if (repository.Status.guesstimatedBytesToVerify < 1)
                             labelDLSize.Text = "objects need syncing";
                         else
                             labelDLSize.Text += string.Format("{0} need syncing",
                                 bytesToHuman(repository.Status.guesstimatedBytesToVerify)
                             );
-                        /*
-                        else
-                            labelDLSize.Text += string.Format("{0} to {1}",
-                                bytesToHuman(repository.Status.guesstimatedBytesToVerify),
-                                bytesToHuman(repository.Status.maxBytesToVerify)
-                            );*/
                     }
-
                     else
                     {
-                        //labelDLSize.Visibility = System.Windows.Visibility.Hidden;
-                        labelDLSize.Text = bytesToHuman(repository.Status.sizeOnRemote) + " in sync"; // "0 GB ";
+                        labelDLSize.Text = bytesToHuman(repository.Status.sizeOnRemote) + " in sync";
                     }
 
 
