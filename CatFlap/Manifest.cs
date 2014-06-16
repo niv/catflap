@@ -131,11 +131,7 @@ namespace Catflap
             // in the repository.
             public bool? purge;
 
-            // Transfer mode. one of 'inplace' (default), 'replace'
-            // Note that 'replace' may leave stray temp files if the user
-            // cancels in just the wrong moment, so using it for big files
-            // is not recommended - it's merely here to allow updating
-            // running binaries or locked files.
+            // Transfer mode. one of 'inplace', 'replace' (default)
             public string mode;
 
             [JsonProperty(ItemConverterType = typeof(IsoDateTimeConverter))]

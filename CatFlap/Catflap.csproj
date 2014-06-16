@@ -198,6 +198,7 @@
     <EmbeddedResource Include="Resources\cygwin1.dll.gz" />
     <EmbeddedResource Include="Resources\rsync.exe.gz" />
     <EmbeddedResource Include="Resources\cyggcc_s-1.dll.gz" />
+    <EmbeddedResource Include="Resources\kill.exe.gz" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.5">

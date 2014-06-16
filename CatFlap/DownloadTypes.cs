@@ -25,6 +25,7 @@ namespace Catflap
         public bool Simulate = false;
         public bool VerifyChecksums = false;
         public string appPath;
+        public string tmpPath;
 
         //private string rsyncPath  = appPath + "/rsync.exe"; // new FileInfo(Assembly.GetExecutingAssembly().Location).DirectoryName + "\\catflap\\rsync.exe";
         private const string rsyncFlags =
@@ -86,6 +87,18 @@ namespace Catflap
         {
             this.repository = repo;
         }
+
+        private void SIGTERM(int id)
+        {
+            var pProcess = new System.Diagnostics.Process();
+            pProcess.StartInfo.FileName = appPath + "\\kill.exe";
+            pProcess.StartInfo.Arguments = "" + id;
+            pProcess.StartInfo.CreateNoWindow = true;
+            pProcess.StartInfo.UseShellExecute = false;
+            pProcess.StartInfo.WorkingDirectory = appPath;
+            pProcess.Start();
+            pProcess.WaitForExit();
+        }
         
         // Returns true if the file was changed in any way.
         public Task<bool> Download(string source, Manifest.SyncItem syncItem, string modPath,
@@ -110,6 +123,14 @@ namespace Catflap
                     {
                         cancelled = true;
                         dm.Invoke("<cancelling>", true);
+
+                        /* Try Ctrl+C first so we can catch --replace/partial transfers */
+                        SIGTERM(p.Id);
+
+                        /* Lets wait for a generous amount of time to wait for rsync to gracefully
+                         * terminate. This can happen on slow disks.
+                         */
+                        p.WaitForExit(20000);
 
                         App.KillProcessAndChildren(p.Id);
                         p.WaitForExit();
@@ -150,19 +171,21 @@ namespace Catflap
             if (syncItem.ignoreExisting.GetValueOrDefault()) va += " --ignore-existing";
 
             // Only ever allow purge on directories, obviously.
-            if (isDir && syncItem.purge.GetValueOrDefault()) va += " --delete-after";
+            if (isDir && syncItem.purge.GetValueOrDefault()) va += " --delete-delay";
 
             if (syncItem.ignoreCase.GetValueOrDefault()) va += " --ignore-case";
             if (syncItem.fuzzy.GetValueOrDefault()) va += " --fuzzy";
 
+            va += " '--temp-dir=" + tmpPath + "' --delay-updates";
+
             switch (syncItem.mode)
             {
-                case null:
                 case "inplace":
                     va += " --inplace";
                     break;
-                case "replace":
-                    va += " ";
+
+                default: // "replace"
+                    va += " --partial-dir=catflap.partials";
                     break;
             }
 
@@ -181,6 +204,8 @@ namespace Catflap
             pProcess.StartInfo.RedirectStandardInput = true;            
             pProcess.StartInfo.WorkingDirectory = targetDir;
 
+            pProcess.StartInfo.EnvironmentVariables.Add("CYGWIN", "nodosfilewarning");
+            ;
             if (this.repository.Password != null)
                 pProcess.StartInfo.EnvironmentVariables.Add("RSYNC_PASSWORD", this.repository.Password);
 
@@ -299,7 +324,7 @@ namespace Catflap
                 }
             };
 
-            dm.Invoke("<verifying old/partially transferred files>", true);
+            dm.Invoke("Verifying " + syncItem.name, true);
 
             pProcess.Start();
             pProcess.BeginOutputReadLine();

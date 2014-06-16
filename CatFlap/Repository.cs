@@ -35,6 +35,7 @@ namespace Catflap
         private bool verifyUpdateFull = false;
         private string rootPath;
         private string appPath;
+        private string tmpPath;
         private WebClient wc;
 
         public string Username { get; private set; }
@@ -122,10 +123,11 @@ namespace Catflap
 
         private void init(string baseUrl, string rootPath, string appPath)
         {
-            Directory.CreateDirectory(appPath);
-
             this.rootPath = rootPath.NormalizePath();
             this.appPath = appPath.NormalizePath();
+            this.tmpPath = this.appPath + "\\temp";
+
+            Directory.CreateDirectory(appPath);
             
             wc = new WebClient();
             wc.Proxy = null;
@@ -436,6 +438,7 @@ namespace Catflap
                 case "rsync":
                     RSyncDownloader dd = new RSyncDownloader(this);
                     dd.appPath = appPath;
+                    dd.tmpPath = tmpPath;
                     dd.VerifyChecksums = verify;
                     dd.Simulate = simulate;
                     return dd.Download(LatestManifest.rsyncUrl + "/" + f.name, f, rootPath,
@@ -471,6 +474,18 @@ namespace Catflap
         private Task<long> RunAllSyncItems(CancellationTokenSource cts)
         {
             string basePath = rootPath;
+
+            /* Cleanup leftover files from a forced abort. */
+            if (Directory.Exists(tmpPath))
+            {
+                var di = new DirectoryInfo(tmpPath).GetFiles("*", SearchOption.TopDirectoryOnly);
+                foreach (var tmpfile in di)
+                {
+                    OnDownloadMessage("<deleting leftover file from forced abort: " + tmpfile.Name + ">", true);
+                    File.Delete(tmpfile.FullName);
+                }
+            }
+            Directory.CreateDirectory(tmpPath);
 
             var updaterBinaryLastWriteTimeBefore = new FileInfo(Assembly.GetExecutingAssembly().Location).LastWriteTime;
 

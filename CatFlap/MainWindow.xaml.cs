@@ -57,7 +57,7 @@ namespace Catflap
 
         private static string[] resourcesToUnpack =
         {
-            "rsync.exe.gz" , "cygwin1.dll.gz",  "cyggcc_s-1.dll.gz"
+            "rsync.exe.gz" , "cygwin1.dll.gz",  "cyggcc_s-1.dll.gz", "kill.exe.gz"
         };
         private static string[] resourcesToPurge =
         {
