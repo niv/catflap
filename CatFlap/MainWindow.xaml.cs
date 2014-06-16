@@ -45,18 +45,6 @@ namespace Catflap
             }));
         }
 
-        private string bytesToHuman(long bytes)
-        {
-            if (bytes > 1024 * 1024 * 1024)
-                return string.Format("{0:F2} GB", ((float)bytes / 1024 / 1024 / 1024));
-            if (bytes > 1024 * 1024)
-                return string.Format("{0:F2} MB", ((float)bytes / 1024 / 1024));
-            if (bytes > 1024)
-                return string.Format("{0:F2} KB", ((float)bytes / 1024));
-            else
-                return bytes + " B";
-        }
-
         private string SubstituteVars(string a)
         {
             return a.
@@ -207,12 +195,12 @@ namespace Catflap
                             labelDLSize.Text = "objects need syncing";
                         else
                             labelDLSize.Text += string.Format("{0} need syncing",
-                                bytesToHuman(repository.Status.guesstimatedBytesToVerify)
+                                repository.Status.guesstimatedBytesToVerify.BytesToHuman()
                             );
                     }
                     else
                     {
-                        labelDLSize.Text = bytesToHuman(repository.Status.sizeOnRemote) + " in sync";
+                        labelDLSize.Text = repository.Status.sizeOnRemote.BytesToHuman() + " in sync";
                     }
 
 
@@ -391,7 +379,7 @@ namespace Catflap
             {
                 var msg = info.currentFile.PathEllipsis(60);
                 if (info.currentBps > 0)
-                    msg += " - " + bytesToHuman(info.currentBps) + "/s";
+                    msg += " - " + info.currentBps.BytesToHuman() + "/s";
                 if (info.currentPercentage > 0)
                     msg += ", " + ((int)(info.currentPercentage * 100)) + "%";
 
@@ -539,13 +527,13 @@ namespace Catflap
             if (cts.IsCancellationRequested)
             {
                 SetGlobalStatus(true, "ABORTED");
-                SetUIProgressState(false, -1, "ABORTED (" + bytesToHuman(bytesOnNetwork) + " of actual network traffic)");
+                SetUIProgressState(false, -1, "ABORTED (" + bytesOnNetwork.BytesToHuman() + " of actual network traffic)");
                 return;
             } 
             else
             {
                 SetGlobalStatus(true, "100%", 1);
-                SetUIProgressState(false, 1, "Done (" + bytesToHuman(bytesOnNetwork) + " of actual network traffic)");
+                SetUIProgressState(false, 1, "Done (" + bytesOnNetwork.BytesToHuman() + " of actual network traffic)");
                 Log("Verify/download complete.");
             }
 
@@ -605,8 +593,8 @@ namespace Catflap
                         "You seem to be running out of disk space on " + rootPath + ". " +
                         "Advanced calculations indicate you might not be able to " +
                         "sync everything: \n\n" +
-                        bytesToHuman(free) +  " free, but \n" +
-                        bytesToHuman(repository.Status.guesstimatedBytesToVerify) + " needed (plus change for temporary files).\n\n" +
+                        free.BytesToHuman() + " free, but \n" +
+                        repository.Status.guesstimatedBytesToVerify.BytesToHuman() + " needed (plus change for temporary files).\n\n" +
                         "Do you still want to run this sync?",
                     MessageDialogStyle.AffirmativeAndNegative);
                 if (MessageDialogResult.Negative == ret)

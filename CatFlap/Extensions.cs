@@ -139,5 +139,21 @@ namespace Catflap
             }
             return null;
         }
+
+        public static string BytesToHuman(this long bytes)
+        {
+            if (bytes >= 0x4000000000000)
+                return string.Format("{0:F2} PB", (float)bytes / 0x4000000000000);
+            if (bytes >= 0x10000000000)
+                return string.Format("{0:F2} TB", (float)bytes / 0x10000000000);
+            if (bytes >= 0x40000000)
+                return string.Format("{0:F2} GB", (float)bytes / 0x40000000);
+            if (bytes >= 0x100000)
+                return string.Format("{0:F2} MB", (float)bytes / 0x100000);
+            if (bytes >= 0x400)
+                return string.Format("{0:F2} KB", (float)bytes / 0x400);
+            else
+                return bytes + " B";
+        }
     }
 }
