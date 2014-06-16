@@ -1,4 +1,5 @@
 ﻿using System.Security.AccessControl;
+using System.Security;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Schema;
@@ -17,12 +18,17 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media.Imaging;
 using vbAccelerator.Components.Shell;
+using System.Security.Cryptography;
 
 namespace Catflap
 {
     public class Repository
     {
+        public const string TrustDBFile = "signify.pub";
+        public const string SignatureFile = "catflap.json.sig";
+
         public class AuthException : Exception { };
+        
 
         public Policy AuthPolicy { get; private set; }
 
@@ -60,6 +66,23 @@ namespace Catflap
                 wc.Credentials = new NetworkCredential(Username, Password);
                 System.IO.File.WriteAllText(AppPath + "\\auth", Username + ":" + Password);
             }
+        }
+
+        // Saves a new public key to our trust db, overwriting the old one.
+        public void SaveTrustDB(string publicKey)
+        {
+            System.IO.File.WriteAllText(AppPath + "/" + TrustDBFile,
+                "untrusted comment: added from UI on " + new DateTime().ToString() + "\n" +
+                publicKey.Trim() + "\n");
+        }
+
+        public void ResetTrustDB()
+        {
+            try
+            {
+                File.Delete(AppPath + "/" + TrustDBFile);
+            }
+            catch (IOException) { }
         }
 
         public class DownloadStatusInfo
@@ -105,13 +128,28 @@ namespace Catflap
             public List<Manifest.SyncItem> filesToVerify;
         }
 
+        public enum SignatureStatusType
+        {
+            OK,
+            NOT_SIGNED,
+            LOST_SIGNATURE,
+            SIGNED_BUT_TRUSTDB_MISSING,
+            KEY_MISMATCH,
+            FAIL
+        }
+
         /* Can be set to true to have the updater restart after checking for new manifests. */
         public bool RequireRestart = false;
+
+        public SignatureStatusType SignatureStatus { get; private set; }
+        // public bool SignatureOK     = false;
+        // public bool HaveTrustedKeys = false;
 
         public delegate void DownloadStatusInfoChanged(DownloadStatusInfo dsi);
         public delegate void DownloadProgressChanged(string fullFileName, int percentage = -1, long bytesReceived = -1, long bytesTotal = -1, long bytesPerSecond = -1);
         public delegate void DownloadEnd(bool wasError, string message, long bytesOnNetwork);
         public delegate void DownloadMessage(string message, bool showInProgressIndicator = false);
+        public delegate bool DownloadVerifyChecksum(string file, string hash);
 
         public event DownloadStatusInfoChanged OnDownloadStatusInfoChanged;
         public event DownloadMessage OnDownloadMessage;
@@ -148,6 +186,7 @@ namespace Catflap
                 var x = System.IO.File.ReadAllText(appPath + "\\auth").Split(new char[] { ':' }, 2);
                 Authorize(x[0], x[1]);
             }
+
             AuthPolicy = Policy
                 .Handle<WebException>((wex) =>
                     wex.Response is HttpWebResponse &&
@@ -242,6 +281,8 @@ namespace Catflap
         {
             FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location);
             string jsonStr = wc.DownloadString("catflap.json?catflap=" + fvi.FileVersion);
+            System.IO.File.WriteAllText(AppPath + "\\catflap.remote.json", jsonStr);
+
             JsonTextReader reader = new JsonTextReader(new StringReader(jsonStr));
 
             JsonValidatingReader validatingReader = new JsonValidatingReader(reader);
@@ -262,8 +303,9 @@ namespace Catflap
             return mf;
         }
 
-        private void RefreshManifestResource(string filename)
+        private bool RefreshManifestResource(string filename)
         {
+            Console.WriteLine("RefreshManifestResource(" + filename + ")");
             try
             {
                 FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location);
@@ -298,6 +340,9 @@ namespace Catflap
             {
                 switch (((HttpWebResponse)wex.Response).StatusCode)
                 {
+                    case HttpStatusCode.NotModified:
+                        return true;
+
                     case HttpStatusCode.Forbidden:
                     case HttpStatusCode.NotFound:
                         if (File.Exists(AppPath + "/" + filename))
@@ -306,7 +351,10 @@ namespace Catflap
                 }
 
                 Console.WriteLine("while getting manifest resource: " + wex.ToString());
+                return false;
             }
+
+            return true;
         }
 
         // Refresh the remote manifest.
@@ -329,7 +377,7 @@ namespace Catflap
                 else
                 {
                     LatestManifest = AuthPolicy.Execute(() => GetManifestFromRemote());
-    
+
                     if (setNewAsCurrent)
                     {
                         System.IO.File.WriteAllText(AppPath + "\\catflap.json", JsonConvert.SerializeObject(LatestManifest));
@@ -343,15 +391,86 @@ namespace Catflap
 
                     RefreshManifestResource("catflap.bgimg");
                     RefreshManifestResource("favicon.ico");
+
+                    SignatureStatus = SignatureStatusType.NOT_SIGNED;
+
+                    if (RefreshManifestResource(SignatureFile))
+                        SignatureStatus = SignatureStatusType.SIGNED_BUT_TRUSTDB_MISSING;
+
+                    /* Convenience trust weakening bad-bad-bad of the day: Always retrieve trustDB if it is over SSL.
+                     * We need to add a (compile) toggle to disable this in the future. */
+                    if (!File.Exists(AppPath + "/" + TrustDBFile) && wc.BaseAddress.StartsWith("https://"))
+                        RefreshManifestResource(TrustDBFile);
+
+                    bool HaveTrustedKeys = File.Exists(AppPath + "/" + TrustDBFile);
+                    bool HaveSignature = File.Exists(AppPath + "/" + SignatureFile);
+
+                    if (!HaveTrustedKeys)
+                    {
+                        Application.Current.Dispatcher.Invoke(() =>
+                        {
+                            var w = new TrustDBWindow(this);
+                            var ret = w.ShowDialog();
+                            if (!ret.GetValueOrDefault())
+                            {
+                                Application.Current.Shutdown();
+                                return;
+                            }
+                        });
+                    }
+
+                    this.SignatureStatus = VerifyManifest();
                 }
 
                 UpdateStatus();
             });
         }
 
+        public SignatureStatusType VerifyManifest()
+        {
+            bool HaveTrustedKeys = File.Exists(AppPath + "/" + TrustDBFile);
+            bool HaveSignature = File.Exists(AppPath + "/" + SignatureFile);
+
+            // We always expect our repo to be signed if the old one is signed, we have a trustdb, or the new one starts being signed
+            // This also ensures that we can never downgrade to unsigned without changing the updater binary.
+            bool expectRepoSigned = HaveTrustedKeys ||
+                HaveSignature ||
+                LatestManifest.signed ||
+                CurrentManifest.signed;
+
+            if (!expectRepoSigned)
+                return SignatureStatusType.NOT_SIGNED;
+
+            if (HaveSignature && HaveTrustedKeys) {
+                var vret = Security.VerifySignature(AppPath, "catflap.json.sig", "catflap.remote.json");
+                switch (vret) {
+                    case VerifyResponse.OK:
+                    return SignatureStatusType.OK;
+                    case VerifyResponse.FAIL:
+                        return SignatureStatusType.FAIL;
+                    case VerifyResponse.KEY_MISMATCH:
+                        return SignatureStatusType.KEY_MISMATCH;
+                    default:
+                    return SignatureStatusType.FAIL;
+                }
+            }
+
+            else if (HaveSignature && !HaveTrustedKeys)
+                return SignatureStatusType.SIGNED_BUT_TRUSTDB_MISSING;
+
+            else if (HaveTrustedKeys && !HaveSignature)
+                return SignatureStatusType.LOST_SIGNATURE;
+
+            else
+                return SignatureStatusType.FAIL; // Should never happen.
+        }
+
         private Task<bool> RunSyncItem(Manifest.SyncItem f,
             bool verify, bool simulate,
-            DownloadProgressChanged dpc, DownloadEnd de, DownloadMessage dm,
+            DownloadProgressChanged dpc,
+            DownloadEnd de,
+            DownloadMessage dm,
+            DownloadVerifyChecksum dvc,
             CancellationTokenSource cts,
             string overrideDestination = null)
         {
@@ -364,7 +483,7 @@ namespace Catflap
                     dd.VerifyChecksums = verify;
                     dd.Simulate = simulate;
                     return dd.Download(LatestManifest.rsyncUrl + "/" + f.name, f, RootPath,
-                        dpc, de, dm, cts, overrideDestination);
+                        dpc, de, dm, dvc, cts, overrideDestination);
 
                 case "delete":
                     return Task<bool>.Run(() =>
@@ -448,6 +567,10 @@ namespace Catflap
                     {
                     }
 
+                    bool lastHashFailed = false;
+                    string lastHashFileFailed = "";
+                    string lastHashFailedMessage = "";
+
                     var t = RunSyncItem(f, verifyUpdateFull, Simulate, delegate(string fname, int percentage, long bytesReceived, long bytesTotal, long bytesPerSecond)
                     {
                         if (bytesReceived > -1) info.currentBytes = bytesReceived;
@@ -489,6 +612,28 @@ namespace Catflap
                     }, delegate(string message, bool show)
                     {
                         OnDownloadMessage(message, show);
+
+                    }, delegate(string file, string hash)
+                    {
+                        if (lastHashFailed)
+                            return false;
+
+                        lastHashFileFailed = file;
+
+                        // Do not error hard on missing manifest hashes, since that can be trusted
+                        // due to gpg signing.
+                        if (f.hashes == null || !f.hashes.ContainsKey(file.ToLowerInvariant()))
+                            return true;
+
+                        if (hash != f.hashes[file.ToLowerInvariant()])
+                        {
+                            lastHashFailed = true;
+                            lastHashFailedMessage = "Hash comparison failed. Expected: " +
+                                f.hashes[file.ToLowerInvariant()] + ", got: " + hash;
+                            return false;
+                        }
+
+                        return true;
                     }, cts);
 
                     try
@@ -497,6 +642,14 @@ namespace Catflap
                     }
                     catch (System.AggregateException x)
                     {
+                        if (lastHashFailed)
+                        {
+                            throw new Exception("Problem verifying " + lastHashFileFailed + ". " +
+                                " This might be a repository error, or someone is messing with your connection. " +
+                                "Please contact your repository admin " +
+                                "with the contents of this message:\n\n" + lastHashFailedMessage);
+                        }
+
                         if (x.InnerException is TaskCanceledException)
                         {
                             break;
@@ -506,6 +659,19 @@ namespace Catflap
                             throw x;
                     }
                     var ret = t.Result;
+
+
+
+                    // Verify hashes
+                    // Security.VerifyHashes(f.hashes)
+                    /*foreach (KeyValuePair<string, string> entry in f.hashes)
+                    {
+                        // key = filename, value = md5 hash string
+                        OnDownloadMessage("Verifying checksum of " + entry.Key, false);
+                        var ourHash = Security.HashMD5(rootPath + "/" + entry.Key);
+                        if (ourHash.ToLowerInvariant() != entry.Value.ToLowerInvariant())
+                            throw new Exception("verify: " + entry.Key + "=" + entry.Value + " vs " + ourHash);
+                    }*/
 
                     if (cts.IsCancellationRequested)
                         break;

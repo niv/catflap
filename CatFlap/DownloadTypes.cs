@@ -38,7 +38,7 @@ namespace Catflap
             "--prune-empty-dirs " +
 
             /* These flags only concern stdout output and are needed for the parser. */
-            "--no-human-readable --stats --out-format 'NEWFILE %i %l %n' --progress " +
+            "--no-human-readable --stats --out-format 'NEWFILE %i %l %n %C' --progress " +
 
             /* Compression helps a lot with speeding up transfers, obviously; esp. empty or sparse files.
              * Level 1 is enough to get nearly all the speed advantage while not hammering slow clients or servers. */
@@ -81,7 +81,7 @@ namespace Catflap
         // NEWFILE .d..t...... 4096 ./
         // NEWFILE >f..T...... 80060515 silm_portraits.hak
         // NEWFILE >f+++++++++ 27302717 silm_tdm01.hak
-        private Regex rxRsyncNewFile = new Regex(@"^NEWFILE (.{11}) (\d+) (.+)$");
+        private Regex rxRsyncNewFile = new Regex(@"^NEWFILE (.{11}) (\d+) (.+?) ([0-9a-f]{32})$");
 
         //  Literal data: 0 bytes
         private Regex rxRsyncLiteralData = new Regex(@"^Literal data: (\d+) bytes$");
@@ -128,8 +128,12 @@ namespace Catflap
         
         // Returns true if the file was changed in any way.
         public Task<bool> Download(string source, Manifest.SyncItem syncItem, string modPath,
-            Catflap.Repository.DownloadProgressChanged dpc, Catflap.Repository.DownloadEnd de, Catflap.Repository.DownloadMessage dm,
-            CancellationTokenSource cts, string overrideDestination = null)
+            Catflap.Repository.DownloadProgressChanged dpc,
+            Catflap.Repository.DownloadEnd de,
+            Catflap.Repository.DownloadMessage dm,
+            Catflap.Repository.DownloadVerifyChecksum dvc,
+            CancellationTokenSource cts,
+            string overrideDestination = null)
         {
             var ct = cts.Token;
 
@@ -137,7 +141,7 @@ namespace Catflap
 
             return Task.Run<bool>(delegate() {
                 currentRunWasChanged = false;
-                var p = RunRSync(source, syncItem, modPath, dpc, dm, overrideDestination);
+                var p = RunRSync(source, syncItem, modPath, dpc, dm, dvc, cts, overrideDestination);
                 (Application.Current as App).TrackProcess(p);
                 
                 // Wait for the pid to appear.
@@ -173,7 +177,11 @@ namespace Catflap
         }
 
         private Process RunRSync(String rsyncUrl, Manifest.SyncItem syncItem, string modPath,
-            Catflap.Repository.DownloadProgressChanged dpc, Catflap.Repository.DownloadMessage dm, string overrideDestination = null)
+            Catflap.Repository.DownloadProgressChanged dpc,
+            Catflap.Repository.DownloadMessage dm,
+            Catflap.Repository.DownloadVerifyChecksum dvc,
+            CancellationTokenSource cts,
+            string overrideDestination = null)
         {
             var targetFileName = syncItem.name;
 
@@ -320,6 +328,11 @@ namespace Catflap
                                     thisFilename += " [" + flagStr + "]";
 
                                 dm.Invoke(thisFilename, true);
+
+                                if (!dvc.Invoke(fname, mr.Groups[4].Value.ToLowerInvariant()))
+                                {
+                                    cts.Cancel();
+                                }
                             }
 
 

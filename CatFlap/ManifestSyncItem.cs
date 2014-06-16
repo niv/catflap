@@ -5,6 +5,7 @@ using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Schema;
 using System.IO;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace Catflap
 {
@@ -52,6 +53,8 @@ namespace Catflap
             // Ignore case when updating/copying files (--ignore-case).
             // Note: This needs a special patch on the server!
             public bool? ignoreCase;
+
+            public Dictionary<string, string> hashes;
 
             // Returns true if this sync item is current on the given rootPath.
             public bool isCurrent(Repository repository)

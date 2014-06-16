@@ -15,6 +15,9 @@ namespace Catflap
     [Serializable]
     public partial class Manifest
     {
+        // If the manifest is signed (out of band).
+        public bool signed = false;
+
         // Repositories can be locked so that clients will be denied with a
         // appropriate message. Set to "" to unlock.
         public string locked = "";

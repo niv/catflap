@@ -66,6 +66,13 @@
                 </Rectangle.Fill>
             </Rectangle>
         </Button>
+        <TextBlock VerticalAlignment="Top" x:Name="labelSignatureStatus" Text="" FontSize="10" Foreground="White"  TextAlignment="Center" 
+                   Panel.ZIndex="100"  Grid.ColumnSpan="2" Height="16" Margin="0,6,0,0"
+                   >
+            <TextBlock.Effect>
+                <DropShadowEffect/>
+            </TextBlock.Effect>
+        </TextBlock>
     </Grid>
 
 

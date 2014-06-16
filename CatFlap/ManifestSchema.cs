@@ -15,6 +15,7 @@ namespace Catflap
 	'description': 'Catflap Manifest',
 	'type': 'object',
 	'properties': {
+        'signingKey': { type: 'string', 'required': false },
         'locked': { 'type': 'string', 'required': false },
         'version':  { 'type': 'integer', 'required': true, 'minimum': 1 },
         'title': { 'type': 'string', 'required': false },
@@ -47,7 +48,8 @@ namespace Catflap
                     'mtime': { 'type': 'string', 'required': false },
                     'fuzzy': { 'type': 'boolean', 'required': false },
                     'ignoreCase': { 'type': 'boolean', 'required': false },
-                    'ignoreExisting': { 'type': 'boolean', 'required': false }
+                    'ignoreExisting': { 'type': 'boolean', 'required': false },
+                    'hashes': { 'type': 'object', 'required': false }
                 }
             }
         },

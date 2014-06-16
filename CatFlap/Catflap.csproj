@@ -131,6 +131,9 @@
     <Compile Include="FileIcon.cs" />
     <Compile Include="Job.cs" />
     <Compile Include="DownloadTypes.cs" />
+    <Compile Include="TrustDBWindow.xaml.cs">
+      <DependentUpon>TrustDBWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="ManifestAction.cs" />
     <Compile Include="ManifestValidation.cs" />
     <Compile Include="ManifestSchema.cs" />
@@ -141,11 +144,16 @@
     <Compile Include="LoginWindow.xaml.cs">
       <DependentUpon>LoginWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Security.cs" />
     <Compile Include="SetupWindow.xaml.cs">
       <DependentUpon>SetupWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="ShellLink.cs" />
     <Page Include="ExceptionMessageBox.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="TrustDBWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
@@ -208,6 +216,7 @@
     <EmbeddedResource Include="Resources\rsync.exe.gz" />
     <EmbeddedResource Include="Resources\cyggcc_s-1.dll.gz" />
     <EmbeddedResource Include="Resources\kill.exe.gz" />
+    <EmbeddedResource Include="Resources\minisign.exe.gz" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.5">

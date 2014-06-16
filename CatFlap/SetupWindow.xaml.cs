@@ -92,7 +92,7 @@ namespace Catflap
             url = url.Trim().TrimEnd('/') + "/";
 
             if (!url.StartsWith("http://") && !url.StartsWith("https://"))
-                url = "http://" + url;
+                url = "https://" + url;
 
             var fi = new FileInfo(Assembly.GetExecutingAssembly().Location);
             var rootPath = Directory.GetCurrentDirectory();
@@ -107,7 +107,7 @@ namespace Catflap
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, "This doesn't look like a valid repository");
+                MessageBox.Show("Error retrieving manifest data from " + url + ": " + ex.Message, "This doesn't look like a valid repository");
                 Console.WriteLine(ex.ToString());
                 return false;
             }

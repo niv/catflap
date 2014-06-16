@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
@@ -52,26 +53,30 @@ namespace Catflap
 
         private static string[] resourcesToUnpack =
         {
-            "rsync.exe.gz" , "cygwin1.dll.gz",  "cyggcc_s-1.dll.gz", "kill.exe.gz"
+            "rsync.exe.gz" , "cygwin1.dll.gz",  "cyggcc_s-1.dll.gz", "kill.exe.gz",
+            // minisign
+            "minisign.exe.gz"
         };
         private static string[] resourcesToPurge =
         {
-            "cygintl-8.dll", "cygpopt-0.dll", "cygiconv-2.dll"
+            "cygpopt-0.dll",
+            // gpgv
+            "gpgv.exe.gz", "cygz.dll.gz", "cygintl-8.dll.gz", "cygiconv-2.dll.gz", "cygbz2-1.dll.gz"
         };
 
         // UI colour states:
         // green/blue - all ok, repo up to date
-        private Accent accentOK = ThemeManager.GetAccent("Olive");
+        public static Accent accentOK = ThemeManager.GetAccent("Olive");
         // orange     - repo not current
-        private Accent accentWarning = ThemeManager.GetAccent("Amber");
+        public static Accent accentWarning = ThemeManager.GetAccent("Amber");
         // red        - failure
-        private Accent accentError = ThemeManager.GetAccent("Crimson");
+        public static Accent accentError = ThemeManager.GetAccent("Crimson");
         // mauve     - busy
-        private Accent accentBusy = ThemeManager.GetAccent("Mauve");
+        public static Accent accentBusy = ThemeManager.GetAccent("Mauve");
 
         private Accent currTheme;
 
-        private Accent SetTheme(Accent t)
+        public Accent SetTheme(Accent t)
         {
             Accent c = currTheme;
             if (currTheme != t)
@@ -456,6 +461,12 @@ namespace Catflap
                                     "(This is probably not your fault, it needs to be fixed in the repository!):" +
                                     "\n\n" + err.Message);
                 }
+                else if (err is SignatureVerificationException)
+                {
+                    MessageBox.Show("There was a problem verifying the gpg signature of the remote manifest. " +
+                        "Please contact the repository owner and give them a screenshot of this message:\n\n" +
+                        err.Message);
+                }
                 else
                     MessageBox.Show("There has been some problem downloading/parsing the repository manifest:\n\n" +
                                     err.ToString());
@@ -506,6 +517,65 @@ namespace Catflap
             btnRun.Effect = effect;
             labelDLSize.Effect = effect;
             labelDownloadStatus.Effect = effect;
+
+            labelSignatureStatus.Background = Brushes.Transparent;
+
+            switch (repository.SignatureStatus)
+            {
+                case Repository.SignatureStatusType.FAIL:
+                    await this.ShowMessageAsync("Signature verification failed",
+                        "Could not verify manifest signature.\n\n" +
+                        "Either the signature is out of date, or someone is messing with you (VERY BAD).\n\n" +
+                        "Contact the repo maintainer! Aborting.");
+                    Application.Current.Shutdown();
+                    break;
+                    
+                case Repository.SignatureStatusType.OK:
+                    labelSignatureStatus.Text = "signature OK :)";
+                    // labelSignatureStatus.Background = Brushes.LightSkyBlue;
+                    labelSignatureStatus.ToolTip = "Signature checks out! This means we can verify downloaded data " +
+                        "has not been tampered with in-flight.";
+                    break;
+
+                case Repository.SignatureStatusType.NOT_SIGNED:
+                    labelSignatureStatus.Text = "Repository not signed.";
+                    // labelSignatureStatus.Background = Brushes.LightGray;
+                    labelSignatureStatus.ToolTip = "Remote repository is not signed. This is okay if you don't expect it to be.";
+                    break;
+
+                case Repository.SignatureStatusType.LOST_SIGNATURE:
+                    // Wooooh, we don't have keys anymore. What the hell happened?
+                    await this.ShowMessageAsync("Signature missing",
+                        "Remote repository was signed in the past, but isn't anymore.\n\n" +
+                        "This means that either the repository maintainer removed the " +
+                        "signature, or someone is messing with you (VERY BAD).\n\n" +
+                        "Contact the repo maintainer! Aborting.");
+                    Application.Current.Shutdown();
+                    break;
+
+                case Repository.SignatureStatusType.SIGNED_BUT_TRUSTDB_MISSING:
+                    // new TrustDBWindow(repository).ShowDialog();
+                    labelSignatureStatus.Text = "missing local keys for signed remote manifest";
+                    labelSignatureStatus.Background = new SolidColorBrush(Color.FromArgb(0x90, 0xff, 0x00, 0x5d));
+                    labelSignatureStatus.ToolTip = "The remote repository is signed, but you are missing the " +
+                        "public key locally. We cannot verify that downloaded data has not been tampered with.";
+                    break;
+
+                case Repository.SignatureStatusType.KEY_MISMATCH:
+                    // signing key changed.
+                    await this.ShowMessageAsync("Signing key mismatch",
+                        "Remote repository was signed with a different key than we were expecting.\n\n" +
+                        "Either the remote maintainer has changed the signing key, " +
+                        "or someone is messing with you (VERY BAD).\n\n" +
+                        "Contact the repo maintainer! Aborting.");
+                    Application.Current.Shutdown();
+                    break;
+
+                default:
+                    throw new Exception("Internal error: Unhandled case for Repository.SignatureStatusType. This is a bug.");
+            }
+
+            labelSignatureStatus.Text = labelSignatureStatus.Text.ToUpperInvariant();
 
             SetUIState(true);
         }
