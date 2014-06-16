@@ -32,7 +32,7 @@ namespace Catflap
             "--no-human-readable " +
             "--prune-empty-dirs " +
             "--stats --itemize-changes --out-format 'NEWFILE %i %l %n' --progress " +
-            "--times --compress";
+            "--times --compress --fsync";
 
         private string rsyncFlagsDirectory = "--recursive";
         private string rsyncFlagsVerify = "--ignore-times";
