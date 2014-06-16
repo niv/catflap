@@ -563,17 +563,20 @@ namespace Catflap
                     if (cts.IsCancellationRequested)
                         break;
 
+                    // This is a really ugly hackyhack to check if running binary was touched while we were upating.
+                    // We just ASSUME that the binary was touched by the sync itself.
+                    var updaterBinaryLastWriteTimeAfter = new FileInfo(Assembly.GetExecutingAssembly().Location).LastWriteTime;
+                    if (Math.Abs((updaterBinaryLastWriteTimeAfter - updaterBinaryLastWriteTimeBefore).TotalSeconds) > 1)
+                    {
+                        RequireRestart = true;
+                        break;
+                    }
+
                     info.globalPercentage = globalBytesTotalStart > 0 ? (info.globalBytesCurrent / (globalBytesTotalStart / 100.0)) / 100 : 1;
                     info.globalPercentage = info.globalPercentage.Clamp(0, 1);
 
                     OnDownloadStatusInfoChanged(info);
                 }
-
-                // This is a really ugly hackyhack to check if running binary was touched while we were upating.
-                // We just ASSUME that the binary was touched by the sync itself.
-                var updaterBinaryLastWriteTimeAfter = new FileInfo(Assembly.GetExecutingAssembly().Location).LastWriteTime;
-                if (Math.Abs((updaterBinaryLastWriteTimeAfter - updaterBinaryLastWriteTimeBefore).TotalSeconds) > 1)
-                    RequireRestart = true;
 
                 return info.currentBytesOnNetwork;
             }, cts.Token);
