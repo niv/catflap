@@ -364,7 +364,12 @@ namespace Catflap
 
             this.repository.OnDownloadStatusInfoChanged += OnDownloadStatusInfoChangedHandler;
 
-            this.repository.OnDownloadMessage += (string message) => Log(message);
+            this.repository.OnDownloadMessage += (string message, bool show) =>
+            {
+                if (show)
+                    labelDownloadStatus.Dispatcher.Invoke((Action)(() => labelDownloadStatus.Text = message.Trim()));
+                Log(message);
+            };
 
             if (App.mArgs.Count() > 0 && App.mArgs[0].ToLower() == "-run")
             {
@@ -387,6 +392,8 @@ namespace Catflap
                 var msg = info.currentFile.PathEllipsis(60);
                 if (info.currentBps > 0)
                     msg += " - " + bytesToHuman(info.currentBps) + "/s";
+                if (info.currentPercentage > 0)
+                    msg += ", " + ((int)(info.currentPercentage * 100)) + "%";
 
                 SetUIProgressState(info.globalFileTotal == 0, info.globalPercentage, msg);
             }

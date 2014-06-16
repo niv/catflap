@@ -68,6 +68,7 @@ namespace Catflap
 
         private string stdErr;
         private long bytesOnNetwork = 0;
+        private bool cancelled = false;
 
         private Repository repository;
 
@@ -97,6 +98,9 @@ namespace Catflap
                 {
                     if (ct.IsCancellationRequested)
                     {
+                        cancelled = true;
+                        dm.Invoke("<cancelling>", true);
+
                         App.KillProcessAndChildren(p.Id);
                         p.WaitForExit();
                         ct.ThrowIfCancellationRequested();
@@ -184,7 +188,7 @@ namespace Catflap
                     {
                         case "receiving file list ... ":
                         case "receiving incremental file list":
-                            dpc.Invoke("<receiving list>");
+                            dm.Invoke("<receiving list>", true);
                             break;
 
                         default:
@@ -203,7 +207,7 @@ namespace Catflap
                                 if (rateDesc == "MB/s")
                                     rate *= 1024 * 1024;
 
-                                dpc.Invoke(thisFilename, percentage, bytesDone, thisFileTotalSize, (int)rate);
+                                dpc.Invoke(cancelled ? "<cancelling>" : thisFilename, percentage, bytesDone, thisFileTotalSize, (int)rate);
                             }
 
                             // new file
@@ -245,8 +249,7 @@ namespace Catflap
                                 if (flagStr != "")
                                     thisFilename += " [" + flagStr + "]";
 
-                                dm.Invoke("~> " + thisFilename);
-
+                                dm.Invoke(thisFilename, true);
                             }
 
 
@@ -285,6 +288,8 @@ namespace Catflap
                     dm.Invoke("ERROR: " + ee.Data);
                 }
             };
+
+            dm.Invoke("<verifying old/partially transferred files>", true);
 
             pProcess.Start();
             pProcess.BeginOutputReadLine();

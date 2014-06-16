@@ -100,25 +100,17 @@ namespace Catflap
             trackedProcesses.Add(p);
         }
 
-        public static void KillProcessAndChildren(int pid, bool sendCtrlC = false)
+        public static void KillProcessAndChildren(int pid)
         {
             try
             {
                 Process proc = Process.GetProcessById(pid);
 
-                if (sendCtrlC)
-                    for (int i = 0; i < 3; i++)
-                        {
-                            if (proc.HasExited) return;
-                            proc.StandardInput.WriteLine("\x3");
-                            Thread.Sleep(50);
-                        }
-
                 ManagementObjectSearcher searcher = new ManagementObjectSearcher("Select * From Win32_Process Where ParentProcessID=" + pid);
                 ManagementObjectCollection moc = searcher.Get();
 
                 foreach (ManagementObject mo in moc)
-                    KillProcessAndChildren(Convert.ToInt32(mo["ProcessID"]), false);
+                    KillProcessAndChildren(Convert.ToInt32(mo["ProcessID"]));
 
                 if (!proc.HasExited)
                     proc.Kill();

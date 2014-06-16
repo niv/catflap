@@ -104,7 +104,7 @@ namespace Catflap
         public delegate void DownloadStatusInfoChanged(DownloadStatusInfo dsi);
         public delegate void DownloadProgressChanged(string fullFileName, int percentage = -1, long bytesReceived = -1, long bytesTotal = -1, long bytesPerSecond = -1);
         public delegate void DownloadEnd(bool wasError, string message, long bytesOnNetwork);
-        public delegate void DownloadMessage(string message);
+        public delegate void DownloadMessage(string message, bool showInProgressIndicator = false);
 
         public event DownloadStatusInfoChanged OnDownloadStatusInfoChanged;
         public event DownloadMessage OnDownloadMessage;
@@ -539,9 +539,9 @@ namespace Catflap
 
                         OnDownloadStatusInfoChanged(info);
 
-                    }, delegate(string message)
+                    }, delegate(string message, bool show)
                     {
-                        OnDownloadMessage(message);
+                        OnDownloadMessage(message, show);
                     }, cts);
 
                     try
