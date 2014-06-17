@@ -27,12 +27,21 @@ namespace Catflap
         public string appPath;
 
         //private string rsyncPath  = appPath + "/rsync.exe"; // new FileInfo(Assembly.GetExecutingAssembly().Location).DirectoryName + "\\catflap\\rsync.exe";
-        private string rsyncFlags =
+        private const string rsyncFlags =
             "--safe-links --one-file-system --copy-links --perms --executability " +
             "--no-human-readable " +
             "--prune-empty-dirs " +
             "--stats --itemize-changes --out-format 'NEWFILE %i %l %n' --progress " +
-            "--times --compress --fsync";
+            "--compress " +
+            "--times --fsync " +
+            /* Bufferbloat optimisation time!
+             * As of this writing, the default sock recv buffers on Windows 7 are 8KB.
+             * That's nowhere near enough to saturate even a moderately fast broadband connection.
+             * Theoretically, to saturate 1Gbit/s, we need a buffer of about 1-1.5MB.
+             * So .. we're basically just setting that.
+             * TCP_NODELAY should help on higher-latency or otherwise overly saturated links.
+             */
+            "--sockopts SO_SNDBUF=65536,SO_RCVBUF=1572864,TCP_NODELAY ";
 
         private string rsyncFlagsDirectory = "--recursive";
         private string rsyncFlagsVerify = "--ignore-times";
@@ -47,6 +56,7 @@ namespace Catflap
             stdout:     15007744  10%    2.86MB/s    0:00:41
             stdout:     17006592  12%    2.60MB/s    0:00:45
             stdout:     19333120  14%    2.46MB/s    0:00:46
+            stdout:     28988893 100%   16.61MB/s    0:00:12 (xfr#1, to-chk=0/1)
          */
         private Regex rxRsyncProgress = new Regex(@"^\s*(\d+)\s+(\d+)%\s+(\d+\.\d+)([kM]B/s)\s+(.+)$");
 
