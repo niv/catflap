@@ -31,6 +31,7 @@ namespace Catflap
        
         private string rootPath;
         private string appPath;
+        private bool IgnoreRepositoryLock = false;
 
         private void Log(String str, bool showMessageBox = false) {
             Console.WriteLine(str);
@@ -359,18 +360,15 @@ namespace Catflap
                 Log(message);
             };
 
-            if (App.mArgs.Count() > 0 && App.mArgs[0].ToLower() == "-run")
-            {
+            if (App.mArgs.Contains("-nolock"))
+                IgnoreRepositoryLock = true;
+
+            if (App.mArgs.Contains("-run"))
                 UpdateAndRun(false);
-            }
-            else if (App.mArgs.Count() > 0 && App.mArgs[0].ToLower() == "-runwait")
-            {
+            else if (App.mArgs.Contains("-runwait"))
                 UpdateAndRun(false);
-            }
             else
-            {
                 UpdateRootManifest();
-            }
         }
 
         private void OnDownloadStatusInfoChangedHandler(Catflap.Repository.DownloadStatusInfo info)
@@ -476,7 +474,7 @@ namespace Catflap
                 Application.Current.Shutdown();
             }
 
-            if (repository.LatestManifest.locked != "")
+            if (!IgnoreRepositoryLock && repository.LatestManifest.locked != "")
             {
                 await this.ShowMessageAsync("Repository locked", repository.LatestManifest.locked);
                 Application.Current.Shutdown();
