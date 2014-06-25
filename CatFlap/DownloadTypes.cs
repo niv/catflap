@@ -33,8 +33,8 @@ namespace Catflap
             "--no-human-readable " +
             "--prune-empty-dirs " +
             "--stats --itemize-changes --out-format 'NEWFILE %i %l %n' --progress " +
-            "--compress " +
-            "--times --fsync " +
+            "--compress --compress-level=1 " +
+            "--times --checksum --no-whole-file --fsync " +
             /* Bufferbloat optimisation time!
              * As of this writing, the default sock recv buffers on Windows 7 are 8KB.
              * That's nowhere near enough to saturate even a moderately fast broadband connection.
@@ -45,7 +45,7 @@ namespace Catflap
             "--sockopts SO_SNDBUF=65536,SO_RCVBUF=1572864,TCP_NODELAY ";
 
         private string rsyncFlagsDirectory = "--recursive";
-        private string rsyncFlagsVerify = "--ignore-times";
+        private string rsyncFlagsVerify = "";
         private string rsyncFlagsNoVerify = "";
 
         /*
