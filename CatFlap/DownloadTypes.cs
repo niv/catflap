@@ -29,7 +29,7 @@ namespace Catflap
 
         //private string rsyncPath  = appPath + "/rsync.exe"; // new FileInfo(Assembly.GetExecutingAssembly().Location).DirectoryName + "\\catflap\\rsync.exe";
         private const string rsyncFlags =
-            "--safe-links --one-file-system --copy-links --perms --executability " +
+            "--safe-links --one-file-system --copy-links --executability " +
             "--no-human-readable " +
             "--prune-empty-dirs " +
             "--stats --itemize-changes --out-format 'NEWFILE %i %l %n' --progress " +
