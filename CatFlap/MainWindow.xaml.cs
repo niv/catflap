@@ -190,6 +190,13 @@ namespace Catflap
                         repository.LatestManifest.sync.Select(f => f.mtime).Max().PrettyInterval()
                     );
 
+                    if (repository.Status.directoriesToVerify.Any() || repository.Status.filesToVerify.Any())
+                    {
+                        labelDLSize.ToolTip += "\nThe following items are outdated:";
+                        repository.Status.directoriesToVerify.ForEach(e => labelDLSize.ToolTip += "\n" + e.name);
+                        repository.Status.filesToVerify.ForEach(e => labelDLSize.ToolTip += "\n" + e.name);
+                    }
+
                     labelDLSize.Text = "";
 
                     if (repository.Status.guesstimatedBytesToVerify > 0 || repository.Status.maxBytesToVerify > 0)
