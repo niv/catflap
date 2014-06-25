@@ -491,7 +491,7 @@ namespace Catflap
 
             var info = new DownloadStatusInfo();
 
-            info.globalFileTotal = Status.fileCountToVerify;
+            info.globalFileTotal = Status.directoryCountToVerify + Status.fileCountToVerify;
             info.globalFileCurrent = 0;
             info.globalBytesTotal = Status.maxBytesToVerify;
 
