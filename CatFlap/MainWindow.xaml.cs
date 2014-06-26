@@ -33,6 +33,8 @@ namespace Catflap
         private string appPath;
         private bool IgnoreRepositoryLock = false;
 
+        private bool CloseAfterSync = false;
+
         private void Log(String str, bool showMessageBox = false) {
             Console.WriteLine(str);
 
@@ -526,18 +528,20 @@ namespace Catflap
             {
                 SetGlobalStatus(true, "ABORTED");
                 SetUIProgressState(false, -1, "ABORTED (" + bytesOnNetwork.BytesToHuman() + " of actual network traffic)");
-                return;
             } 
             else
             {
                 SetGlobalStatus(true, "100%", 1);
                 SetUIProgressState(false, 1, "Done (" + bytesOnNetwork.BytesToHuman() + " of actual network traffic)");
                 Log("Verify/download complete.");
+
+                await UpdateRootManifest(!checkboxSimulate.IsChecked.Value);
             }
 
             cts = null;
 
-            await UpdateRootManifest(!checkboxSimulate.IsChecked.Value);
+            if (CloseAfterSync)
+                this.Close();
         }
 
 
@@ -644,6 +648,16 @@ namespace Catflap
         {
             if (cts != null && !cts.IsCancellationRequested)
                 cts.Cancel();
+        }
+
+        protected override async void OnClosing(CancelEventArgs e)
+        {
+            if (cts != null && !cts.IsCancellationRequested)
+            {
+                cts.Cancel();
+                e.Cancel = true;
+                CloseAfterSync = true;
+            }
         }
 
         private void btnHelp_Click(object sender, RoutedEventArgs e)
