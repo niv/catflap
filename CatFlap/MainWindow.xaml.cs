@@ -700,8 +700,8 @@ namespace Catflap
                 shortcut.Target = fi.FullName;
                 shortcut.Arguments = "-run";
                 shortcut.WorkingDirectory = rootPath;
-                if (repository.CurrentManifest != null)
-                    shortcut.Description = repository.CurrentManifest.title;
+                if (repository.LatestManifest != null)
+                    shortcut.Description = repository.LatestManifest.title;
                 else
                     shortcut.Description = fi.Name + " - run";
                 shortcut.DisplayMode = ShellLink.LinkDisplayMode.edmNormal;
