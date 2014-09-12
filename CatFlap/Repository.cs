@@ -170,7 +170,18 @@ namespace Catflap
 
         private static FileInfo[] GetDirectoryElements(string parentDirectory)
         {
-            return Directory.Exists(parentDirectory) ? new DirectoryInfo(parentDirectory).GetFiles("*", SearchOption.AllDirectories) : new FileInfo[]{};
+            // This throws IOException when directories are being locked by catflap
+            // (like partial dirs, or delayed updates).
+            try
+            {
+                return Directory.Exists(parentDirectory)
+                    ? new DirectoryInfo(parentDirectory).GetFiles("*", SearchOption.AllDirectories)
+                    : new FileInfo[] {};
+            }
+            catch (IOException)
+            {
+                return new FileInfo[] {};
+            }
         }
 
         public RepositoryStatus Status { get; private set; }
