@@ -31,6 +31,8 @@ namespace Catflap
         // The manifest currently active.
         public Manifest CurrentManifest { get; private set; }
 
+        public bool AlwaysAssumeCurrent = false;
+
         private bool simulate = false;
         private bool verifyUpdateFull = false;
         private string rootPath;
@@ -185,48 +187,60 @@ namespace Catflap
 
             RepositoryStatus ret = new RepositoryStatus();
 
-            // For directories, we check mtime and file count.
-            var dirsToCheck = LatestManifest.sync.
-                Where(f => f.name.EndsWith("/")).
-                Where(f =>
-                        (f.type == "rsync" && (
-                            // Always check dirs that ..
+            IEnumerable<Manifest.SyncItem>
+                dirsToCheck = new List<Manifest.SyncItem>(),
+                filesToCheck = new List<Manifest.SyncItem>();
 
-                            // don't exist locally yet
-                            !Directory.Exists(rootPath + "/" + f.name) ||
+            if (AlwaysAssumeCurrent)
+            {
 
-                            (!f.ignoreExisting.GetValueOrDefault() && (
+            }
+            else
+            {
+                // For directories, we check mtime and file count.
+                dirsToCheck = LatestManifest.sync.
+                    Where(f => f.name.EndsWith("/")).
+                    Where(f =>
+                            (f.type == "rsync" && (
+                                // Always check dirs that ..
 
-                                // are not young enough mtime
-                                Math.Abs((new FileInfo(rootPath + "/" + f.name).LastWriteTime - f.mtime).TotalSeconds) > 1 ||
+                                // don't exist locally yet
+                                !Directory.Exists(rootPath + "/" + f.name) ||
 
-                                // have mismatching item count
-                                GetDirectoryElements(rootPath + "/" + f.name).Count() < f.count ||
+                                (!f.ignoreExisting.GetValueOrDefault() && (
 
-                                // are not big enough
-                                GetDirectoryElements(rootPath + "/" + f.name).Sum(file => file.Length) < f.size
+                                    // are not young enough mtime
+                                    Math.Abs((new FileInfo(rootPath + "/" + f.name).LastWriteTime - f.mtime).TotalSeconds) > 1 ||
+
+                                    // have mismatching item count
+                                    GetDirectoryElements(rootPath + "/" + f.name).Count() < f.count ||
+
+                                    // are not big enough
+                                    GetDirectoryElements(rootPath + "/" + f.name).Sum(file => file.Length) < f.size
+                                ))
+                            )) || (f.type == "delete" && (
+                                Directory.Exists(rootPath + "/" + f.name)
                             ))
-                        )) || (f.type == "delete" && (
-                            Directory.Exists(rootPath + "/" + f.name)
-                        ))
-                );
+                    );
 
-            // For files, we check metadata, mtime & size only.
-            var filesToCheck = LatestManifest.sync.
-                Where(f => !f.name.EndsWith("/")).
-                Where(f =>
-                        (f.type == "rsync" && (
-                            !File.Exists(rootPath + "/" + f.name) ||
+                // For files, we check metadata, mtime & size only.
+                filesToCheck = LatestManifest.sync.
+                    Where(f => !f.name.EndsWith("/")).
+                    Where(f =>
+                            (f.type == "rsync" && (
+                                !File.Exists(rootPath + "/" + f.name) ||
 
-                            (!f.ignoreExisting.GetValueOrDefault() && (
-                                (f.mtime != null && Math.Abs((new FileInfo(rootPath + "/" + f.name).LastWriteTime - f.mtime).TotalSeconds) > 1) ||
+                                (!f.ignoreExisting.GetValueOrDefault() && (
+                                    (f.mtime != null && Math.Abs((new FileInfo(rootPath + "/" + f.name).LastWriteTime - f.mtime).TotalSeconds) > 1) ||
 
-                                (new FileInfo(rootPath + "/" + f.name).Length != f.size)
+                                    (new FileInfo(rootPath + "/" + f.name).Length != f.size)
+                                ))
+                            )) || (f.type == "delete" && (
+                                File.Exists(rootPath + "/" + f.name)
                             ))
-                        )) || (f.type == "delete" && (
-                            File.Exists(rootPath + "/" + f.name)
-                        ))
-                );
+                    );
+                
+            }
 
             ret.guesstimatedBytesToVerify =
                 // All the data we have, we assume to be correct, so we just take the diff.
@@ -407,24 +421,40 @@ namespace Catflap
         public Task RefreshManifest(bool setNewAsCurrent = false)
         {
             return Task.Run(delegate()
-             {
-                 LatestManifest = AuthPolicy.Execute(() => GetManifestFromRemote());
-                 Console.WriteLine(LatestManifest);
+            {
+                if (this.AlwaysAssumeCurrent)
+                {
+                    if (File.Exists(appPath + "\\catflap.json"))
+                    {
+                        LatestManifest = JsonConvert.DeserializeObject<Manifest>(System.IO.File.ReadAllText(appPath + "\\catflap.json"));
+                        CurrentManifest = LatestManifest;
+                    }
+                    else
+                    {
+                        throw new Exception("Cannot use AlwaysAssumeCurrent with no local manifest.");
+                    }
+                }
+                else
+                {
+                    LatestManifest = AuthPolicy.Execute(() => GetManifestFromRemote());
+    
+                    if (setNewAsCurrent)
+                    {
+                        System.IO.File.WriteAllText(appPath + "\\catflap.json", JsonConvert.SerializeObject(LatestManifest));
+                        CurrentManifest = LatestManifest;
+                    }
+                    else
+                        if (File.Exists(appPath + "\\catflap.json"))
+                            CurrentManifest = JsonConvert.DeserializeObject<Manifest>(System.IO.File.ReadAllText(appPath + "\\catflap.json"));
 
-                 if (setNewAsCurrent)
-                 {
-                     System.IO.File.WriteAllText(appPath + "\\catflap.json", JsonConvert.SerializeObject(LatestManifest));
-                     CurrentManifest = LatestManifest;
-                 }
-                 else
-                     if (File.Exists(appPath + "\\catflap.json"))
-                         CurrentManifest = JsonConvert.DeserializeObject<Manifest>(System.IO.File.ReadAllText(appPath + "\\catflap.json"));
+                    Console.WriteLine(LatestManifest);
 
-                 RefreshManifestResource("catflap.bgimg");
-                 RefreshManifestResource("favicon.ico");
+                    RefreshManifestResource("catflap.bgimg");
+                    RefreshManifestResource("favicon.ico");
+                }
 
-                 UpdateStatus();
-             });
+                UpdateStatus();
+            });
         }
 
         private Task<bool> RunSyncItem(Manifest.SyncItem f,

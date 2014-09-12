@@ -95,7 +95,7 @@ namespace Catflap
 
         private void SetUIState(bool enabled)
         {
-            btnDownload.IsEnabled = enabled;
+            btnDownload.IsEnabled = !repository.AlwaysAssumeCurrent;
             checkboxSimulate.IsEnabled = enabled;
 
             if (!enabled)
@@ -199,7 +199,12 @@ namespace Catflap
 
                     labelDLSize.Text = "";
 
-                    if (repository.Status.guesstimatedBytesToVerify > 0 || repository.Status.maxBytesToVerify > 0)
+                    if (repository.AlwaysAssumeCurrent)
+                    {
+                        labelDLSize.Text = "-nocheck";
+                    }
+
+                    else if (repository.Status.guesstimatedBytesToVerify > 0 || repository.Status.maxBytesToVerify > 0)
                     {
                         if (repository.Status.guesstimatedBytesToVerify < 1)
                             labelDLSize.Text = "objects need syncing";
@@ -371,6 +376,8 @@ namespace Catflap
 
             if (App.mArgs.Contains("-nolock"))
                 IgnoreRepositoryLock = true;
+            if (App.mArgs.Contains("-nocheck"))
+                this.repository.AlwaysAssumeCurrent = true;
 
             if (App.mArgs.Contains("-run"))
                 UpdateAndRun(false);
@@ -433,24 +440,32 @@ namespace Catflap
             SetUIProgressState(true);
             SetUIState(false);
 
+            Retry:
+
             try
             {
                 await repository.RefreshManifest(setNewAsCurrent);
-            } catch (Exception err)
+            }
+            catch (Exception err)
             {
                 if (err is WebException)
-                    {
-                        MessageBox.Show("Could not retrieve repository manifest: " + err.Message);
-                    }
-                    else if (err is Repository.ValidationException)
-                    {
-                        MessageBox.Show("There are problems with the repository manifest " +
-                            "(This is probably not your fault, it needs to be fixed in the repository!):" +
-                            "\n\n" + err.Message);
-                    }
-                    else
+                {
+                    // WebException wex = (WebException) err;
+
+                    MessageBox.Show("Could not retrieve repository manifest: " + err.Message +
+                                    ". Switching to offline mode.");
+                    repository.AlwaysAssumeCurrent = true;
+                    goto Retry;
+                }
+                else if (err is Repository.ValidationException)
+                {
+                    MessageBox.Show("There are problems with the repository manifest " +
+                                    "(This is probably not your fault, it needs to be fixed in the repository!):" +
+                                    "\n\n" + err.Message);
+                }
+                else
                     MessageBox.Show("There has been some problem downloading/parsing the repository manifest:\n\n" +
-                            err.ToString());
+                                    err.ToString());
 
                 Application.Current.Shutdown();
                 return;
