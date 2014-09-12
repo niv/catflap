@@ -29,10 +29,9 @@ namespace Catflap
 
         //private string rsyncPath  = appPath + "/rsync.exe"; // new FileInfo(Assembly.GetExecutingAssembly().Location).DirectoryName + "\\catflap\\rsync.exe";
         private const string rsyncFlags =
-            "--safe-links --one-file-system --copy-links --executability " +
-            "--no-human-readable " +
+            "--one-file-system --copy-links --executability " +
             "--prune-empty-dirs " +
-            "--stats --itemize-changes --out-format 'NEWFILE %i %l %n' --progress " +
+            "--no-human-readable --stats --out-format 'NEWFILE %i %l %n' --progress " +
             "--compress --compress-level=1 " +
             "--times --checksum --no-whole-file --fsync " +
             /* Bufferbloat optimisation time!
@@ -176,7 +175,7 @@ namespace Catflap
             if (syncItem.ignoreCase.GetValueOrDefault()) va += " --ignore-case";
             if (syncItem.fuzzy.GetValueOrDefault()) va += " --fuzzy";
 
-            va += " '--temp-dir=" + tmpPath + "' --delay-updates";
+            va += " '--temp-dir=" + tmpPath + "'";
 
             switch (syncItem.mode)
             {
@@ -185,7 +184,7 @@ namespace Catflap
                     break;
 
                 default: // "replace"
-                    va += " --partial-dir=catflap.partials";
+                    va += " --partial-dir=catflap.partials --delay-updates";
                     break;
             }
 
