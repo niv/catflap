@@ -237,18 +237,27 @@ namespace Catflap
                 // For files, we check metadata, mtime & size only.
                 filesToCheck = LatestManifest.sync.
                     Where(f => !f.name.EndsWith("/")).
+                    Where(f => f.mtime != null).
                     Where(f =>
                             (f.type == "rsync" && (
-                                !File.Exists(rootPath + "/" + f.name) ||
+                                // Always checkfiles that dont exist locally
+                                !File.Exists(rootPath + "/" + f.name) || (
 
-                                (!f.ignoreExisting.GetValueOrDefault() && (
-                                    (f.mtime != null && Math.Abs((new FileInfo(rootPath + "/" + f.name).LastWriteTime - f.mtime).TotalSeconds) > 1) ||
+                                    // Only check files that arent ignored because they exist
+                                    (!f.ignoreExisting.GetValueOrDefault() && (
 
-                                    (new FileInfo(rootPath + "/" + f.name).Length != f.size)
-                                ))
-                            )) || (f.type == "delete" && (
-                                File.Exists(rootPath + "/" + f.name)
-                            ))
+                                        // Only check files that arent ignored because they're newer.
+                                        ((!f.ignoreNewer.GetValueOrDefault() || new FileInfo(rootPath + "/" + f.name).LastWriteTime < f.mtime) && (
+
+                                            // Different timestamp
+                                            Math.Abs((new FileInfo(rootPath + "/" + f.name).LastWriteTime - f.mtime).TotalSeconds) > 1 ||
+                                            // Check files that have different size.
+                                            new FileInfo(rootPath + "/" + f.name).Length != f.size
+
+                                        ))
+                                    ))
+                                )
+                            )) || (f.type == "delete" && File.Exists(rootPath + "/" + f.name))
                     );
                 
             }
@@ -373,6 +382,11 @@ namespace Catflap
                     if (!syncItem.ignoreExisting.HasValue)
                         syncItem.ignoreExisting = mf.ignoreExisting.Value;
 
+            if (mf.ignoreNewer.HasValue)
+                foreach (var syncItem in mf.sync)
+                    if (!syncItem.ignoreNewer.HasValue)
+                        syncItem.ignoreNewer = mf.ignoreNewer.Value;
+
             if (mf.purge.HasValue)
                 foreach (var syncItem in mf.sync)
                     if (!syncItem.purge.HasValue)
@@ -472,7 +486,7 @@ namespace Catflap
             bool verify, bool simulate,
             DownloadProgressChanged dpc, DownloadEnd de, DownloadMessage dm,
             CancellationTokenSource cts,
-            string overrideDestination = null)
+            string overrideDestination = null, string additionalArgs = "")
         {
             switch (f.type)
             {
@@ -483,7 +497,7 @@ namespace Catflap
                     dd.VerifyChecksums = verify;
                     dd.Simulate = simulate;
                     return dd.Download(LatestManifest.rsyncUrl + "/" + f.name, f, rootPath,
-                        dpc, de, dm, cts, overrideDestination);
+                        dpc, de, dm, cts, overrideDestination, additionalArgs);
 
                 case "delete":
                     return Task<bool>.Run(() =>
@@ -598,7 +612,7 @@ namespace Catflap
                     }, delegate(string message, bool show)
                     {
                         OnDownloadMessage(message, show);
-                    }, cts);
+                    }, cts, null, (LatestManifest.additionalArguments != null ? LatestManifest.additionalArguments  : "").Trim());
 
                     try
                     {
