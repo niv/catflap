@@ -27,13 +27,34 @@ namespace Catflap
         public string appPath;
         public string tmpPath;
 
-        //private string rsyncPath  = appPath + "/rsync.exe"; // new FileInfo(Assembly.GetExecutingAssembly().Location).DirectoryName + "\\catflap\\rsync.exe";
         private const string rsyncFlags =
-            "--one-file-system --copy-links --executability " +
+            /* */
+            "--one-file-system --copy-links " +
+            
+            /* We need to preserve +x so that .exe files can actually be run. */
+            "--executability " +
+
+            /* Remove empty dirs by default to keep it clean. */
             "--prune-empty-dirs " +
+
+            /* These flags only concern stdout output and are needed for the parser. */
             "--no-human-readable --stats --out-format 'NEWFILE %i %l %n' --progress " +
+
+            /* Compression helps a lot with speeding up transfers, obviously; esp. empty or sparse files.
+             * Level 1 is enough to get nearly all the speed advantage while not hammering slow clients or servers. */
             "--compress --compress-level=1 " +
-            "--times --checksum --no-whole-file --fsync " +
+
+            /* This is quite expensive for the server. We turn it off by default. You can still configure it in
+             * the manifest if you require that kind of accuracy - but that's what verify is for.
+             " --checksum"
+             */
+
+            /* Sync times. This is important. Also, do fsyncs after each sync. */
+            "--times --fsync " +
+
+            /* Never re-download whole files, always use deltas for changed files. */
+            "--no-whole-file " +
+
             /* Bufferbloat optimisation time!
              * As of this writing, the default sock recv buffers on Windows 7 are 8KB.
              * That's nowhere near enough to saturate even a moderately fast broadband connection.
@@ -44,7 +65,7 @@ namespace Catflap
             "--sockopts SO_SNDBUF=65536,SO_RCVBUF=1572864,TCP_NODELAY ";
 
         private string rsyncFlagsDirectory = "--recursive";
-        private string rsyncFlagsVerify = "";
+        private string rsyncFlagsVerify = "--checksum";
         private string rsyncFlagsNoVerify = "";
 
         /*
