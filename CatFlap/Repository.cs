@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using System.Security.AccessControl;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Schema;
 using Polly;
@@ -570,6 +571,17 @@ namespace Catflap
                 foreach (Manifest.SyncItem f in toCheck)
                 {
                     info.currentFile = f.name;
+
+                    // Hacky: Make sure we can write to our target. This is mostly due to rsync
+                    // sometimes setting "ReadOnly" on .exe files when the remote is configured
+                    // not quite correctly and only affects updating the updater itself.
+                    try
+                    {
+                        new FileInfo(rootPath + "/" + f.name) {IsReadOnly = false}.Refresh();
+                    }
+                    catch (Exception e)
+                    {
+                    }
 
                     var t = RunSyncItem(f, verifyUpdateFull, simulate, delegate(string fname, int percentage, long bytesReceived, long bytesTotal, long bytesPerSecond)
                     {
