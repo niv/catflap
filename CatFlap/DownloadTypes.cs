@@ -116,6 +116,15 @@ namespace Catflap
             pProcess.StartInfo.CreateNoWindow = true;
             pProcess.StartInfo.UseShellExecute = false;
             pProcess.StartInfo.WorkingDirectory = appPath;
+
+            if (pProcess.StartInfo.EnvironmentVariables.ContainsKey("PATH"))
+                pProcess.StartInfo.EnvironmentVariables.Remove("PATH");
+
+            if (pProcess.StartInfo.EnvironmentVariables.ContainsKey("CYGWIN"))
+                pProcess.StartInfo.EnvironmentVariables.Remove("CYGWIN");
+
+            pProcess.StartInfo.EnvironmentVariables.Add("CYGWIN", "nodosfilewarning");
+
             pProcess.Start();
             pProcess.WaitForExit();
         }
@@ -232,8 +241,14 @@ namespace Catflap
             pProcess.StartInfo.RedirectStandardInput = true;            
             pProcess.StartInfo.WorkingDirectory = targetDir;
 
+            if (pProcess.StartInfo.EnvironmentVariables.ContainsKey("PATH"))
+                pProcess.StartInfo.EnvironmentVariables.Remove("PATH");
+
+            if (pProcess.StartInfo.EnvironmentVariables.ContainsKey("CYGWIN"))
+                pProcess.StartInfo.EnvironmentVariables.Remove("CYGWIN");
+
             pProcess.StartInfo.EnvironmentVariables.Add("CYGWIN", "nodosfilewarning");
-            ;
+
             if (this.repository.Password != null)
                 pProcess.StartInfo.EnvironmentVariables.Add("RSYNC_PASSWORD", this.repository.Password);
 
