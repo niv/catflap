@@ -318,8 +318,9 @@ namespace Catflap
 
             Assembly assembly = Assembly.GetExecutingAssembly();
             FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
-            string version = String.Join(".", fvi.FileVersion.Split('.').Take(3));
-            btnHelp.Content = version;
+            string major = String.Join(".", fvi.FileVersion.Split('.').Take(3));
+            string point = String.Join(".", fvi.FileVersion.Split('.').Skip(3));
+            btnHelp.Content = major + (point == "0" ? "" : "." + point);
 
             foreach (string src in resourcesToPurge)
             {
