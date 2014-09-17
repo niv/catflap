@@ -38,7 +38,6 @@ namespace Catflap
         'additionalArguments': { 'type': 'string', 'required': false },
         'purge': { 'type': 'boolean', 'required': false },
 
-        'runActionAllowOutdated': { 'type': 'boolean', 'required': false },
         'runAction': { 'type': 'object', 'required': false },
 
         'sync': { 'type': 'array', 'required': true, 'items':  {
@@ -179,10 +178,15 @@ namespace Catflap
             // Argument string passed to binary.
             // Supports substituting variables as described below.
             public string arguments;
+
+            // Set to true to allow client arguments being passed/appended
+            // to the command line for run action.
+            public bool passArguments;
+
+            // Allow pressing the run button even if the local repository is not up to date.
+            public bool allowOutdated;
         }
 
-        // Allow pressing the run button even if the local repository is not up to date.
-        public bool runActionAllowOutdated;
 
         /*
          * Substitutable variables:

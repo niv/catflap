@@ -122,9 +122,8 @@ namespace Catflap
                         else
                         {
                             btnRun.Content = "sync required";
-                            btnRun.IsEnabled = repository.LatestManifest.runActionAllowOutdated;
+                            btnRun.IsEnabled = repository.LatestManifest.runAction.allowOutdated;
                         }
-                            
                     }
             }
         }
@@ -376,14 +375,27 @@ namespace Catflap
             };
 
             if (App.mArgs.Contains("-nolock"))
+            {
+                App.mArgs = App.mArgs.Where(x => x != "-nolock").ToArray();
                 IgnoreRepositoryLock = true;
+            }
+
             if (App.mArgs.Contains("-nocheck"))
+            {
+                App.mArgs = App.mArgs.Where(x => x != "-nocheck").ToArray();
                 this.repository.AlwaysAssumeCurrent = true;
+            }
 
             if (App.mArgs.Contains("-run"))
+            {
+                App.mArgs = App.mArgs.Where(x => x != "-run").ToArray();
                 UpdateAndRun(false);
+            }
             else if (App.mArgs.Contains("-runwait"))
+            {
+                App.mArgs = App.mArgs.Where(x => x != "-runwait").ToArray();
                 UpdateAndRun(false);
+            }
             else
                 UpdateRootManifest();
         }
@@ -422,7 +434,7 @@ namespace Catflap
             await Task.Delay(100);
             WindowState = WindowState.Minimized;
 
-            var t = RunAction(App.mArgs.Skip(1).ToArray());
+            var t = RunAction();
             if (waitForExit)
                 await t;
             else
@@ -587,14 +599,15 @@ namespace Catflap
             });
         }
 
-        private async Task RunAction(string[] additionalArgs)
+        private async Task RunAction()
         {
             Accent old = SetTheme(accentBusy);
             SetGlobalStatus(true, "Running");
             SetUIState(false);
             try
             {
-                await ExecuteAction(repository.LatestManifest.runAction, additionalArgs);
+                await ExecuteAction(repository.LatestManifest.runAction,
+                    repository.LatestManifest.runAction.passArguments ? App.mArgs : new string[] { });
             }
             catch (Exception ex)
             {
@@ -658,7 +671,7 @@ namespace Catflap
                     return;
             }
 
-            await RunAction(new string[]{});
+            await RunAction();
         }
 
         private void btnShowHideLog_Click(object sender, RoutedEventArgs e)
