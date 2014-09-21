@@ -95,7 +95,7 @@ namespace Catflap
 
         private void SetUIState(bool enabled)
         {
-            btnDownload.IsEnabled = !repository.AlwaysAssumeCurrent;
+            btnDownload.IsEnabled = (!repository.AlwaysAssumeCurrent && enabled); //  || !repository.AlwaysAssumeCurrent;
             checkboxSimulate.IsEnabled = enabled;
 
             if (!enabled)
