@@ -148,7 +148,7 @@ namespace Catflap
                     if (ct.IsCancellationRequested)
                     {
                         cancelled = true;
-                        dm.Invoke("<cancelling>", true);
+                        dm.Invoke("<cancelling (patience)>", true);
 
                         /* Try Ctrl+C first so we can catch --replace/partial transfers */
                         SIGTERM(p.Id);
@@ -356,7 +356,7 @@ namespace Catflap
                 }
             };
 
-            dm.Invoke("Verifying " + syncItem.name, true);
+            dm.Invoke("Verifying " + syncItem.name + " (checksumming/waiting for server)", true);
 
             pProcess.Start();
             pProcess.BeginOutputReadLine();
