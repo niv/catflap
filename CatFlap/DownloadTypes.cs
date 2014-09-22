@@ -50,7 +50,7 @@ namespace Catflap
              */
 
             /* Sync times. This is important. Also, do fsyncs after each sync. */
-            "--times --fsync " +
+            "--times " +
 
             /* Never re-download whole files, always use deltas for changed files. */
             "--no-whole-file " +
