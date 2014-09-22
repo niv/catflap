@@ -132,7 +132,7 @@ namespace Catflap
         // Returns true if the file was changed in any way.
         public Task<bool> Download(string source, Manifest.SyncItem syncItem, string modPath,
             Catflap.Repository.DownloadProgressChanged dpc, Catflap.Repository.DownloadEnd de, Catflap.Repository.DownloadMessage dm,
-            CancellationTokenSource cts, string overrideDestination = null, string additionalArgs = "")
+            CancellationTokenSource cts, string overrideDestination = null)
         {
             var ct = cts.Token;
 
@@ -140,7 +140,7 @@ namespace Catflap
 
             return Task.Run<bool>(delegate() {
                 currentRunWasChanged = false;
-                var p = RunRSync(source, syncItem, modPath, dpc, dm, overrideDestination, additionalArgs);
+                var p = RunRSync(source, syncItem, modPath, dpc, dm, overrideDestination);
                 (Application.Current as App).TrackProcess(p);
                 
                 // Wait for the pid to appear.
@@ -176,8 +176,7 @@ namespace Catflap
         }
 
         private Process RunRSync(String rsyncUrl, Manifest.SyncItem syncItem, string modPath,
-            Catflap.Repository.DownloadProgressChanged dpc, Catflap.Repository.DownloadMessage dm, string overrideDestination = null,
-            string additionalArgs = "")
+            Catflap.Repository.DownloadProgressChanged dpc, Catflap.Repository.DownloadMessage dm, string overrideDestination = null)
         {
             var targetFileName = syncItem.name;
 
@@ -199,19 +198,12 @@ namespace Catflap
             if (isDir) va += " " + rsyncFlagsDirectory;
 
             if (syncItem.ignoreExisting.GetValueOrDefault()) va += " --ignore-existing";
-            if (syncItem.ignoreNewer.GetValueOrDefault()) va += " --update";
 
             // Only ever allow purge on directories, obviously.
             if (isDir && syncItem.purge.GetValueOrDefault()) va += " --delete-delay";
 
             if (syncItem.ignoreCase.GetValueOrDefault()) va += " --ignore-case";
             if (syncItem.fuzzy.GetValueOrDefault()) va += " --fuzzy";
-
-            if (additionalArgs != null && additionalArgs != "")
-                va += " " + additionalArgs;
-
-            if (syncItem.additionalArguments != null && syncItem.additionalArguments.Trim() != "")
-                va += " " + syncItem.additionalArguments.Trim();
 
             va += " '--temp-dir=" + tmpPath + "'";
 

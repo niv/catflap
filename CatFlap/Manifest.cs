@@ -34,8 +34,6 @@ namespace Catflap
         'fuzzy': { 'type': 'boolean', 'required': false },
         'ignoreCase': { 'type': 'boolean', 'required': false },
         'ignoreExisting': { 'type': 'boolean', 'required': false },
-        'ignoreNewer': { 'type': 'boolean', 'required': false },
-        'additionalArguments': { 'type': 'string', 'required': false },
         'purge': { 'type': 'boolean', 'required': false },
 
         'runAction': { 'type': 'object', 'required': false },
@@ -52,9 +50,7 @@ namespace Catflap
                     'mtime': { 'type': 'string', 'required': false },
                     'fuzzy': { 'type': 'boolean', 'required': false },
                     'ignoreCase': { 'type': 'boolean', 'required': false },
-                    'ignoreExisting': { 'type': 'boolean', 'required': false },
-                    'ignoreNewer': { 'type': 'boolean', 'required': false },
-                    'additionalArguments': { 'type': 'string', 'required': false },
+                    'ignoreExisting': { 'type': 'boolean', 'required': false }
                 }
             }
         },
@@ -108,13 +104,6 @@ namespace Catflap
         // This sets a default for "ignoreExisting" on all sync items, unless otherwise given in each item.
         public bool? ignoreExisting;
 
-        // This sets a default for "ignoreNewer" on all sync items, unless otherwise given in each item.
-        public bool? ignoreNewer;
-
-        // Addional raw arguments to pass into rsync. Be very, very careful! This "stacks" with
-        // additionalArguments of each sync item.
-        public string additionalArguments;
-
         // This sets a default for "purge" on all sync items, unless otherwise given in each item.
         public bool? purge;
 
@@ -150,13 +139,6 @@ namespace Catflap
             // Makes the updater skip syncing this file or directory if it
             // exists on the client. Can be used for initial config-file syncs.
             public bool? ignoreExisting;
-
-            // Makes the updater skip syncing this file or directory if it
-            // exists on the client and is of newer last modified time.
-            public bool? ignoreNewer;
-
-            // Addional raw arguments to pass into rsync. Be very, very careful!
-            public string additionalArguments;
 
             // Do fuzzy-matching on the target. (--fuzzy)
             public bool? fuzzy;
