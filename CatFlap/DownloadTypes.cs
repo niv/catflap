@@ -52,9 +52,6 @@ namespace Catflap
             /* Sync times. This is important. Also, do fsyncs after each sync. */
             "--times " +
 
-            /* Never re-download whole files, always use deltas for changed files. */
-            "--no-whole-file " +
-
             /* Bufferbloat optimisation time!
              * As of this writing, the default sock recv buffers on Windows 7 are 8KB.
              * That's nowhere near enough to saturate even a moderately fast broadband connection.
