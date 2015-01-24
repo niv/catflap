@@ -211,7 +211,11 @@ namespace Catflap
                     break;
 
                 default: // "replace"
-                    va += " --partial-dir=catflap.partials --delay-updates";
+                    /* We cannot keep partials for ignore-existing .. */
+                    if (!syncItem.ignoreExisting.GetValueOrDefault())
+                        va += " --partial-dir=catflap.partials";
+
+                    va += " --delay-updates";
                     break;
             }
 
