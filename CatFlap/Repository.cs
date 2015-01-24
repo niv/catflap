@@ -169,6 +169,17 @@ namespace Catflap
                 UpdateStatus();
         }
 
+        private void EnsureWriteable(string obj)
+        {
+            new FileInfo(obj) { IsReadOnly = false }.Refresh();
+
+            foreach (FileInfo e in GetDirectoryElements(obj))
+            {
+                e.IsReadOnly = false;
+                e.Refresh();
+            }
+        }
+
         private static FileInfo[] GetDirectoryElements(string parentDirectory)
         {
             // This throws IOException when directories are being locked by catflap
@@ -563,7 +574,8 @@ namespace Catflap
                     // not quite correctly and only affects updating the updater itself.
                     try
                     {
-                        new FileInfo(rootPath + "/" + f.name) {IsReadOnly = false}.Refresh();
+                        // new FileInfo(rootPath + "/" + f.name) {IsReadOnly = false}.Refresh();
+                        EnsureWriteable(rootPath + "/" + f.name);
                     }
                     catch (Exception e)
                     {
