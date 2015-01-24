@@ -186,9 +186,12 @@ namespace Catflap
             // (like partial dirs, or delayed updates).
             try
             {
-                return Directory.Exists(parentDirectory)
-                    ? new DirectoryInfo(parentDirectory).GetFiles("*", SearchOption.AllDirectories)
-                    : new FileInfo[] {};
+                if (Directory.Exists(parentDirectory))
+                    return new DirectoryInfo(parentDirectory).GetFiles("*", SearchOption.AllDirectories);
+                else if (File.Exists(parentDirectory))
+                    return new FileInfo[] { new FileInfo(parentDirectory) };
+                else
+                    return new FileInfo[] { };
             }
             catch (IOException)
             {
