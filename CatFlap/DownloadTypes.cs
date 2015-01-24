@@ -186,7 +186,7 @@ namespace Catflap
             if (this.repository.Username != null)
                 rsyncUrl = rsyncUrl.Replace("%user%", this.repository.Username);
 
-            string va = rsyncFlags + " " + "'" + rsyncUrl + "'" +" " + "'" + rsyncTargetSpec + "'";
+            string va = rsyncFlags + " " + "\"" + rsyncUrl + "\"" + " " + "\"" + rsyncTargetSpec.ShellEscape() + "\"";
             
             if (VerifyChecksums) va += " " + rsyncFlagsVerify;
             if (!VerifyChecksums) va += " " + rsyncFlagsNoVerify;
@@ -202,7 +202,7 @@ namespace Catflap
             if (syncItem.ignoreCase.GetValueOrDefault()) va += " --ignore-case";
             if (syncItem.fuzzy.GetValueOrDefault()) va += " --fuzzy";
 
-            va += " '--temp-dir=" + tmpPath + "'";
+            va += " \"--temp-dir=" + tmpPath.ShellEscape() + "\"";
 
             switch (syncItem.mode)
             {

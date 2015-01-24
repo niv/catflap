@@ -155,5 +155,10 @@ namespace Catflap
             else
                 return bytes + " B";
         }
+
+        public static string ShellEscape(this string str)
+        {
+            return str.Replace("\\", "\\\\").TrimEnd('\\');
+        }
     }
 }
