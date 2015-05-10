@@ -130,6 +130,8 @@
     <Compile Include="FileIcon.cs" />
     <Compile Include="Job.cs" />
     <Compile Include="DownloadTypes.cs" />
+    <Compile Include="ManifestSchema.cs" />
+    <Compile Include="ManifestSyncItem.cs" />
     <Compile Include="Native.cs" />
     <Compile Include="Repository.cs" />
     <Compile Include="Manifest.cs" />
@@ -229,6 +231,9 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Resources\bgimg.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Utils.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

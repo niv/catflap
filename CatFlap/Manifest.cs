@@ -12,50 +12,9 @@ using System.Windows;
 
 namespace Catflap
 {
-    public class Manifest
+    [Serializable]
+    public partial class Manifest
     {
-        public const int VERSION = 5;
-
-        public static JsonSchema Schema = JsonSchema.Parse(@"{
-	'$schema': 'http://json-schema.org/draft-04/schema#',
-	'description': 'Catflap Manifest',
-	'type': 'object',
-	'properties': {
-        'locked': { 'type': 'string', 'required': false },
-        'version':  { 'type': 'integer', 'required': true, 'minimum': 1 },
-        'title': { 'type': 'string', 'required': false },
-        'baseUrl': { 'type': 'string', 'required': true },
-        'rsyncUrl': { 'type': 'string', 'required': true },
-        'revision': { 'type': 'string', 'required': false },
-        'textColor': { 'type': 'string', 'required': false },
-
-        'warnWhenSetupWithUntracked': { 'type': 'boolean', 'required': false },
-
-        'fuzzy': { 'type': 'boolean', 'required': false },
-        'ignoreCase': { 'type': 'boolean', 'required': false },
-        'ignoreExisting': { 'type': 'boolean', 'required': false },
-        'purge': { 'type': 'boolean', 'required': false },
-
-        'runAction': { 'type': 'object', 'required': false },
-
-        'sync': { 'type': 'array', 'required': true, 'items':  {
-                'type': 'object',
-                'properties': {
-                    'name': { 'type': 'string', 'required': true },
-                    'type': { 'type': 'string', 'required': false },
-                    'mode': { 'type': 'string', 'required': false },
-                    'size': { 'type': 'integer', 'required': false, 'minimum': 0 },
-                    'count': { 'type': 'integer', 'required': false, 'minimum': 0 },
-                    'purge': { 'type': 'boolean', 'required': false },
-                    'mtime': { 'type': 'string', 'required': false },
-                    'fuzzy': { 'type': 'boolean', 'required': false },
-                    'ignoreCase': { 'type': 'boolean', 'required': false },
-                    'ignoreExisting': { 'type': 'boolean', 'required': false }
-                }
-            }
-        },
-    },
-}");
         // Repositories can be locked so that clients will be denied with a
         // appropriate message. Set to "" to unlock.
         public string locked = "";
@@ -108,45 +67,6 @@ namespace Catflap
         public bool? purge;
 
         public List<SyncItem> sync;
-
-        public class SyncItem
-        {
-            // The filename or dirname of the sync item in question.
-            // Make sure that directories ALWAYS terminate with a /.
-            public string name;
-
-            // The sync type. Currently supported:
-            // * "rsync": Download the given item via rsync (default).
-            // * "delete": Delete the given directory or file from the local repository.
-            public string type = "rsync";
-
-            // Uncompressed size in bytes
-            public long   size;
-
-            // Dir only: Number of files/directories in directory.
-            public long   count;
-            // Dir only: Pass --delete to rsync when syncing directory/ items.
-            // Will remove all untracked files that are not present
-            // in the repository.
-            public bool? purge;
-
-            // Transfer mode. one of 'inplace', 'replace' (default)
-            public string mode;
-
-            [JsonProperty(ItemConverterType = typeof(IsoDateTimeConverter))]
-            public DateTime mtime;
-
-            // Makes the updater skip syncing this file or directory if it
-            // exists on the client. Can be used for initial config-file syncs.
-            public bool? ignoreExisting;
-
-            // Do fuzzy-matching on the target. (--fuzzy)
-            public bool? fuzzy;
-
-            // Ignore case when updating/copying files (--ignore-case).
-            // Note: This needs a special patch on the server!
-            public bool? ignoreCase;
-        }
 
         public ManifestAction runAction;
 

@@ -173,29 +173,10 @@ namespace Catflap
         {
             new FileInfo(obj) { IsReadOnly = false }.Refresh();
 
-            foreach (FileInfo e in GetDirectoryElements(obj))
+            foreach (FileInfo e in Utils.GetDirectoryElements(obj))
             {
                 e.IsReadOnly = false;
                 e.Refresh();
-            }
-        }
-
-        private static FileInfo[] GetDirectoryElements(string parentDirectory)
-        {
-            // This throws IOException when directories are being locked by catflap
-            // (like partial dirs, or delayed updates).
-            try
-            {
-                if (Directory.Exists(parentDirectory))
-                    return new DirectoryInfo(parentDirectory).GetFiles("*", SearchOption.AllDirectories);
-                else if (File.Exists(parentDirectory))
-                    return new FileInfo[] { new FileInfo(parentDirectory) };
-                else
-                    return new FileInfo[] { };
-            }
-            catch (IOException)
-            {
-                return new FileInfo[] {};
             }
         }
 
@@ -214,118 +195,42 @@ namespace Catflap
             RepositoryStatus ret = new RepositoryStatus();
 
             IEnumerable<Manifest.SyncItem>
+                outdated = new List<Manifest.SyncItem>(),
                 dirsToCheck = new List<Manifest.SyncItem>(),
                 filesToCheck = new List<Manifest.SyncItem>();
 
-            if (AlwaysAssumeCurrent)
+            if (!AlwaysAssumeCurrent)
             {
+                outdated = LatestManifest.sync;
 
+                if (CurrentManifest != null)
+                {
+                    outdated = outdated.Where(f => {
+                        return !f.isCurrent(rootPath);
+                    });
+                }
+                    
+                dirsToCheck  = outdated.Where(f => f.name.EndsWith("/"));
+                filesToCheck = outdated.Where(f => !f.name.EndsWith("/"));
+
+                ret.guesstimatedBytesToVerify = outdated.Select(n => n.SizeOnDisk(rootPath)).Sum();
+                ret.maxBytesToVerify = outdated.Select(n => n.size).Sum();
+
+                ret.guesstimatedBytesToVerify = ret.guesstimatedBytesToVerify.Clamp(0);
+                ret.maxBytesToVerify = ret.maxBytesToVerify.Clamp(0);
+
+                ret.directoryCountToVerify = dirsToCheck.Count();
+                ret.fileCountToVerify = dirsToCheck.Select(n => n.count).Sum() + filesToCheck.Count();
+                ret.directoriesToVerify = dirsToCheck.ToList();
+                ret.filesToVerify = filesToCheck.ToList();
             }
-            else
-            {
-                // For directories, we check mtime and file count.
-                dirsToCheck = LatestManifest.sync.
-                    Where(f => f.name.EndsWith("/")).
-                    Where(f =>
-                            (f.type == "rsync" && (
-                                // Always check dirs that ..
-
-                                // don't exist locally yet
-                                !Directory.Exists(rootPath + "/" + f.name) ||
-
-                                (!f.ignoreExisting.GetValueOrDefault() && (
-
-                                    // are not young enough mtime
-                                    Math.Abs((new FileInfo(rootPath + "/" + f.name).LastWriteTime - f.mtime).TotalSeconds) > 1 ||
-
-                                    // have mismatching item count
-                                    GetDirectoryElements(rootPath + "/" + f.name).Count() < f.count ||
-
-                                    // are not big enough
-                                    GetDirectoryElements(rootPath + "/" + f.name).Sum(file => file.Length) < f.size
-                                ))
-                            )) || (f.type == "delete" && (
-                                Directory.Exists(rootPath + "/" + f.name)
-                            ))
-                    );
-
-                // For files, we check metadata, mtime & size only.
-                filesToCheck = LatestManifest.sync.
-                    Where(f => !f.name.EndsWith("/")).
-                    Where(f =>
-                            (f.type == "rsync" && (
-                                !File.Exists(rootPath + "/" + f.name) ||
-
-                                (!f.ignoreExisting.GetValueOrDefault() && (
-                                    (f.mtime != null && Math.Abs((new FileInfo(rootPath + "/" + f.name).LastWriteTime - f.mtime).TotalSeconds) > 1) ||
-
-                                    (new FileInfo(rootPath + "/" + f.name).Length != f.size)
-                                ))
-                            )) || (f.type == "delete" && (
-                                File.Exists(rootPath + "/" + f.name)
-                            ))
-                    );
-                
-            }
-
-            ret.guesstimatedBytesToVerify =
-                // All the data we have, we assume to be correct, so we just take the diff.
-                filesToCheck.Select(n => n.size - (File.Exists(rootPath + "/" + n.name) ? new FileInfo(rootPath + "/" + n.name).Length : 0)).Sum() +
-                dirsToCheck.Select(n => n.size - GetDirectoryElements(rootPath + "/" + n.name).Sum(file => file.Length)).Sum();
-    
-            ret.maxBytesToVerify =
-                filesToCheck.Select(n => n.size).Sum() + 
-                dirsToCheck.Select(n => n.size).Sum();
-
-            /*
-            ret.guesstimatedBytesToXfer =
-                // All the data we have, we assume to be correct, so we just take the diff.
-                // We're also guessing at some compression ratio by comparing size and csize.
-                filesToCheck.Select(n => n.csize - (File.Exists(rootPath + "/" + n.name) ? new FileInfo(rootPath + "/" + n.name).Length * (n.csize / n.size) : 0)).Sum() +
-                dirsToCheck.Select(n => n.csize - (GetDirectoryElements(rootPath + "/" + n.name).Sum(file => file.Length) * (n.csize / n.size))).Sum();
-
-            // Worst case, we need to transfer everything.
-            ret.maxBytesToXfer =
-                filesToCheck.Select(n => n.csize).Sum() +
-                dirsToCheck.Select(n => n.csize).Sum();
-            */
-
-            ret.maxBytesToVerify = ret.maxBytesToVerify.Clamp(0);
-            ret.guesstimatedBytesToVerify = ret.guesstimatedBytesToVerify.Clamp(0);
-            // ret.maxBytesToXfer = ret.maxBytesToXfer.Clamp(0);
-            // ret.guesstimatedBytesToXfer = ret.guesstimatedBytesToXfer.Clamp(0);
-
-
-            ret.directoryCountToVerify = dirsToCheck.Count();
-            ret.fileCountToVerify = dirsToCheck.Select(n => n.count).Sum() + filesToCheck.Count();
-            ret.directoriesToVerify = dirsToCheck.ToList();
-            ret.filesToVerify = filesToCheck.ToList();
 
             ret.sizeOnRemote = LatestManifest.sync.Select(n => n.size).Sum();
-            ret.sizeOnDisk = LatestManifest.sync.Select(n =>
-                    Directory.Exists(rootPath + "/" + n.name)
-                        ? GetDirectoryElements(rootPath + "/" + n.name).Sum(file => file.Length)
-                        : (File.Exists(rootPath + "/" + n.name) ? new FileInfo(rootPath + "/" + n.name).Length : 0)
-                ).Sum();
+            ret.sizeOnDisk = LatestManifest.sync.Select(n => n.SizeOnDisk(rootPath)).Sum();
 
             ret.current = LatestManifest != null && CurrentManifest != null &&
                 ret.fileCountToVerify == 0 &&
                 ret.directoryCountToVerify == 0;
-
-            /*foreach (var x in dirsToCheck)
-            {
-                var c = GetDirectoryElements(rootPath + "/" + x.name);
-                Console.WriteLine("dirToCheck: " + x.name + " expected " + x.size + ", got " + c.Sum(file => file.Length) + ", count = " + x.count + ", ex = " + c.Count());
-                var fi  =new FileInfo(rootPath + "/" + x.name).LastWriteTime;
-                Console.WriteLine("  mtime: " + fi + " vs " + x.mtime + " cmp " + (fi <= x.mtime));
-            }
-            foreach (var x in filesToCheck)
-            {
-                var c = new FileInfo(rootPath + "/" + x.name);
-                Console.WriteLine("filesToCheck: " + x.name + " expected " + x.size + ", got " + c.Length);
-                var fi = new FileInfo(rootPath + "/" + x.name).LastWriteTime;
-                Console.WriteLine("  mtime: " + fi + " vs " + x.mtime + " cmp " + (fi - x.mtime).TotalSeconds);
-            }*/
 
             this.Status = ret;
         }
