@@ -22,6 +22,7 @@ namespace Catflap
         'rsyncUrl': { 'type': 'string', 'required': true },
         'revision': { 'type': 'string', 'required': false },
         'textColor': { 'type': 'string', 'required': false },
+        'darkTheme': { 'type': 'boolean', 'required': false },
 
         'warnWhenSetupWithUntracked': { 'type': 'boolean', 'required': false },
 

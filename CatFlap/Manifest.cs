@@ -45,7 +45,10 @@ namespace Catflap
 
         // Text color in hexadecimal notation (for example, "#ffee33"). Can be used to adjust
         // to background images where black does not work.
-        public string textColor;
+        public string textColor = "#000000";
+
+        // Use a dark theme instead of light.
+        public bool darkTheme = false;
 
         // A optional revision string, which will be printed to the log, but has no bearing on syncing.
         // Useful for debugging or informational displays on clients.

@@ -9,7 +9,7 @@
         Title="Catflap" Height="500" Width="400" WindowStartupLocation="CenterScreen" ResizeMode="CanMinimize" BorderThickness="0" BorderBrush="Gray" Background="White" WindowTransitionsEnabled="False" ShowIconOnTitleBar="False">
 
     <i:Interaction.Behaviors>
-        <behaviours:BorderlessWindowBehavior ResizeWithGrip="False" EnableDWMDropShadow="True" AllowsTransparency="False" />
+        <behaviours:BorderlessWindowBehavior EnableDWMDropShadow="True" />
     </i:Interaction.Behaviors>
 
     <Window.TaskbarItemInfo>
@@ -29,13 +29,13 @@
         </Controls:FlyoutsControl>
     </Controls:MetroWindow.Flyouts>
 
-    <Controls:MetroWindow.WindowCommands>
+    <Controls:MetroWindow.RightWindowCommands>
         <Controls:WindowCommands>
             <Button x:Name="btnHelp" Content="?" Click="btnHelp_Click" ToolTip="Catflap website." />
             <Button x:Name="btnShowHideLog" Content="more" Click="btnShowHideLog_Click" />
 
         </Controls:WindowCommands>
-    </Controls:MetroWindow.WindowCommands>
+    </Controls:MetroWindow.RightWindowCommands>
 
 
     <Grid x:Name="gridMainWindow" Margin="0,0,0,0">
@@ -48,14 +48,25 @@
             <ColumnDefinition/>
         </Grid.ColumnDefinitions>
 
-        <Button x:Name="btnRun" Content="Run" Margin="10,0,10,10" Click="btnRun_Click" FontWeight="Bold" IsEnabled="False" Grid.Column="1"  Style="{StaticResource AccentedSquareButtonStyle}" Height="36" VerticalAlignment="Bottom" Opacity="0.8" IsDefault="True" />
+        <Button x:Name="btnRun" Content="Run" Margin="10,0,10,10" Click="btnRun_Click" FontWeight="Bold" IsEnabled="False" Grid.Column="1"  Style="{StaticResource AccentedSquareButtonStyle}" Height="36" VerticalAlignment="Bottom" IsDefault="True" BorderThickness="1" Opacity="0.9">
+            <Button.Effect>
+                <DropShadowEffect BlurRadius="5" Opacity="0.5"/>
+            </Button.Effect>
+        </Button>
 
-        <Button x:Name="btnDownload" Content="sync" Margin="10,0,10,10" FontWeight="Bold" IsEnabled="False" Click="btnDownload_Click" BorderThickness="1" Style="{DynamicResource SquareButtonStyle}" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Height="36" VerticalAlignment="Bottom" Opacity="0.8" />
+        <Button x:Name="btnDownload" Content="sync" Margin="10,0,10,10" FontWeight="Bold" IsEnabled="False" Click="btnDownload_Click" BorderThickness="1" Style="{DynamicResource SquareButtonStyle}" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Height="36" VerticalAlignment="Bottom"  Opacity="0.9">
+            <Button.Effect>
+                <DropShadowEffect BlurRadius="5" Opacity="0.5"/>
+            </Button.Effect>
+        </Button>
 
         <TextBlock x:Name="labelDownloadStatus" Margin="0,0,0,50" Text="{}{0} - {1}% of {2} at {3}/s" Padding="5,0" RenderTransformOrigin="0.489,-0.039" Panel.ZIndex="100" FontSize="10" Grid.ColumnSpan="2" Height="17" VerticalAlignment="Bottom" TextAlignment="Center"/>
         <!--<ProgressBar x:Name="globalProgress" Height="3" BorderBrush="Black" Grid.ColumnSpan="2" BorderThickness="0" VerticalAlignment="Top" Background="#FF898989" />-->
         <TextBlock x:Name="labelDLSize" Text="(to check)" Margin="10,0,10,64" VerticalAlignment="Bottom" RenderTransformOrigin="0.868,0.192" Height="30" TextAlignment="Center" Grid.ColumnSpan="2" FontSize="20" FontFamily="Segoe UI Light"/>
-        <Button x:Name="btnCancel" Style="{DynamicResource MetroCircleButtonStyle}" HorizontalAlignment="Left" Margin="2,0,0,3" Width="50" Click="btnCancel_Click" Background="#FFF7F7F7" Panel.ZIndex="2" Height="50" VerticalAlignment="Bottom">
+        <Button x:Name="btnCancel" Style="{DynamicResource MetroCircleButtonStyle}" HorizontalAlignment="Left" Margin="2,0,0,3" Width="50" Click="btnCancel_Click" Panel.ZIndex="2" Height="50" VerticalAlignment="Bottom" BorderThickness="0" Background="White">
+            <Button.Effect>
+                <DropShadowEffect BlurRadius="10" Opacity="0.5"/>
+            </Button.Effect>
             <Rectangle Width="20" Height="20">
                 <Rectangle.Fill>
                     <VisualBrush Stretch="Fill" Visual="{StaticResource appbar_stop}" />

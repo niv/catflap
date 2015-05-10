@@ -68,13 +68,13 @@ namespace Catflap
 
         // UI colour states:
         // green/blue - all ok, repo up to date
-        private Accent accentOK = ThemeManager.Accents.First(x => x.Name == "Olive");
+        private Accent accentOK = ThemeManager.GetAccent("Olive");
         // orange     - repo not current
-        private Accent accentWarning = ThemeManager.Accents.First(x => x.Name == "Amber");
+        private Accent accentWarning = ThemeManager.GetAccent("Amber");
         // red        - failure
-        private Accent accentError = ThemeManager.Accents.First(x => x.Name == "Crimson");
+        private Accent accentError = ThemeManager.GetAccent("Crimson");
         // mauve     - busy
-        private Accent accentBusy = ThemeManager.Accents.First(x => x.Name == "Mauve");
+        private Accent accentBusy = ThemeManager.GetAccent("Mauve");
 
         private Accent currTheme;
 
@@ -86,8 +86,10 @@ namespace Catflap
                 currTheme = t;
                 Application.Current.Dispatcher.Invoke(() =>
                 {
-                    ThemeManager.ChangeAppStyle(Application.Current, t,
-                        ThemeManager.AppThemes.First(x => x.Name == "BaseLight"));
+                    var themestr = (repository.LatestManifest != null && repository.LatestManifest.darkTheme) ?
+                        "BaseDark" : "BaseLight";
+
+                    ThemeManager.ChangeAppStyle(Application.Current, t, ThemeManager.GetAppTheme(themestr));
                 });
             }
             return c;
@@ -162,7 +164,9 @@ namespace Catflap
 
         private void SetGlobalStatus(bool lastOperationOK = true, string message = null, double percent = -1, string progressMsg = null)
         {
-            if (!lastOperationOK)
+            if (cts != null)
+                 SetTheme(accentBusy);
+            else if (!lastOperationOK)
                 SetTheme(accentError);
             else if (repository.Status.current)
                 SetTheme(accentOK);
@@ -558,8 +562,10 @@ namespace Catflap
                 SetUIState(true);
             }
             
+            bool wasCancel = cts.IsCancellationRequested;
+            cts = null;
 
-            if (cts.IsCancellationRequested)
+            if (wasCancel)
             {
                 SetGlobalStatus(true, "ABORTED");
                 SetUIProgressState(false, -1, "ABORTED (" + bytesOnNetwork.BytesToHuman() + " of actual network traffic)");
@@ -572,8 +578,6 @@ namespace Catflap
 
                 await UpdateRootManifest(!checkboxSimulate.IsChecked.Value);
             }
-
-            cts = null;
 
             if (CloseAfterSync)
                 this.Close();
