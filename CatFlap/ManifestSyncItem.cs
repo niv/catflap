@@ -16,6 +16,11 @@ namespace Catflap
             // Make sure that directories ALWAYS terminate with a /.
             public string name;
 
+            // The serverside revision. This is used to quickly match local revisions
+            // is incremented by the serverside utility automatically.
+            // Note that this is a internal uint, not a user-supplied string.
+            public uint revision;
+
             // The sync type. Currently supported:
             // * "rsync": Download the given item via rsync (default).
             // * "delete": Delete the given directory or file from the local repository.

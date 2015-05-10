@@ -36,6 +36,7 @@ namespace Catflap
                 'type': 'object',
                 'properties': {
                     'name': { 'type': 'string', 'required': true },
+                    'revision': { 'type': 'integer', 'required': false },
                     'type': { 'type': 'string', 'required': false },
                     'mode': { 'type': 'string', 'required': false },
                     'size': { 'type': 'integer', 'required': false, 'minimum': 0 },
