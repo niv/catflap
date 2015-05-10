@@ -357,7 +357,7 @@ namespace Catflap
             this.KeyDown += new KeyEventHandler(async (o, kea) => {
                 if (kea.Key == Key.F5)
                 {
-                    await UpdateRootManifest(!checkboxSimulate.IsChecked.Value);
+                    await UpdateRootManifest();
                     repository.UpdateStatus();
                     this.SetGlobalStatus();
                 }
