@@ -23,6 +23,9 @@ namespace Catflap
             {
                 var fullPath = (rootPath + "/" + syncItem.name).NormalizePath();
 
+                if (fullPath.EndsWith(".catflap"))
+                    throw new ValidationException("cannot sync items into catflap directories at " + syncItem.name);
+
                 if (fullPath == rootPath)
                     throw new ValidationException("cannot sync the root path directly at " + syncItem.name);
 
