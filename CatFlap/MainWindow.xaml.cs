@@ -474,7 +474,7 @@ namespace Catflap
                     repository.AlwaysAssumeCurrent = true;
                     goto Retry;
                 }
-                else if (err is Repository.ValidationException)
+                else if (err is ValidationException)
                 {
                     MessageBox.Show("There are problems with the repository manifest " +
                                     "(This is probably not your fault, it needs to be fixed in the repository!):" +

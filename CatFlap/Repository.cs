@@ -21,7 +21,6 @@ namespace Catflap
 {
     public class Repository
     {
-        public class ValidationException : Exception { public ValidationException(string message) : base(message) { } };
         public class AuthException : Exception { };
 
         public Policy AuthPolicy;
@@ -273,49 +272,7 @@ namespace Catflap
             if (messages.Count > 0)
                 throw new ValidationException("manifest is not valid: " + string.Join("\n", messages));
 
-            // Basic sanity checks for all sync items
-            foreach (var syncItem in mf.sync)
-            {
-                var fullPath = (rootPath + "/" + syncItem.name).NormalizePath();
-
-                if (fullPath == rootPath)
-                    throw new ValidationException("cannot sync the root path directly at " + syncItem.name);
-
-                if (!fullPath.StartsWith(rootPath))
-                    throw new ValidationException("would place synced item outside of root path: " + syncItem.name);
-
-                if (syncItem.type != "delete" && syncItem.type != "rsync")
-                    throw new ValidationException("invalid sync item type: " + syncItem.type + " for " + syncItem.name);
-            }
-
-            if (!mf.baseUrl.StartsWith("http://") && !mf.baseUrl.StartsWith("https://"))
-                throw new ValidationException("baseUrl does not start with http(s)://");
-            if (!mf.rsyncUrl.StartsWith("rsync://"))
-                throw new ValidationException("rsyncUrl does not start with rsync://");
-
-            if (mf.version != Manifest.VERSION)
-                throw new ValidationException("Your catflap.exe is of a different version than this repository (Expected: " +
-                    mf.version + ", you: " + Manifest.VERSION + "). Please make sure you're using the right version.");
-
-            if (mf.ignoreCase.HasValue)
-                foreach (var syncItem in mf.sync)
-                    if (!syncItem.ignoreCase.HasValue)
-                        syncItem.ignoreCase = mf.ignoreCase.Value;
-
-            if (mf.fuzzy.HasValue)
-                foreach (var syncItem in mf.sync)
-                    if (!syncItem.fuzzy.HasValue)
-                        syncItem.fuzzy = mf.fuzzy.Value;
-
-            if (mf.ignoreExisting.HasValue)
-                foreach (var syncItem in mf.sync)
-                    if (!syncItem.ignoreExisting.HasValue)
-                        syncItem.ignoreExisting = mf.ignoreExisting.Value;
-
-            if (mf.purge.HasValue)
-                foreach (var syncItem in mf.sync)
-                    if (!syncItem.purge.HasValue)
-                        syncItem.purge = mf.purge.Value;
+            mf.Validate(rootPath);
 
             return mf;
         }

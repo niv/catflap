@@ -131,6 +131,7 @@
     <Compile Include="FileIcon.cs" />
     <Compile Include="Job.cs" />
     <Compile Include="DownloadTypes.cs" />
+    <Compile Include="ManifestValidation.cs" />
     <Compile Include="ManifestSchema.cs" />
     <Compile Include="ManifestSyncItem.cs" />
     <Compile Include="Native.cs" />
