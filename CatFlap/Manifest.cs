@@ -72,33 +72,5 @@ namespace Catflap
         public List<SyncItem> sync;
 
         public ManifestAction runAction;
-
-        public class ManifestAction
-        {
-            // The displayed string on the button.
-            public string name;
-            // The path to a binary file to execute.
-            // Supports substituting variables as described below.
-            public string execute;
-            // Argument string passed to binary.
-            // Supports substituting variables as described below.
-            public string arguments;
-
-            // Set to true to allow client arguments being passed/appended
-            // to the command line for run action.
-            public bool passArguments;
-
-            // Allow pressing the run button even if the local repository is not up to date.
-            public bool allowOutdated;
-        }
-
-
-        /*
-         * Substitutable variables:
-         * 
-         * %root%     - the root directory (e.g. where catflap.exe is located)
-         * %app%      - the app directory, where catflap stores it's internal data (e.g. catflap.exe.catflap)
-         * %user%     - the stored user credential, if any
-         */
     }
 }

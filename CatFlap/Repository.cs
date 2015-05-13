@@ -35,8 +35,8 @@ namespace Catflap
 
         private bool simulate = false;
         private bool verifyUpdateFull = false;
-        private string rootPath;
-        private string appPath;
+        public string rootPath;
+        public string appPath;
         private string tmpPath;
         private WebClient wc;
 

@@ -48,14 +48,6 @@ namespace Catflap
             }));
         }
 
-        private string SubstituteVars(string a)
-        {
-            return a.
-                Replace("%app%", appPath).
-                Replace("%root%", rootPath).
-                Replace("%user%", repository.Username);
-        }
-
 
         private static string[] resourcesToUnpack =
         {
@@ -583,26 +575,6 @@ namespace Catflap
                 this.Close();
         }
 
-
-        private async Task ExecuteAction(Catflap.Manifest.ManifestAction ac, string[] additionalArgs)
-        {
-            var cmd = SubstituteVars(ac.execute);
-            var args = SubstituteVars(ac.arguments) + (" " + string.Join(" ", additionalArgs)).TrimEnd(' ');
-            Log("Run Action: " + cmd + " " + args);
-
-            Process pProcess = new System.Diagnostics.Process();
-            pProcess.StartInfo.FileName = cmd;
-            pProcess.StartInfo.UseShellExecute = true;
-            pProcess.StartInfo.Arguments = args;
-            pProcess.StartInfo.WorkingDirectory = rootPath;
-
-            await Task.Run(delegate()
-            {
-                pProcess.Start();
-                pProcess.WaitForExit();
-            });
-        }
-
         private async Task RunAction()
         {
             Accent old = SetTheme(accentBusy);
@@ -610,7 +582,7 @@ namespace Catflap
             SetUIState(false);
             try
             {
-                await ExecuteAction(repository.LatestManifest.runAction,
+                await repository.LatestManifest.runAction.Run(repository,
                     repository.LatestManifest.runAction.passArguments ? App.mArgs : new string[] { });
             }
             catch (Exception ex)
