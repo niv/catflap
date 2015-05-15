@@ -252,7 +252,6 @@ namespace Catflap
                 if (ee.Data != null)
                 {
                     /* Send everything to the log as-is. */
-                    Console.WriteLine("(stdout) " + ee.Data);
                     dm.Invoke("(stdout) " + ee.Data);
 
                     switch (ee.Data)

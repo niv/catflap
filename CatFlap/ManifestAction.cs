@@ -55,8 +55,8 @@ namespace Catflap
             private string SubstituteVars(Repository repository, string a)
             {
                 return a.
-                    Replace("%app%", repository.appPath).
-                    Replace("%root%", repository.rootPath).
+                    Replace("%app%", repository.AppPath).
+                    Replace("%root%", repository.RootPath).
                     Replace("%user%", repository.Username);
             }
 
@@ -76,7 +76,7 @@ namespace Catflap
                     pProcess.StartInfo.Verb = this.verb;
                 
                 pProcess.StartInfo.Arguments = args;
-                pProcess.StartInfo.WorkingDirectory = repository.rootPath;
+                pProcess.StartInfo.WorkingDirectory = repository.RootPath;
 
                 await Task.Run(delegate()
                 {

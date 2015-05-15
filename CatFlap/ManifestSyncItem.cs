@@ -54,42 +54,60 @@ namespace Catflap
             public bool? ignoreCase;
 
             // Returns true if this sync item is current on the given rootPath.
-            public bool isCurrent(string rootPath)
+            public bool isCurrent(Repository repository)
             {
-                return !isOutdated(rootPath);
+                return !isOutdated(repository);
             }
 
-            public long SizeOnDisk(string rootPath)
+            public long SizeOnDisk(Repository repository)
             {
-                // All the data we have, we assume to be correct, so we just take the diff.
+                long sz = 0;
 
                 if (this.name.EndsWith("/"))
-                    return (this.size - Utils.GetDirectoryElements(rootPath + "/" + this.name).Sum(file => file.Length));
-
-                else if (File.Exists(rootPath + "/" + this.name))
-                    return new FileInfo(rootPath + "/" + this.name).Length;
+                    sz = (this.size - Utils.GetDirectoryElements(repository.RootPath + "/" + this.name).Sum(file => file.Length));
 
                 else
-                    return 0;
+                {
+                    var fileInfo = new FileInfo(repository.RootPath + "/" + this.name);
+
+                    if (fileInfo.Exists)
+                        sz += fileInfo.Length;
+
+                    // Check partial dir
+                    var partialInfo = new FileInfo(fileInfo.Directory.FullName + "/catflap.partials/" + fileInfo.Name);
+
+                    // Check the current-transfer temp dir for in-flight ransfers
+                    if (Directory.Exists(repository.TmpPath))
+                    {
+                        sz += Directory.EnumerateFiles(repository.TmpPath).
+                            Where(x => new FileInfo(x).Name.StartsWith(fileInfo.Name)).
+                            Select(x => new FileInfo(x).Length).Sum();
+                    }
+                        // Otherwise, check for partials
+                    else if (partialInfo.Exists)
+                        sz += partialInfo.Length;
+                }
+
+                return sz.Clamp(0);
             }
 
-            private bool isOutdated(string rootPath)
+            private bool isOutdated(Repository repository)
             {
                 if (this.name.EndsWith("/"))
                 {
-                    var directoryElements = Utils.GetDirectoryElements(rootPath + "/" + this.name);
+                    var directoryElements = Utils.GetDirectoryElements(repository.RootPath + "/" + this.name);
 
                     // Always check dirs that ..
                     return (this.type == "rsync" && (
                         // Always check dirs that ..
 
                                 // don't exist locally yet
-                                !Directory.Exists(rootPath + "/" + this.name) ||
+                                !Directory.Exists(repository.RootPath + "/" + this.name) ||
 
                                 (!this.ignoreExisting.GetValueOrDefault() && (
 
                                     // are not young enough mtime
-                                    Math.Abs((new FileInfo(rootPath + "/" + this.name).LastWriteTime - this.mtime).TotalSeconds) > 1 ||
+                                    Math.Abs((new FileInfo(repository.RootPath + "/" + this.name).LastWriteTime - this.mtime).TotalSeconds) > 1 ||
 
                                     // have mismatching item count
                                     directoryElements.Count() < this.count ||
@@ -98,21 +116,21 @@ namespace Catflap
                                     directoryElements.Sum(file => file.Length) < this.size
                                 ))
                             )) || (this.type == "delete" && (
-                                Directory.Exists(rootPath + "/" + this.name)
+                                Directory.Exists(repository.RootPath + "/" + this.name)
                             ));
                 }
                 else
                 {
                     return (this.type == "rsync" && (
-                                !File.Exists(rootPath + "/" + this.name) ||
+                                !File.Exists(repository.RootPath + "/" + this.name) ||
 
                                 (!this.ignoreExisting.GetValueOrDefault() && (
-                                    (this.mtime != null && Math.Abs((new FileInfo(rootPath + "/" + this.name).LastWriteTime - this.mtime).TotalSeconds) > 1) ||
+                                    (this.mtime != null && Math.Abs((new FileInfo(repository.RootPath + "/" + this.name).LastWriteTime - this.mtime).TotalSeconds) > 1) ||
 
-                                    (new FileInfo(rootPath + "/" + this.name).Length != this.size)
+                                    (new FileInfo(repository.RootPath + "/" + this.name).Length != this.size)
                                 ))
                             )) || (this.type == "delete" && (
-                                File.Exists(rootPath + "/" + this.name)
+                                File.Exists(repository.RootPath + "/" + this.name)
                             ));
                 }
             }

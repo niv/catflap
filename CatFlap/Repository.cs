@@ -23,7 +23,7 @@ namespace Catflap
     {
         public class AuthException : Exception { };
 
-        public Policy AuthPolicy;
+        public Policy AuthPolicy { get; private set; }
 
         // The latest available manifest on the server.
         public Manifest LatestManifest { get; private set; }
@@ -35,9 +35,11 @@ namespace Catflap
 
         private bool simulate = false;
         private bool verifyUpdateFull = false;
-        public string rootPath;
-        public string appPath;
-        private string tmpPath;
+
+        public string RootPath { get; private set; }
+        public string AppPath { get; private set; }
+        public string TmpPath { get; private set; }
+
         private WebClient wc;
 
         public string Username { get; private set; }
@@ -48,13 +50,13 @@ namespace Catflap
             {
                 this.Username = null; this.Password = null;
                 wc.Credentials = null;
-                File.Delete(appPath + "\\auth");
+                File.Delete(AppPath + "\\auth");
             }
             else
             {
                 this.Username = u; this.Password = p;
                 wc.Credentials = new NetworkCredential(Username, Password);
-                System.IO.File.WriteAllText(appPath + "\\auth", Username + ":" + Password);
+                System.IO.File.WriteAllText(AppPath + "\\auth", Username + ":" + Password);
             }
         }
 
@@ -125,9 +127,9 @@ namespace Catflap
 
         private void init(string baseUrl, string rootPath, string appPath)
         {
-            this.rootPath = rootPath.NormalizePath();
-            this.appPath = appPath.NormalizePath();
-            this.tmpPath = this.appPath + "\\temp";
+            this.RootPath = rootPath.NormalizePath();
+            this.AppPath = appPath.NormalizePath();
+            this.TmpPath = this.AppPath + "\\temp";
 
             Directory.CreateDirectory(appPath);
             
@@ -211,11 +213,11 @@ namespace Catflap
                             var f_old = CurrentManifest.sync.Find(_f_old => _f_old.name == f.name);
                             // No old sync item: new item
                             if (f_old == null)
-                                return !f.isCurrent(rootPath);
+                                return !f.isCurrent(this);
 
                             // No old revision: fallback to old check (and don't trigger force updates)
                             if (f_old != null && f_old.revision == 0)
-                                return !f.isCurrent(rootPath);
+                                return !f.isCurrent(this);
 
                             // Mismatching revision: always force check
                             if (f_old != null && f_old.revision != f.revision)
@@ -223,16 +225,19 @@ namespace Catflap
 
                             // Matching revisions still incur the regular check to catch deleted/touched files
                         }
-                        
-                        return !f.isCurrent(rootPath);
+
+                        return !f.isCurrent(this);
                     });
                 }
                     
                 dirsToCheck  = outdated.Where(f => f.name.EndsWith("/"));
                 filesToCheck = outdated.Where(f => !f.name.EndsWith("/"));
 
-                ret.guesstimatedBytesToVerify = outdated.Select(n => n.SizeOnDisk(rootPath)).Sum();
-                ret.maxBytesToVerify = outdated.Select(n => n.size).Sum();
+                long outdatedSizeLocally = outdated.Select(n => n.SizeOnDisk(this)).Sum();
+                long outdatedSizeRemote = outdated.Select(n => n.size).Sum();
+
+                ret.guesstimatedBytesToVerify = outdatedSizeRemote - outdatedSizeLocally;
+                ret.maxBytesToVerify = outdatedSizeRemote;
 
                 ret.guesstimatedBytesToVerify = ret.guesstimatedBytesToVerify.Clamp(0);
                 ret.maxBytesToVerify = ret.maxBytesToVerify.Clamp(0);
@@ -244,7 +249,7 @@ namespace Catflap
             }
 
             ret.sizeOnRemote = LatestManifest.sync.Select(n => n.size).Sum();
-            ret.sizeOnDisk = LatestManifest.sync.Select(n => n.SizeOnDisk(rootPath)).Sum();
+            ret.sizeOnDisk = LatestManifest.sync.Select(n => n.SizeOnDisk(this)).Sum();
 
             ret.current = LatestManifest != null && CurrentManifest != null &&
                 ret.fileCountToVerify == 0 &&
@@ -272,7 +277,7 @@ namespace Catflap
             if (messages.Count > 0)
                 throw new ValidationException("manifest is not valid: " + string.Join("\n", messages));
 
-            mf.Validate(rootPath);
+            mf.Validate(RootPath);
 
             return mf;
         }
@@ -283,8 +288,8 @@ namespace Catflap
             {
                 FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location);
                 var req = (HttpWebRequest)WebRequest.Create(CurrentManifest.baseUrl + "/" + filename + "?catflap=" + fvi.FileVersion);
-                if (File.Exists(appPath + "/" + filename))
-                    req.IfModifiedSince = new FileInfo(appPath + "/" + filename).LastWriteTime;
+                if (File.Exists(AppPath + "/" + filename))
+                    req.IfModifiedSince = new FileInfo(AppPath + "/" + filename).LastWriteTime;
                 if (Username != null)
                     req.Credentials = new NetworkCredential(Username, Password);
                 req.Proxy = null;
@@ -303,8 +308,8 @@ namespace Catflap
                                 memoryStream.Write(buffer, 0, count);
                             } while (count != 0);
 
-                            System.IO.File.WriteAllBytes(appPath + "/" + filename, memoryStream.ToArray());
-                            File.SetLastWriteTime(appPath + "/" + filename, res.LastModified);
+                            System.IO.File.WriteAllBytes(AppPath + "/" + filename, memoryStream.ToArray());
+                            File.SetLastWriteTime(AppPath + "/" + filename, res.LastModified);
                         }
                     }
                 }
@@ -315,8 +320,8 @@ namespace Catflap
                 {
                     case HttpStatusCode.Forbidden:
                     case HttpStatusCode.NotFound:
-                        if (File.Exists(appPath + "/" + filename))
-                            File.Delete(appPath + "/" + filename);
+                        if (File.Exists(AppPath + "/" + filename))
+                            File.Delete(AppPath + "/" + filename);
                         break;
                 }
 
@@ -331,9 +336,9 @@ namespace Catflap
             {
                 if (this.AlwaysAssumeCurrent)
                 {
-                    if (File.Exists(appPath + "\\catflap.json"))
+                    if (File.Exists(AppPath + "\\catflap.json"))
                     {
-                        LatestManifest = JsonConvert.DeserializeObject<Manifest>(System.IO.File.ReadAllText(appPath + "\\catflap.json"));
+                        LatestManifest = JsonConvert.DeserializeObject<Manifest>(System.IO.File.ReadAllText(AppPath + "\\catflap.json"));
                         CurrentManifest = LatestManifest;
                     }
                     else
@@ -347,12 +352,12 @@ namespace Catflap
     
                     if (setNewAsCurrent)
                     {
-                        System.IO.File.WriteAllText(appPath + "\\catflap.json", JsonConvert.SerializeObject(LatestManifest));
+                        System.IO.File.WriteAllText(AppPath + "\\catflap.json", JsonConvert.SerializeObject(LatestManifest));
                         CurrentManifest = LatestManifest;
                     }
                     else
-                        if (File.Exists(appPath + "\\catflap.json"))
-                            CurrentManifest = JsonConvert.DeserializeObject<Manifest>(System.IO.File.ReadAllText(appPath + "\\catflap.json"));
+                        if (File.Exists(AppPath + "\\catflap.json"))
+                            CurrentManifest = JsonConvert.DeserializeObject<Manifest>(System.IO.File.ReadAllText(AppPath + "\\catflap.json"));
 
                     Console.WriteLine(LatestManifest);
 
@@ -374,22 +379,22 @@ namespace Catflap
             {
                 case "rsync":
                     RSyncDownloader dd = new RSyncDownloader(this);
-                    dd.appPath = appPath;
-                    dd.tmpPath = tmpPath;
+                    dd.appPath = AppPath;
+                    dd.tmpPath = TmpPath;
                     dd.VerifyChecksums = verify;
                     dd.Simulate = simulate;
-                    return dd.Download(LatestManifest.rsyncUrl + "/" + f.name, f, rootPath,
+                    return dd.Download(LatestManifest.rsyncUrl + "/" + f.name, f, RootPath,
                         dpc, de, dm, cts, overrideDestination);
 
                 case "delete":
                     return Task<bool>.Run(() =>
                     {
-                        if (f.name.EndsWith("/") && Directory.Exists(rootPath + "/" + f.name)) {
+                        if (f.name.EndsWith("/") && Directory.Exists(RootPath + "/" + f.name)) {
                             dm.Invoke("Deleting directory " + f.name);
-                            Directory.Delete(rootPath + "/" + f.name, true);
-                        } else if (File.Exists(rootPath + "/" + f.name)) {
+                            Directory.Delete(RootPath + "/" + f.name, true);
+                        } else if (File.Exists(RootPath + "/" + f.name)) {
                             dm.Invoke("Deleting file " + f.name);
-                            File.Delete(rootPath + "/" + f.name);
+                            File.Delete(RootPath + "/" + f.name);
                         }
                         return true;
                     });
@@ -410,19 +415,19 @@ namespace Catflap
 
         private Task<long> RunAllSyncItems(CancellationTokenSource cts)
         {
-            string basePath = rootPath;
+            string basePath = RootPath;
 
             /* Cleanup leftover files from a forced abort. */
-            if (Directory.Exists(tmpPath))
+            if (Directory.Exists(TmpPath))
             {
-                var di = new DirectoryInfo(tmpPath).GetFiles("*", SearchOption.TopDirectoryOnly);
+                var di = new DirectoryInfo(TmpPath).GetFiles("*", SearchOption.TopDirectoryOnly);
                 foreach (var tmpfile in di)
                 {
                     OnDownloadMessage("<deleting leftover file from forced abort: " + tmpfile.Name + ">", true);
                     File.Delete(tmpfile.FullName);
                 }
             }
-            Directory.CreateDirectory(tmpPath);
+            Directory.CreateDirectory(TmpPath);
 
             var updaterBinaryLastWriteTimeBefore = new FileInfo(Assembly.GetExecutingAssembly().Location).LastWriteTime;
 
@@ -459,7 +464,7 @@ namespace Catflap
                     try
                     {
                         // new FileInfo(rootPath + "/" + f.name) {IsReadOnly = false}.Refresh();
-                        EnsureWriteable(rootPath + "/" + f.name);
+                        EnsureWriteable(RootPath + "/" + f.name);
                     }
                     catch (Exception e)
                     {
