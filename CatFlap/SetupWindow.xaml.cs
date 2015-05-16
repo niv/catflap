@@ -20,6 +20,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using FORMS = System.Windows.Forms;
 using MahApps.Metro.Controls.Dialogs;
+using System.Windows.Threading;
 
 namespace Catflap
 {
@@ -42,24 +43,32 @@ namespace Catflap
             gridSetupWindow.Background = myBrush;
 
             txtUrl.Focus();
+        }
 
+        private void OnWindowLoaded(object sender, RoutedEventArgs e)
+        {
+            Dispatcher.BeginInvoke(new Action(() => handleAutoSetup()), DispatcherPriority.ContextIdle, null);
+        }
+ 
+        private async void handleAutoSetup()
+        {
             var fi = new FileInfo(Assembly.GetExecutingAssembly().Location);
             var rootPath = Directory.GetCurrentDirectory();
             var setupFile = System.IO.Path.Combine(rootPath, fi.Name + ".setup");
             if (File.Exists(setupFile))
             {
-                var url = File.ReadAllText(setupFile);
-                var ret = setup(url);
-                ret.Wait();
-                
-                if (ret.Result)
+                var url =File.ReadAllText(setupFile);
+                var ret = await setup(url);
+
+                if (ret)
                 {
                     File.Delete(setupFile);
-                    // this.DialogResult = true;
-                    // this.Close();
+                    this.DialogResult = true;
+                    this.Close();
                     SetupOk = true;
                 }
             }
+
         }
 
         private async void btnGo_Click(object sender, RoutedEventArgs e)
@@ -82,7 +91,7 @@ namespace Catflap
         {
             url = url.Trim().TrimEnd('/') + "/";
 
-            if (!url.StartsWith("http://") || !!url.StartsWith("https://"))
+            if (!url.StartsWith("http://") && !url.StartsWith("https://"))
                 url = "http://" + url;
 
             var fi = new FileInfo(Assembly.GetExecutingAssembly().Location);

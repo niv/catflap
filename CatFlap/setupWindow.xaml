@@ -5,6 +5,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         ShowTitleBar="true"
+        Loaded="OnWindowLoaded"
         Title="Catflap Setup" Height="500" Width="400" WindowStartupLocation="CenterScreen" ResizeMode="NoResize" Margin="1" BorderBrush="Gray" BorderThickness="0" WindowTransitionsEnabled="False">
 
     <i:Interaction.Behaviors>
