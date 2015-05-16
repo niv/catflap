@@ -103,6 +103,23 @@ namespace Catflap
                 return false;
             }
 
+            if (mf.warnWhenSetupWithoutFiles.Count() > 0)
+            {
+                var currentContents = Directory.GetFiles(rootPath).Select(x => new FileInfo(x).Name.ToLowerInvariant());
+                var diff = mf.warnWhenSetupWithoutFiles.Select(x => new FileInfo(x).Name.ToLowerInvariant()).Except(currentContents);
+                if (diff.Count() > 0)
+                {
+                    var setupAnyways = await this.ShowMessageAsync("Expected files missing?",
+                        "This manifest claims it needs to be run in a directory containing certain " +
+                        "files, but we're missing the following:\n\n" +
+                        string.Join(", ", diff) + "\n\n" +
+                        "Do you want to continue anyways?", MessageDialogStyle.AffirmativeAndNegative);
+
+                    if (MessageDialogResult.Negative == setupAnyways)
+                        return false;
+                }
+            }
+
             if (mf.warnWhenSetupWithUntracked)
             {
                 var currentContents =

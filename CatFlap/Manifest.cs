@@ -63,6 +63,9 @@ namespace Catflap
         // Warn the user if he's doing setup in a directory that contains data not tracked by this repository.
         public Boolean warnWhenSetupWithUntracked = false;
 
+        // Expect files to be present when setting up repo, give warning otherwise.
+        public string[] warnWhenSetupWithoutFiles = { };
+
         // This sets a default for "fuzzy" on all sync items, unless otherwise given in each item.
         public bool? fuzzy;
 
