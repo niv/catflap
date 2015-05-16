@@ -53,6 +53,9 @@ namespace Catflap
         // Make buttons and text have drop shadows.
         public bool dropShadows = true;
 
+        // Show a 1px border around the main window.
+        public bool border = false;
+
         // A optional revision string, which will be printed to the log, but has no bearing on syncing.
         // Useful for debugging or informational displays on clients.
         public string revision;

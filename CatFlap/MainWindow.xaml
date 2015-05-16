@@ -6,7 +6,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:gif="http://wpfanimatedgif.codeplex.com"
         ShowTitleBar="true" 
-        Title="Catflap" Height="500" Width="400" WindowStartupLocation="CenterScreen" ResizeMode="CanMinimize" BorderThickness="0" BorderBrush="Gray" Background="White" WindowTransitionsEnabled="False" ShowIconOnTitleBar="False">
+        Title="Catflap" Height="500" Width="400" WindowStartupLocation="CenterScreen" ResizeMode="CanMinimize" BorderBrush="{DynamicResource {x:Static SystemColors.WindowFrameBrushKey}}" Background="White" WindowTransitionsEnabled="False" ShowIconOnTitleBar="False" BorderThickness="0">
 
     <i:Interaction.Behaviors>
         <behaviours:BorderlessWindowBehavior EnableDWMDropShadow="True" />

@@ -497,6 +497,8 @@ namespace Catflap
                 Application.Current.Shutdown();
             }
 
+            this.BorderThickness = new Thickness(repository.LatestManifest.border ? 1 : 0);
+
             var effect = repository.LatestManifest.dropShadows ? new DropShadowEffect() {
                 // Color = (Color) ColorConverter.ConvertFromString(repository.LatestManifest.textColor),
                 Opacity = 0.5,
