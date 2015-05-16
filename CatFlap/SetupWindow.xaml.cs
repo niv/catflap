@@ -49,23 +49,27 @@ namespace Catflap
             if (File.Exists(setupFile))
             {
                 var url = File.ReadAllText(setupFile);
-                if (setup(url))
+                var ret = setup(url);
+                ret.Wait();
+                
+                if (ret.Result)
                 {
                     File.Delete(setupFile);
                     // this.DialogResult = true;
                     // this.Close();
                     SetupOk = true;
                 }
-                    
             }
         }
 
-        private void btnGo_Click(object sender, RoutedEventArgs e)
+        private async void btnGo_Click(object sender, RoutedEventArgs e)
         {
             if (txtUrl.Text == null || txtUrl.Text.Trim() == "")
                 return;
 
-            if (setup(txtUrl.Text))
+            var ret = await setup(txtUrl.Text);
+
+            if (ret)
             {
                 this.DialogResult = true;
                 this.Close();
@@ -74,7 +78,7 @@ namespace Catflap
         }
 
 
-        private bool setup(string url)
+        private async Task<bool> setup(string url)
         {
             url = url.Trim().TrimEnd('/') + "/";
 
@@ -130,6 +134,15 @@ namespace Catflap
             Directory.CreateDirectory(appPath);
 
             System.IO.File.WriteAllText(appPath + "\\catflap.json", JsonConvert.SerializeObject(mf));
+
+            var wantShortcut = await this.ShowMessageAsync("Create desktop shortcut?",
+                "Do you want me to create a desktop shortcut for you?\n" +
+                "I will only ask once. You can this yourself later by clicking 'more' in the title bar.",
+                MessageDialogStyle.AffirmativeAndNegative);
+
+            if (MessageDialogResult.Affirmative == wantShortcut)
+                repo.MakeDesktopShortcut();
+
             return true;
         }
 

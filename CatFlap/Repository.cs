@@ -16,6 +16,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media.Imaging;
+using vbAccelerator.Components.Shell;
 
 namespace Catflap
 {
@@ -288,7 +289,7 @@ namespace Catflap
             try
             {
                 FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location);
-                var req = (HttpWebRequest)WebRequest.Create(CurrentManifest.baseUrl + "/" + filename + "?catflap=" + fvi.FileVersion);
+                var req = (HttpWebRequest)WebRequest.Create(LatestManifest.baseUrl + "/" + filename + "?catflap=" + fvi.FileVersion);
                 if (File.Exists(AppPath + "/" + filename))
                     req.IfModifiedSince = new FileInfo(AppPath + "/" + filename).LastWriteTime;
                 if (Username != null)
@@ -548,6 +549,29 @@ namespace Catflap
 
                 return info.currentBytesOnNetwork;
             }, cts.Token);
+        }
+
+        public void MakeDesktopShortcut()
+        {
+            using (ShellLink shortcut = new ShellLink())
+            {
+                var fi = new FileInfo(Assembly.GetExecutingAssembly().Location);
+                string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+
+                shortcut.Target = fi.FullName;
+                shortcut.Arguments = "-run";
+                shortcut.WorkingDirectory = RootPath;
+                if (this.LatestManifest != null)
+                    shortcut.Description = this.LatestManifest.title;
+                else
+                    shortcut.Description = fi.Name + " - run";
+                shortcut.DisplayMode = ShellLink.LinkDisplayMode.edmNormal;
+
+                shortcut.IconPath = AppPath + "\\favicon.ico";
+
+                var fname = new string(shortcut.Description.Where(ch => !Path.GetInvalidFileNameChars().Contains(ch)).ToArray());
+                shortcut.Save(desktopPath + "/" + fname + ".lnk");
+            }
         }
     }
 }

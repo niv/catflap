@@ -677,27 +677,7 @@ namespace Catflap
 
         private void btnMakeShortcut_Click(object sender, RoutedEventArgs e)
         {
-            using (ShellLink shortcut = new ShellLink())
-            {
-                var fi = new FileInfo(Assembly.GetExecutingAssembly().Location);
-                string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-
-                shortcut.Target = fi.FullName;
-                shortcut.Arguments = "-run";
-                shortcut.WorkingDirectory = rootPath;
-                if (repository.LatestManifest != null)
-                    shortcut.Description = repository.LatestManifest.title;
-                else
-                    shortcut.Description = fi.Name + " - run";
-                shortcut.DisplayMode = ShellLink.LinkDisplayMode.edmNormal;
-
-                if (File.Exists(appPath + "/favicon.ico"))
-                    shortcut.IconPath = appPath + "\\favicon.ico";
-
-                var fname = new string(shortcut.Description.Where(ch => !Path.GetInvalidFileNameChars().Contains(ch)).ToArray());
-                shortcut.Save(desktopPath + "/" + fname + ".lnk");
-            }
-
+            repository.MakeDesktopShortcut();
             this.ShowMessageAsync("Shortcut created", "A shortcut to update & run this repository was created on your Desktop.\n\n" +
                 "Feel free to rename it and/or change the icon.");
         }
