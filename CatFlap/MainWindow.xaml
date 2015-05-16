@@ -22,7 +22,7 @@
             <Controls:Flyout Header="Log" Position="Right" Width="400" x:Name="logFlyout" Opacity="0.9" >
                 <Grid Margin="0,0,0,0">
                     <TextBox x:Name="logTextBox" Height="356" TextWrapping="Wrap" Text="" VerticalAlignment="Bottom" Margin="0,0,0,50" IsReadOnly="True" VerticalScrollBarVisibility="Visible" FontSize="9"/>
-                    <CheckBox x:Name="checkboxSimulate" Content="Simulate only (--dry-run)" VerticalAlignment="Bottom"  HorizontalAlignment="Left" Margin="10" Height="18" />
+                    <Button x:Name="btnVerify" Content="verify" Click="btnVerify_Click" VerticalAlignment="Bottom"  HorizontalAlignment="Left" Margin="10" Height="18" />
                     <Button x:Name="btnMakeShortcut" Content="create desktop shortcut" Click="btnMakeShortcut_Click" VerticalAlignment="Bottom"  HorizontalAlignment="Right" Margin="10" Height="18" />
                 </Grid>
             </Controls:Flyout>
@@ -40,7 +40,8 @@
 
     <Grid x:Name="gridMainWindow" Margin="0,0,0,0">
         <Grid.RowDefinitions>
-            <RowDefinition/>
+            <RowDefinition Height="369*"/>
+            <RowDefinition Height="103*"/>
             <RowDefinition Height="0*"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
@@ -48,22 +49,17 @@
             <ColumnDefinition/>
         </Grid.ColumnDefinitions>
 
-        <Button x:Name="btnRun" Content="Run" Margin="10,0,10,10" Click="btnRun_Click" FontWeight="Bold" IsEnabled="False" Grid.Column="1"  Style="{StaticResource AccentedSquareButtonStyle}" Height="36" VerticalAlignment="Bottom" IsDefault="True" BorderThickness="1" Opacity="0.9">
+        <Button x:Name="btnRun" Content="" Margin="106,0,106,11" Click="btnRun_Click" FontWeight="Bold"  Style="{StaticResource AccentedSquareButtonStyle}" Height="36" VerticalAlignment="Bottom" IsDefault="True" BorderThickness="1" Opacity="0.9" Grid.ColumnSpan="2" Grid.Row="1" IsEnabled="False">
             <Button.Effect>
                 <DropShadowEffect BlurRadius="5" Opacity="0.5"/>
             </Button.Effect>
         </Button>
 
-        <Button x:Name="btnDownload" Content="sync" Margin="10,0,10,10" FontWeight="Bold" IsEnabled="False" Click="btnDownload_Click" BorderThickness="1" Style="{DynamicResource SquareButtonStyle}" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Height="36" VerticalAlignment="Bottom"  Opacity="0.9">
-            <Button.Effect>
-                <DropShadowEffect BlurRadius="5" Opacity="0.5"/>
-            </Button.Effect>
-        </Button>
 
-        <TextBlock x:Name="labelDownloadStatus" Margin="0,0,0,50" Text="{}{0} - {1}% of {2} at {3}/s" Padding="5,0" RenderTransformOrigin="0.489,-0.039" Panel.ZIndex="100" FontSize="10" Grid.ColumnSpan="2" Height="17" VerticalAlignment="Bottom" TextAlignment="Center"/>
+        <TextBlock x:Name="labelDownloadStatus" Margin="0,0,0,50" Text="{}{0} - {1}% of {2} at {3}/s" Padding="5,0" Panel.ZIndex="100" FontSize="10" Grid.ColumnSpan="2" TextAlignment="Center" Grid.Row="1" Height="17" VerticalAlignment="Bottom" />
         <!--<ProgressBar x:Name="globalProgress" Height="3" BorderBrush="Black" Grid.ColumnSpan="2" BorderThickness="0" VerticalAlignment="Top" Background="#FF898989" />-->
-        <TextBlock x:Name="labelDLSize" Text="(to check)" Margin="10,0,10,64" VerticalAlignment="Bottom" RenderTransformOrigin="0.868,0.192" Height="30" TextAlignment="Center" Grid.ColumnSpan="2" FontSize="20" FontFamily="Segoe UI Light"/>
-        <Button x:Name="btnCancel" Style="{DynamicResource MetroCircleButtonStyle}" HorizontalAlignment="Left" Margin="2,0,0,3" Width="50" Click="btnCancel_Click" Panel.ZIndex="2" Height="50" VerticalAlignment="Bottom" BorderThickness="0" Background="White">
+        <TextBlock x:Name="labelDLSize" Text="(to check)" Margin="10,0,10,64" VerticalAlignment="Bottom" RenderTransformOrigin="0.868,0.192" Height="30" TextAlignment="Center" Grid.ColumnSpan="2" FontSize="20" FontFamily="Segoe UI Light" Grid.Row="1"/>
+        <Button x:Name="btnCancel" Style="{DynamicResource MetroCircleButtonStyle}" HorizontalAlignment="Left" Margin="91,0,0,4" Width="50" Click="btnCancel_Click" Panel.ZIndex="2" Height="50" VerticalAlignment="Bottom" BorderThickness="0" Background="White" Grid.Row="1">
             <Button.Effect>
                 <DropShadowEffect BlurRadius="10" Opacity="0.5"/>
             </Button.Effect>

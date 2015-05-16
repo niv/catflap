@@ -89,37 +89,33 @@ namespace Catflap
 
         private void SetUIState(bool enabled)
         {
-            btnDownload.IsEnabled = (!repository.AlwaysAssumeCurrent && enabled); //  || !repository.AlwaysAssumeCurrent;
-            checkboxSimulate.IsEnabled = enabled;
+            btnVerify.IsEnabled = enabled && repository.Status.current;
 
-            if (!enabled)
-                btnRun.IsEnabled = false;
+            var wantEnabled = false;
 
-            else
+            if (repository.LatestManifest != null)
+                wantEnabled = true;
+
+            if (repository.Status.current)
             {
-                if (repository.CurrentManifest == null)
+                if (repository.LatestManifest.runAction == null)
                 {
-                    btnRun.Content = "sync required";
-                    btnRun.IsEnabled = false;
+                    btnRun.Content = "nothing to do";
+                    wantEnabled = false;
                 }
                 else
-                    if (repository.LatestManifest.runAction == null)
-                    {
-                        btnRun.IsEnabled = false;
-                        btnRun.Content = "manifest has no run action";
-                    }
-                    else
-                    {
-                        btnRun.Content = repository.LatestManifest.runAction.name;
-                        if (repository.Status.current)
-                            btnRun.IsEnabled = true;
-                        else
-                        {
-                            btnRun.Content = "sync required";
-                            btnRun.IsEnabled = repository.LatestManifest.runAction.allowOutdated;
-                        }
-                    }
+                {
+                    btnRun.Content = "run";
+                    wantEnabled = true;
+                }
             }
+            else
+            {
+                btnRun.Content = "sync";
+                wantEnabled = true;
+            }
+
+            btnRun.IsEnabled = enabled && wantEnabled;
         }
 
         private void SetUIProgressState(bool indeterminate, double percentage = -1, string message = null)
@@ -376,6 +372,11 @@ namespace Catflap
                 IgnoreRepositoryLock = true;
             }
 
+            if (App.mArgs.Contains("-simulate"))
+            {
+                repository.Simulate = true;
+            }
+
             if (App.mArgs.Contains("-nocheck"))
             {
                 App.mArgs = App.mArgs.Where(x => x != "-nocheck").ToArray();
@@ -491,10 +492,10 @@ namespace Catflap
             );
             Log("Revision: " + revText);
 
-            if (repository.Status.current)
+            /*if (repository.Status.current)
                 btnDownload.Content = "verify";
             else
-                btnDownload.Content = "sync";
+                btnDownload.Content = "sync";*/
 
             btnCancel.Visibility = System.Windows.Visibility.Hidden;
 
@@ -529,7 +530,7 @@ namespace Catflap
             long bytesOnNetwork = 0;
             try
             {
-                bytesOnNetwork = await repository.UpdateEverything(fullVerify, checkboxSimulate.IsChecked.Value, cts);
+                bytesOnNetwork = await repository.UpdateEverything(fullVerify, cts);
                 SetUIProgressState(false, 1, null);
             }
             catch (Exception eee)
@@ -568,7 +569,7 @@ namespace Catflap
                 SetUIProgressState(false, 1, "Done (" + bytesOnNetwork.BytesToHuman() + " of actual network traffic)");
                 Log("Verify/download complete.");
 
-                await UpdateRootManifest(!checkboxSimulate.IsChecked.Value);
+                await UpdateRootManifest(!repository.Simulate);
             }
 
             if (CloseAfterSync)
@@ -597,7 +598,7 @@ namespace Catflap
             }
         }
 
-        private async void btnDownload_Click(object sender, RoutedEventArgs e)
+        private async void btnRun_Click(object sender, RoutedEventArgs e)
         {
             long free = (long) Native.GetDiskFreeSpace(rootPath);
             long needed = repository.Status.guesstimatedBytesToVerify + (200 * 1024 * 1024);
@@ -616,6 +617,14 @@ namespace Catflap
             }
 
             if (repository.Status.current)
+                await RunAction();
+            else
+                await Sync(false);
+        }
+        
+        private async void btnVerify_Click(object sender, RoutedEventArgs e)
+        {
+            if (repository.Status.current)
             {
                 var ret = await this.ShowMessageAsync("Verify?", "Running a full sync will take longer, " +
                     "since it will verify checksums.\n\n" +
@@ -627,27 +636,13 @@ namespace Catflap
             }
             var fullVerify = repository.Status.current;
 
-            if (fullVerify && checkboxSimulate.IsChecked.Value)
+            if (fullVerify && repository.Simulate)
             {
                 await this.ShowMessageAsync("Cannot simulate", "Full verify does not support simulate-mode, sorry!");
                 return;
             }
 
-            await Sync(fullVerify);
-        }
-
-        private async void btnRun_Click(object sender, RoutedEventArgs e)
-        {
-            if (!repository.Status.current)
-            {
-                var ret = await this.ShowMessageAsync("Warning", "Warning, your files are outdated or incomplete. Do you still want to run?",
-                    MessageDialogStyle.AffirmativeAndNegative);
-
-                if (MessageDialogResult.Negative == ret)
-                    return;
-            }
-
-            await RunAction();
+            await Sync(true);
         }
 
         private void btnShowHideLog_Click(object sender, RoutedEventArgs e)

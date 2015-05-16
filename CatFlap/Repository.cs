@@ -33,7 +33,8 @@ namespace Catflap
 
         public bool AlwaysAssumeCurrent = false;
 
-        private bool simulate = false;
+        public bool Simulate = false;
+
         private bool verifyUpdateFull = false;
 
         public string RootPath { get; private set; }
@@ -404,11 +405,9 @@ namespace Catflap
             }
         }
 
-        public Task<long> UpdateEverything(bool verify, bool simulate,
-                CancellationTokenSource cts)
+        public Task<long> UpdateEverything(bool verify, CancellationTokenSource cts)
         {
             this.verifyUpdateFull = verify;
-            this.simulate = simulate;
 
             return RunAllSyncItems(cts);
         }
@@ -470,7 +469,7 @@ namespace Catflap
                     {
                     }
 
-                    var t = RunSyncItem(f, verifyUpdateFull, simulate, delegate(string fname, int percentage, long bytesReceived, long bytesTotal, long bytesPerSecond)
+                    var t = RunSyncItem(f, verifyUpdateFull, Simulate, delegate(string fname, int percentage, long bytesReceived, long bytesTotal, long bytesPerSecond)
                     {
                         if (bytesReceived > -1) info.currentBytes = bytesReceived;
                         if (bytesTotal > -1) info.currentTotalBytes = bytesTotal;

@@ -42,9 +42,6 @@ namespace Catflap
             // Note that shellExecute needs to be true for this to work.
             public string verb = "";
 
-            // Allow pressing the run button even if the local repository is not up to date.
-            public bool allowOutdated;
-
             /*
              * Substitutable variables:
              * 
