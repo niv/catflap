@@ -21,6 +21,7 @@ using System.Windows.Controls;
 using vbAccelerator.Components.Shell;
 using System.Text;
 using System.Windows.Input;
+using System.Windows.Media.Effects;
 
 namespace Catflap
 {
@@ -261,24 +262,6 @@ namespace Catflap
             }
         }
 
-        private void webBrowser1_Navigating(object sender, NavigatingCancelEventArgs e)
-        {
-            // Internal pages
-            if (e.Uri == null || e.Uri.ToString() == "")
-                return;
-
-            // Urls on the main repo load in-page
-            if (e.Uri.ToString().StartsWith(repository.CurrentManifest.baseUrl))
-                return;
-
-            // all others load in external.
-            e.Cancel = true;
-            Process.Start(new ProcessStartInfo
-            {
-                FileName = e.Uri.ToString()
-            });
-        }
-
         public MainWindow() {
             InitializeComponent();
 
@@ -514,6 +497,14 @@ namespace Catflap
                 Application.Current.Shutdown();
             }
 
+            var effect = repository.LatestManifest.dropShadows ? new DropShadowEffect() {
+                // Color = (Color) ColorConverter.ConvertFromString(repository.LatestManifest.textColor),
+                Opacity = 0.5,
+                BlurRadius = 10 } : null;
+            btnRun.Effect = effect;
+            labelDLSize.Effect = effect;
+            labelDownloadStatus.Effect = effect;
+
             SetUIState(true);
         }
 
@@ -672,6 +663,14 @@ namespace Catflap
             Process myProcess = new Process();
             myProcess.StartInfo.UseShellExecute = true;
             myProcess.StartInfo.FileName = "https://github.com/niv/catflap";
+            myProcess.Start();
+        }
+
+        private void btnOpenFolder_Click(object sender, RoutedEventArgs e)
+        {
+            Process myProcess = new Process();
+            myProcess.StartInfo.UseShellExecute = true;
+            myProcess.StartInfo.FileName = repository.RootPath;
             myProcess.Start();
         }
 

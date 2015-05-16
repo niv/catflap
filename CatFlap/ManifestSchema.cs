@@ -23,6 +23,7 @@ namespace Catflap
         'revision': { 'type': 'string', 'required': false },
         'textColor': { 'type': 'string', 'required': false },
         'darkTheme': { 'type': 'boolean', 'required': false },
+        'dropShadows': { 'type': 'boolean', 'required': false },
 
         'warnWhenSetupWithUntracked': { 'type': 'boolean', 'required': false },
 

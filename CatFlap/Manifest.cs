@@ -48,7 +48,10 @@ namespace Catflap
         public string textColor = "#000000";
 
         // Use a dark theme instead of light.
-        public bool darkTheme = false;
+        public bool darkTheme = true;
+
+        // Make buttons and text have drop shadows.
+        public bool dropShadows = true;
 
         // A optional revision string, which will be printed to the log, but has no bearing on syncing.
         // Useful for debugging or informational displays on clients.
