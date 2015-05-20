@@ -64,7 +64,7 @@ namespace Catflap
                 long sz = 0;
 
                 if (this.name.EndsWith("/"))
-                    sz = (this.size - Utils.GetDirectoryElements(repository.RootPath + "/" + this.name).Sum(file => file.Length));
+                    sz = (Utils.GetDirectoryElements(repository.RootPath + "/" + this.name).Sum(file => file.Length));
 
                 else
                 {
