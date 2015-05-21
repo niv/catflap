@@ -246,9 +246,10 @@ namespace Catflap
 
                 ret.directoryCountToVerify = dirsToCheck.Count();
                 ret.fileCountToVerify = dirsToCheck.Select(n => n.count).Sum() + filesToCheck.Count();
-                ret.directoriesToVerify = dirsToCheck.ToList();
-                ret.filesToVerify = filesToCheck.ToList();
             }
+
+            ret.directoriesToVerify = dirsToCheck.ToList();
+            ret.filesToVerify = filesToCheck.ToList();
 
             ret.sizeOnRemote = LatestManifest.sync.Select(n => n.size).Sum();
             ret.sizeOnDisk = LatestManifest.sync.Select(n => n.SizeOnDisk(this)).Sum();
