@@ -207,30 +207,7 @@ namespace Catflap
                 outdated = LatestManifest.sync;
 
                 if (CurrentManifest != null)
-                {
-                    outdated = outdated.Where(f => {
-
-                        if (f.revision != 0)
-                        {
-                            var f_old = CurrentManifest.sync.Find(_f_old => _f_old.name == f.name);
-                            // No old sync item: new item
-                            if (f_old == null)
-                                return !f.isCurrent(this);
-
-                            // No old revision: fallback to old check (and don't trigger force updates)
-                            if (f_old != null && f_old.revision == 0)
-                                return !f.isCurrent(this);
-
-                            // Mismatching revision: always force check
-                            if (f_old != null && f_old.revision != f.revision)
-                                return true;
-
-                            // Matching revisions still incur the regular check to catch deleted/touched files
-                        }
-
-                        return !f.isCurrent(this);
-                    });
-                }
+                    outdated = outdated.Where(f => !f.isCurrent(this));
                     
                 dirsToCheck  = outdated.Where(f => f.name.EndsWith("/"));
                 filesToCheck = outdated.Where(f => !f.name.EndsWith("/"));

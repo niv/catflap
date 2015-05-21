@@ -93,46 +93,58 @@ namespace Catflap
 
             private bool isOutdated(Repository repository)
             {
-                if (this.name.EndsWith("/"))
+                bool thisIsDirectory = this.name.EndsWith("/");
+                string path = repository.RootPath + "/" + this.name;
+
+                SyncItem thisOld = repository.CurrentManifest.sync.Find(_f_old =>
+                    _f_old.name.ToLowerInvariant() == this.name.ToLowerInvariant());
+
+                if (thisOld == null)
+                    return true;
+
+                FileInfo fileInfo = new FileInfo(path);
+                bool thisPathExists =
+                    (thisIsDirectory && new DirectoryInfo(path).Exists) ||
+                    (!thisIsDirectory && fileInfo.Exists);
+
+                // Special handling for delete syncitems: any existing item is outdated because
+                // we need to delete it.
+                if (this.type == "delete")
+                    if (this.ignoreExisting.GetValueOrDefault())
+                        return false;
+                    else
+                        return thisPathExists;
+
+                // Local data doesn't even exist. outdated.
+                if (!thisPathExists)
+                    return true;
+
+                // special sync item flag: ignore any existing data.
+                if (this.ignoreExisting.GetValueOrDefault())
+                    return false;
+
+                // old manifest item has a revision, we have a revision, and it's a mismatch
+                if (thisOld.revision > 0 && this.revision > 0 && this.revision != thisOld.revision)
+                    return true;
+
+                // Timestamp mismatch - we're too old (or too young)
+                if (Math.Abs((fileInfo.LastWriteTime - this.mtime).TotalSeconds) > 1)
+                    return true;
+
+                // We can't possibly have enough data, size mismatch.
+                if (SizeOnDisk(repository) < this.size)
+                    return true;
+
+                if (thisIsDirectory)
                 {
-                    var directoryElements = Utils.GetDirectoryElements(repository.RootPath + "/" + this.name);
+                    var directoryElements = Utils.GetDirectoryElements(path);
 
-                    // Always check dirs that ..
-                    return (this.type == "rsync" && (
-                        // Always check dirs that ..
-
-                                // don't exist locally yet
-                                !Directory.Exists(repository.RootPath + "/" + this.name) ||
-
-                                (!this.ignoreExisting.GetValueOrDefault() && (
-
-                                    // are not young enough mtime
-                                    Math.Abs((new FileInfo(repository.RootPath + "/" + this.name).LastWriteTime - this.mtime).TotalSeconds) > 1 ||
-
-                                    // have mismatching item count
-                                    directoryElements.Count() < this.count ||
-
-                                    // are not big enough
-                                    directoryElements.Sum(file => file.Length) < this.size
-                                ))
-                            )) || (this.type == "delete" && (
-                                Directory.Exists(repository.RootPath + "/" + this.name)
-                            ));
+                    // Not enough files.
+                    if (directoryElements.Count() < this.count)
+                        return true;
                 }
-                else
-                {
-                    return (this.type == "rsync" && (
-                                !File.Exists(repository.RootPath + "/" + this.name) ||
 
-                                (!this.ignoreExisting.GetValueOrDefault() && (
-                                    (this.mtime != null && Math.Abs((new FileInfo(repository.RootPath + "/" + this.name).LastWriteTime - this.mtime).TotalSeconds) > 1) ||
-
-                                    (new FileInfo(repository.RootPath + "/" + this.name).Length != this.size)
-                                ))
-                            )) || (this.type == "delete" && (
-                                File.Exists(repository.RootPath + "/" + this.name)
-                            ));
-                }
+                return false;
             }
         }
     }
