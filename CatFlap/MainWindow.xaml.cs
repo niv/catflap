@@ -461,12 +461,6 @@ namespace Catflap
                                     "(This is probably not your fault, it needs to be fixed in the repository!):" +
                                     "\n\n" + err.Message);
                 }
-                else if (err is SignatureVerificationException)
-                {
-                    MessageBox.Show("There was a problem verifying the gpg signature of the remote manifest. " +
-                        "Please contact the repository owner and give them a screenshot of this message:\n\n" +
-                        err.Message);
-                }
                 else
                     MessageBox.Show("There has been some problem downloading/parsing the repository manifest:\n\n" +
                                     err.ToString());
@@ -517,12 +511,16 @@ namespace Catflap
             btnRun.Effect = effect;
             labelDLSize.Effect = effect;
             labelDownloadStatus.Effect = effect;
+            signatureStatus.Effect = effect;
 
-            labelSignatureStatus.Background = Brushes.Transparent;
-
-            switch (repository.SignatureStatus)
+            switch (repository.ManifestSecurityStatus.Status)
             {
-                case Repository.SignatureStatusType.FAIL:
+                case Security.VerifyResponse.VerifyResponseStatus.NOT_CHECKED:
+                    signatureStatus.Source = new BitmapImage(new Uri("pack://application:,,,/Resources/padlock-red.png"));
+                    signatureStatus.ToolTip = "Remote repository is not signed. This is okay if you don't expect it to be.";
+                    break;
+
+                case Security.VerifyResponse.VerifyResponseStatus.SIGNATURE_DOES_NOT_VERIFY:
                     await this.ShowMessageAsync("Signature verification failed",
                         "Could not verify manifest signature.\n\n" +
                         "Either the signature is out of date, or someone is messing with you (VERY BAD).\n\n" +
@@ -530,21 +528,13 @@ namespace Catflap
                     Application.Current.Shutdown();
                     break;
                     
-                case Repository.SignatureStatusType.OK:
-                    labelSignatureStatus.Text = "signature OK :)";
-                    // labelSignatureStatus.Background = Brushes.LightSkyBlue;
-                    labelSignatureStatus.ToolTip = "Signature checks out! This means we can verify downloaded data " +
+                case Security.VerifyResponse.VerifyResponseStatus.OK:
+                    signatureStatus.Source = new BitmapImage(new Uri("pack://application:,,,/Resources/padlock-white.png"));
+                    signatureStatus.ToolTip = "Signature checks out! We will verify that any downloaded data " +
                         "has not been tampered with in-flight.";
                     break;
 
-                case Repository.SignatureStatusType.NOT_SIGNED:
-                    labelSignatureStatus.Text = "Repository not signed.";
-                    // labelSignatureStatus.Background = Brushes.LightGray;
-                    labelSignatureStatus.ToolTip = "Remote repository is not signed. This is okay if you don't expect it to be.";
-                    break;
-
-                case Repository.SignatureStatusType.LOST_SIGNATURE:
-                    // Wooooh, we don't have keys anymore. What the hell happened?
+                case Security.VerifyResponse.VerifyResponseStatus.NO_LOCAL_SIGNATURE:
                     await this.ShowMessageAsync("Signature missing",
                         "Remote repository was signed in the past, but isn't anymore.\n\n" +
                         "This means that either the repository maintainer removed the " +
@@ -553,16 +543,15 @@ namespace Catflap
                     Application.Current.Shutdown();
                     break;
 
-                case Repository.SignatureStatusType.SIGNED_BUT_TRUSTDB_MISSING:
-                    // new TrustDBWindow(repository).ShowDialog();
-                    labelSignatureStatus.Text = "missing local keys for signed remote manifest";
-                    labelSignatureStatus.Background = new SolidColorBrush(Color.FromArgb(0x90, 0xff, 0x00, 0x5d));
-                    labelSignatureStatus.ToolTip = "The remote repository is signed, but you are missing the " +
+                // This shouldn't ever show up, because we have the UI popup for sig updates in
+                // Repository.VerifyManifest
+                case Security.VerifyResponse.VerifyResponseStatus.NO_LOCAL_PUBKEY:
+                    signatureStatus.Source = new BitmapImage(new Uri("pack://application:,,,/Resources/padlock-red.png"));
+                    signatureStatus.ToolTip = "The remote repository is signed, but you are missing the " +
                         "public key locally. We cannot verify that downloaded data has not been tampered with.";
                     break;
 
-                case Repository.SignatureStatusType.KEY_MISMATCH:
-                    // signing key changed.
+                case Security.VerifyResponse.VerifyResponseStatus.PUBKEY_MISMATCH:
                     await this.ShowMessageAsync("Signing key mismatch",
                         "Remote repository was signed with a different key than we were expecting.\n\n" +
                         "Either the remote maintainer has changed the signing key, " +
@@ -574,8 +563,6 @@ namespace Catflap
                 default:
                     throw new Exception("Internal error: Unhandled case for Repository.SignatureStatusType. This is a bug.");
             }
-
-            labelSignatureStatus.Text = labelSignatureStatus.Text.ToUpperInvariant();
 
             SetUIState(true);
         }
@@ -751,6 +738,15 @@ namespace Catflap
             repository.MakeDesktopShortcut();
             this.ShowMessageAsync("Shortcut created", "A shortcut to update & run this repository was created on your Desktop.\n\n" +
                 "Feel free to rename it and/or change the icon.");
+        }
+
+        private void btnSignatureStatus_Click(object sender, RoutedEventArgs e)
+        {
+            string msg = this.signatureStatus.ToolTip.ToString();
+            if (repository.ManifestSecurityStatus.signingKey != null)
+                msg += "\n\nSigning key:\n" + repository.ManifestSecurityStatus.signingKey;
+
+            this.ShowMessageAsync("", msg);
         }
     }
 }

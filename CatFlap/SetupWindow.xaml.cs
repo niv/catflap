@@ -161,13 +161,16 @@ namespace Catflap
 
             System.IO.File.WriteAllText(appPath + "\\catflap.json", JsonConvert.SerializeObject(mf));
 
-            var wantShortcut = await this.ShowMessageAsync("Create desktop shortcut?",
-                "Do you want me to create a desktop shortcut for you?\n" +
-                "I will only ask once. You can this yourself later by clicking 'more' in the title bar.",
-                MessageDialogStyle.AffirmativeAndNegative);
+            if (mf.runAction != null && mf.runAction.execute != "")
+            {
+                var wantShortcut = await this.ShowMessageAsync("Create desktop shortcut?",
+                    "Do you want me to create a desktop shortcut for you?\n" +
+                    "I will only ask once. You can this yourself later by clicking 'more' in the title bar.",
+                    MessageDialogStyle.AffirmativeAndNegative);
 
-            if (MessageDialogResult.Affirmative == wantShortcut)
-                repo.MakeDesktopShortcut();
+                if (MessageDialogResult.Affirmative == wantShortcut)
+                    repo.MakeDesktopShortcut();
+            }
 
             return true;
         }

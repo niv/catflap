@@ -128,22 +128,12 @@ namespace Catflap
             public List<Manifest.SyncItem> filesToVerify;
         }
 
-        public enum SignatureStatusType
-        {
-            OK,
-            NOT_SIGNED,
-            LOST_SIGNATURE,
-            SIGNED_BUT_TRUSTDB_MISSING,
-            KEY_MISMATCH,
-            FAIL
-        }
+        public Security Security { get; private set; }
+
+        public Security.VerifyResponse ManifestSecurityStatus { get; private set; }
 
         /* Can be set to true to have the updater restart after checking for new manifests. */
         public bool RequireRestart = false;
-
-        public SignatureStatusType SignatureStatus { get; private set; }
-        // public bool SignatureOK     = false;
-        // public bool HaveTrustedKeys = false;
 
         public delegate void DownloadStatusInfoChanged(DownloadStatusInfo dsi);
         public delegate void DownloadProgressChanged(string fullFileName, int percentage = -1, long bytesReceived = -1, long bytesTotal = -1, long bytesPerSecond = -1);
@@ -170,6 +160,8 @@ namespace Catflap
             this.RootPath = rootPath.NormalizePath();
             this.AppPath = appPath.NormalizePath();
             this.TmpPath = this.AppPath + "\\temp";
+
+            this.Security = new Security(AppPath);
 
             Directory.CreateDirectory(appPath);
             
@@ -303,9 +295,12 @@ namespace Catflap
             return mf;
         }
 
-        private bool RefreshManifestResource(string filename)
+        private bool RefreshManifestResource(string filename, bool neverOverwrite = false)
         {
             Console.WriteLine("RefreshManifestResource(" + filename + ")");
+            if (File.Exists(AppPath + "/" + filename) && neverOverwrite)
+                return true;
+
             try
             {
                 FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location);
@@ -392,77 +387,52 @@ namespace Catflap
                     RefreshManifestResource("catflap.bgimg");
                     RefreshManifestResource("favicon.ico");
 
-                    SignatureStatus = SignatureStatusType.NOT_SIGNED;
-
-                    if (RefreshManifestResource(SignatureFile))
-                        SignatureStatus = SignatureStatusType.SIGNED_BUT_TRUSTDB_MISSING;
-
-                    /* Convenience trust weakening bad-bad-bad of the day: Always retrieve trustDB if it is over SSL.
-                     * We need to add a (compile) toggle to disable this in the future. */
-                    if (!File.Exists(AppPath + "/" + TrustDBFile) && wc.BaseAddress.StartsWith("https://"))
-                        RefreshManifestResource(TrustDBFile);
-
-                    bool HaveTrustedKeys = File.Exists(AppPath + "/" + TrustDBFile);
-                    bool HaveSignature = File.Exists(AppPath + "/" + SignatureFile);
-
-                    if (!HaveTrustedKeys)
-                    {
-                        Application.Current.Dispatcher.Invoke(() =>
-                        {
-                            var w = new TrustDBWindow(this);
-                            var ret = w.ShowDialog();
-                            if (!ret.GetValueOrDefault())
-                            {
-                                Application.Current.Shutdown();
-                                return;
-                            }
-                        });
-                    }
-
-                    this.SignatureStatus = VerifyManifest();
+                    VerifyManifest();
                 }
 
                 UpdateStatus();
             });
         }
 
-        public SignatureStatusType VerifyManifest()
+        public void VerifyManifest()
         {
+            this.ManifestSecurityStatus = new Catflap.Security.VerifyResponse();
+
+            // Try to fetch signature file!
+            RefreshManifestResource(SignatureFile);
+
+            /* Convenience trust weakening bad-bad-bad of the day: Always retrieve trustDB if it is over SSL.
+             * We need to add a (compile) toggle to disable this in the future. */
+            if (!File.Exists(AppPath + "/" + TrustDBFile) && wc.BaseAddress.StartsWith("https://"))
+                RefreshManifestResource(TrustDBFile, true);
+
             bool HaveTrustedKeys = File.Exists(AppPath + "/" + TrustDBFile);
             bool HaveSignature = File.Exists(AppPath + "/" + SignatureFile);
 
             // We always expect our repo to be signed if the old one is signed, we have a trustdb, or the new one starts being signed
             // This also ensures that we can never downgrade to unsigned without changing the updater binary.
-            bool expectRepoSigned = HaveTrustedKeys ||
+            bool expectRepoSigned =
+                HaveTrustedKeys ||
                 HaveSignature ||
                 LatestManifest.signed ||
                 CurrentManifest.signed;
 
-            if (!expectRepoSigned)
-                return SignatureStatusType.NOT_SIGNED;
-
-            if (HaveSignature && HaveTrustedKeys) {
-                var vret = Security.VerifySignature(AppPath, "catflap.json.sig", "catflap.remote.json");
-                switch (vret) {
-                    case VerifyResponse.OK:
-                    return SignatureStatusType.OK;
-                    case VerifyResponse.FAIL:
-                        return SignatureStatusType.FAIL;
-                    case VerifyResponse.KEY_MISMATCH:
-                        return SignatureStatusType.KEY_MISMATCH;
-                    default:
-                    return SignatureStatusType.FAIL;
-                }
+            if (expectRepoSigned && !HaveTrustedKeys)
+            {
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    var w = new TrustDBWindow(this);
+                    var ret = w.ShowDialog();
+                    if (!ret.GetValueOrDefault())
+                    {
+                        Application.Current.Shutdown();
+                        return;
+                    }
+                });
             }
 
-            else if (HaveSignature && !HaveTrustedKeys)
-                return SignatureStatusType.SIGNED_BUT_TRUSTDB_MISSING;
-
-            else if (HaveTrustedKeys && !HaveSignature)
-                return SignatureStatusType.LOST_SIGNATURE;
-
-            else
-                return SignatureStatusType.FAIL; // Should never happen.
+            if (expectRepoSigned)
+                this.ManifestSecurityStatus = Security.VerifySignature(SignatureFile, "catflap.remote.json");
         }
 
         private Task<bool> RunSyncItem(Manifest.SyncItem f,
@@ -644,14 +614,18 @@ namespace Catflap
                     {
                         if (lastHashFailed)
                         {
+                            OnDownloadMessage("hash verification failed", true);
+
                             throw new Exception("Problem verifying " + lastHashFileFailed + ". " +
                                 " This might be a repository error, or someone is messing with your connection. " +
                                 "Please contact your repository admin " +
                                 "with the contents of this message:\n\n" + lastHashFailedMessage);
+                            
                         }
 
                         if (x.InnerException is TaskCanceledException)
                         {
+                            OnDownloadMessage("cancelled", true);
                             break;
                         }
 
@@ -674,7 +648,11 @@ namespace Catflap
                     }*/
 
                     if (cts.IsCancellationRequested)
+                    {
+                        OnDownloadMessage("cancelled", true);
                         break;
+                    }
+                        
 
                     // This is a really ugly hackyhack to check if running binary was touched while we were upating.
                     // We just ASSUME that the binary was touched by the sync itself.

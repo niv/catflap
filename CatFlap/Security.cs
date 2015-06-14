@@ -10,27 +10,67 @@ using System.Threading.Tasks;
 
 namespace Catflap
 {
-    class SignatureVerificationException : SecurityException { public SignatureVerificationException(string message) : base(message) { } };
-
-    enum VerifyResponse
+    public class Security
     {
-        // Checks out!
-        OK,
-        // Fail.
-        FAIL,
-        // Public keys have changed.
-        KEY_MISMATCH
-    };
+        public struct VerifyResponse
+        {
+            public enum VerifyResponseStatus
+            {
+                NOT_CHECKED,
 
-    class Security
-    {
+                // Signature Checks out!
+                OK,
+
+                // Fail.
+                SIGNATURE_DOES_NOT_VERIFY,
+
+                // Public keys have changed.
+                PUBKEY_MISMATCH,
+
+                // File wasn't signed.
+                // This could mean that the signature disappeared!
+                NO_LOCAL_SIGNATURE,
+
+                // We have no (local) key.
+                // File was signed but we have no keyring
+                NO_LOCAL_PUBKEY,
+            };
+
+            public VerifyResponseStatus Status;
+            public string signingKey;
+        };
+        
+        
+        private string AppPath;
+
+        public Security(string appPath)
+        {
+            this.AppPath = appPath;
+        }
+
+
         private static Regex RegexKeyMismatch = new Regex(@"^Signature key id in (.+?) is ([A-F0-9]+)\s+but the key id in (.+?) is ([A-F0-9]+)");
 
-        public static VerifyResponse VerifySignature(string appPath, string sigFile, string dataFile)
+        public VerifyResponse VerifySignature(string sigFile, string dataFile)
         {
+            VerifyResponse ret = new VerifyResponse();
+
             var keyring = Repository.TrustDBFile;
+
+            if (!File.Exists(AppPath + "/" + keyring))
+            {
+                ret.Status = VerifyResponse.VerifyResponseStatus.NO_LOCAL_PUBKEY;
+                return ret;
+            }
+
+            if (!File.Exists(AppPath + "/" + sigFile) || !File.Exists(AppPath + "/" + dataFile))
+            {
+                ret.Status = VerifyResponse.VerifyResponseStatus.NO_LOCAL_SIGNATURE;
+                return ret;
+            }
+                
             var pProcess = new System.Diagnostics.Process();
-            pProcess.StartInfo.FileName = appPath + "\\minisign.exe";
+            pProcess.StartInfo.FileName = AppPath + "\\minisign.exe";
             pProcess.StartInfo.EnvironmentVariables.Add("CYGWIN", "nodosfilewarning");
 
             pProcess.StartInfo.Arguments = "-q -V " +
@@ -40,7 +80,7 @@ namespace Catflap
 
             pProcess.StartInfo.CreateNoWindow = true;
             pProcess.StartInfo.UseShellExecute = false;
-            pProcess.StartInfo.WorkingDirectory = appPath;
+            pProcess.StartInfo.WorkingDirectory = AppPath;
             // pProcess.StartInfo.RedirectStandardOutput = true;
             pProcess.StartInfo.RedirectStandardError = true;
             pProcess.Start();
@@ -56,10 +96,16 @@ namespace Catflap
                 var rxsigFile = mr.Groups[2].Value;
                 var newKey = mr.Groups[3].Value;
 
-                return VerifyResponse.KEY_MISMATCH;
-            }
+                ret.Status = VerifyResponse.VerifyResponseStatus.PUBKEY_MISMATCH;
+            } else
+                ret.Status = pProcess.ExitCode == 0 ?
+                    ret.Status = VerifyResponse.VerifyResponseStatus.OK :
+                    ret.Status = VerifyResponse.VerifyResponseStatus.SIGNATURE_DOES_NOT_VERIFY;
 
-            return pProcess.ExitCode == 0 ? VerifyResponse.OK : VerifyResponse.FAIL;
+            byte[] keyringData = Convert.FromBase64String(System.IO.File.ReadAllLines(AppPath + "/" + keyring)[1]);
+            ret.signingKey = BitConverter.ToString(keyringData, 2, 8).ToUpperInvariant();
+
+            return ret;
         }
 
         public static string HashMD5(String file)

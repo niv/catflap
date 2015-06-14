@@ -40,17 +40,18 @@ namespace Catflap
         {
             repository.SaveTrustDB(this.publicKey.Text);
             
-            var ret = repository.VerifyManifest();
-            switch (ret)
+            repository.VerifyManifest();
+            switch (repository.ManifestSecurityStatus.Status)
             {
-                case Repository.SignatureStatusType.OK:
+                case Security.VerifyResponse.VerifyResponseStatus.OK:
                     this.DialogResult = true;
                     this.Close();
                     return;
 
                 default:
                     repository.ResetTrustDB();
-                    MessageBox.Show("Could not verify signature: " + ret.ToString());
+                    MessageBox.Show("Could not verify signature. (Internal status: " +
+                        repository.ManifestSecurityStatus.Status.ToString() + ")");
                     return;
             }
         }

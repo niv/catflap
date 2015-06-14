@@ -29,12 +29,19 @@
             </Controls:Flyout>
         </Controls:FlyoutsControl>
     </Controls:MetroWindow.Flyouts>
+    
+    <Controls:MetroWindow.LeftWindowCommands>
+        <Controls:WindowCommands>
+            <Button x:Name="btnSignatureStatus" Click="btnSignatureStatus_Click">
+                <Image x:Name="signatureStatus" HorizontalAlignment="Left" VerticalAlignment="Top" Source="Resources/padlock-white.png" Grid.Column="1" Height="15" Width="15" />
+            </Button>
+        </Controls:WindowCommands>
+    </Controls:MetroWindow.LeftWindowCommands>
 
     <Controls:MetroWindow.RightWindowCommands>
         <Controls:WindowCommands>
             <Button x:Name="btnHelp" Content="?" Click="btnHelp_Click" ToolTip="Catflap website." />
             <Button x:Name="btnShowHideLog" Content="more" Click="btnShowHideLog_Click" />
-
         </Controls:WindowCommands>
     </Controls:MetroWindow.RightWindowCommands>
 
@@ -66,13 +73,6 @@
                 </Rectangle.Fill>
             </Rectangle>
         </Button>
-        <TextBlock VerticalAlignment="Top" x:Name="labelSignatureStatus" Text="" FontSize="10" Foreground="White"  TextAlignment="Center" 
-                   Panel.ZIndex="100"  Grid.ColumnSpan="2" Height="16" Margin="0,6,0,0"
-                   >
-            <TextBlock.Effect>
-                <DropShadowEffect/>
-            </TextBlock.Effect>
-        </TextBlock>
     </Grid>
 
 
