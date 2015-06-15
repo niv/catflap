@@ -60,12 +60,14 @@ namespace Catflap
             if (!File.Exists(AppPath + "/" + keyring))
             {
                 ret.Status = VerifyResponse.VerifyResponseStatus.NO_LOCAL_PUBKEY;
+                Logger.Info("VerifySignature(\"" + dataFile + "\") = " + ret.Status);
                 return ret;
             }
 
             if (!File.Exists(AppPath + "/" + sigFile) || !File.Exists(AppPath + "/" + dataFile))
             {
                 ret.Status = VerifyResponse.VerifyResponseStatus.NO_LOCAL_SIGNATURE;
+                Logger.Info("VerifySignature(\"" + dataFile + "\") = " + ret.Status);
                 return ret;
             }
                 
@@ -103,7 +105,10 @@ namespace Catflap
                     ret.Status = VerifyResponse.VerifyResponseStatus.SIGNATURE_DOES_NOT_VERIFY;
 
             byte[] keyringData = Convert.FromBase64String(System.IO.File.ReadAllLines(AppPath + "/" + keyring)[1]);
-            ret.signingKey = BitConverter.ToString(keyringData, 2, 8).ToUpperInvariant();
+            keyringData = keyringData.Skip(2).Take(8).Reverse().ToArray();
+            ret.signingKey = BitConverter.ToString(keyringData).ToUpperInvariant();
+
+            Logger.Info("VerifySignature(\"" + dataFile + "\") = " + ret.Status + ", key: " + ret.signingKey);
 
             return ret;
         }

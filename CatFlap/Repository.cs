@@ -332,14 +332,18 @@ namespace Catflap
                                 memoryStream.Write(buffer, 0, count);
                             } while (count != 0);
 
+                            Logger.Info(" => " + memoryStream.Length.BytesToHuman());
                             System.IO.File.WriteAllBytes(AppPath + "/" + filename, memoryStream.ToArray());
                             File.SetLastWriteTime(AppPath + "/" + filename, res.LastModified);
+                            
                         }
                     }
                 }
             }
             catch (WebException wex)
             {
+                Logger.Info("=> " + ((HttpWebResponse)wex.Response).StatusCode);
+
                 switch (((HttpWebResponse)wex.Response).StatusCode)
                 {
                     case HttpStatusCode.NotModified:
@@ -426,6 +430,12 @@ namespace Catflap
                 HaveSignature ||
                 LatestManifest.signed ||
                 CurrentManifest.signed;
+
+            Logger.Info("Expecting repo signing: " + expectRepoSigned +
+                " (have trusted: " + HaveTrustedKeys +
+                ", have signature: " + HaveSignature +
+                ", latest is signed: " + LatestManifest.signed +
+                ", current is signed: " + CurrentManifest.signed + ")");
 
             if (expectRepoSigned && !HaveTrustedKeys)
             {
