@@ -1,0 +1,333 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="binary_updated_restart_required" xml:space="preserve">
+    <value>Restart required</value>
+  </data>
+  <data name="binary_updated_restart_required_long" xml:space="preserve">
+    <value>The updater needs to restart.</value>
+  </data>
+  <data name="busy" xml:space="preserve">
+    <value>Busy!</value>
+  </data>
+  <data name="busy_manifest" xml:space="preserve">
+    <value>Refreshing manifest!</value>
+  </data>
+  <data name="busy_window_title" xml:space="preserve">
+    <value>Please wait!</value>
+  </data>
+  <data name="err_cannot_simulate" xml:space="preserve">
+    <value>Cannot simulate</value>
+  </data>
+  <data name="err_cannot_simulate_long" xml:space="preserve">
+    <value>Full verify does not support simulate-mode, sorry!</value>
+  </data>
+  <data name="err_manifest_network_failure_exit" xml:space="preserve">
+    <value>There has been some problem downloading/parsing the repository manifest:\n\n {0}</value>
+  </data>
+  <data name="err_manifest_network_failure_offline_mode" xml:space="preserve">
+    <value>Could not retrieve repository manifest: {0} Switching to offline mode.</value>
+  </data>
+  <data name="err_manifest_parse_error" xml:space="preserve">
+    <value>There are problems with the repository manifest (This is probably not your fault, it needs to be fixed in the repository!):\n\n {0}</value>
+  </data>
+  <data name="mainwindow_button_more" xml:space="preserve">
+    <value>more</value>
+  </data>
+  <data name="mainwindow_button_openfolder" xml:space="preserve">
+    <value>Open Folder</value>
+  </data>
+  <data name="mainwindow_button_shortcut" xml:space="preserve">
+    <value>Create Shortcut</value>
+  </data>
+  <data name="mainwindow_button_verify" xml:space="preserve">
+    <value>Verify</value>
+  </data>
+  <data name="mainwindow_logflyout_header" xml:space="preserve">
+    <value>Log</value>
+  </data>
+  <data name="pubkeywindow_button_go_invalid" xml:space="preserve">
+    <value>invalid public key</value>
+  </data>
+  <data name="pubkeywindow_button_go_ok" xml:space="preserve">
+    <value>save!</value>
+  </data>
+  <data name="pubkeywindow_button_go_start" xml:space="preserve">
+    <value>enter key</value>
+  </data>
+  <data name="pubkeywindow_infotext" xml:space="preserve">
+    <value>The remote repository is signed.
+
+Please ask the repository maintainer for the public key,
+and copy/paste it into this text box.</value>
+  </data>
+  <data name="pubkeywindow_window_title" xml:space="preserve">
+    <value>This repository is signed</value>
+  </data>
+  <data name="repository_crypto_not_signed_long" xml:space="preserve">
+    <value>Remote repository is not signed. This is okay if you don't expect it to be.</value>
+  </data>
+  <data name="repository_crypto_pubkey_mismatch" xml:space="preserve">
+    <value>Signing key mismatch</value>
+  </data>
+  <data name="repository_crypto_pubkey_mismatch_long" xml:space="preserve">
+    <value>Remote repository was signed with a different key than we were expecting.\n\nEither the remote maintainer has changed the signing key,or someone is messing with you (VERY BAD).\n\nContact the repo maintainer! Aborting.</value>
+  </data>
+  <data name="repository_crypto_pubkey_missing_long" xml:space="preserve">
+    <value>The remote repository is signed, but you are missing the public key locally. We cannot verify that downloaded data has not been tampered with.</value>
+  </data>
+  <data name="repository_crypto_signature_incorrect" xml:space="preserve">
+    <value>Signature verification failed</value>
+  </data>
+  <data name="repository_crypto_signature_incorrect_long" xml:space="preserve">
+    <value>Could not verify manifest signature.\n\nEither the signature is out of date, or someone is messing with you (VERY BAD).\n\nContact the repo maintainer! Aborting.</value>
+  </data>
+  <data name="repository_crypto_signature_missing" xml:space="preserve">
+    <value>Signature missing</value>
+  </data>
+  <data name="repository_crypto_signature_missing_long" xml:space="preserve">
+    <value>Remote repository was signed in the past, but isn't anymore.\n\nThis means that either the repository maintainer removed the signature, or someone is messing with you (VERY BAD).\n\nContact the repo maintainer! Aborting.</value>
+  </data>
+  <data name="repository_crypto_signature_ok_long" xml:space="preserve">
+    <value>Signature checks out! We will verify that any downloaded data has not been tampered with in-flight.</value>
+  </data>
+  <data name="repository_crypto_signing_key" xml:space="preserve">
+    <value>Signing key</value>
+  </data>
+  <data name="repository_locked" xml:space="preserve">
+    <value>Repository locked.</value>
+  </data>
+  <data name="run_action_run" xml:space="preserve">
+    <value>run</value>
+  </data>
+  <data name="run_action_sync" xml:space="preserve">
+    <value>sync</value>
+  </data>
+  <data name="run_error" xml:space="preserve">
+    <value>Error executing runAction: {0}</value>
+  </data>
+  <data name="run_no_action" xml:space="preserve">
+    <value>nothing to do</value>
+  </data>
+  <data name="setup_button_go" xml:space="preserve">
+    <value>Make it go</value>
+  </data>
+  <data name="setup_expected_missing" xml:space="preserve">
+    <value>Expected files missing?</value>
+  </data>
+  <data name="setup_expected_missing_long" xml:space="preserve">
+    <value>This manifest claims it needs to be run in a directory containing certainfiles, but we're missing the following:\n\n{0}\n\nDo you want to continue anyways?</value>
+  </data>
+  <data name="setup_manifest_invalid" xml:space="preserve">
+    <value>This doesn't look like a valid repository</value>
+  </data>
+  <data name="setup_manifest_invalid_long" xml:space="preserve">
+    <value>Error retrieving manifest data from {0}: {1}</value>
+  </data>
+  <data name="setup_shortcut_ask" xml:space="preserve">
+    <value>Create desktop shortcut?</value>
+  </data>
+  <data name="setup_shortcut_ask_long" xml:space="preserve">
+    <value>Do you want me to create a desktop shortcut for you?\nI will only ask once. You can this yourself later by clicking 'more' in the title bar.</value>
+  </data>
+  <data name="setup_warn_untracked" xml:space="preserve">
+    <value>Untracked files in directory, continue anyways?</value>
+  </data>
+  <data name="setup_warn_untracked_long" xml:space="preserve">
+    <value>THIS REPOSITORY RECOMMENDS TO START IN A EMPTY DIRECTORY.\n\nYou are setting up in a directory that already contains data that is not tracked by this repository:\n\n{0}\n..\n\nDo you want to continue anyways?</value>
+  </data>
+  <data name="setup_window_title" xml:space="preserve">
+    <value>Setup</value>
+  </data>
+  <data name="shortcut_created" xml:space="preserve">
+    <value>Shortcut created</value>
+  </data>
+  <data name="shortcut_created_long" xml:space="preserve">
+    <value>A shortcut to update &amp; run this repository was created on your Desktop.\n\nFeel free to rename it and/or change the icon.</value>
+  </data>
+  <data name="status_aborted" xml:space="preserve">
+    <value>ABORTED</value>
+  </data>
+  <data name="status_aborted_n_traffic" xml:space="preserve">
+    <value>ABORTED ({0} of actual network traffic)</value>
+  </data>
+  <data name="status_cancelled" xml:space="preserve">
+    <value>cancelled</value>
+  </data>
+  <data name="status_done" xml:space="preserve">
+    <value>Done</value>
+  </data>
+  <data name="status_done_n_traffic" xml:space="preserve">
+    <value>Done ({0} of actual network traffic)</value>
+  </data>
+  <data name="status_n_in_sync" xml:space="preserve">
+    <value>{0} in sync</value>
+  </data>
+  <data name="status_running" xml:space="preserve">
+    <value>Running</value>
+  </data>
+  <data name="status_sync_n_need_syncing" xml:space="preserve">
+    <value>{0} need syncing</value>
+  </data>
+  <data name="status_sync_objects_need_syncing" xml:space="preserve">
+    <value>objects need syncing</value>
+  </data>
+  <data name="status_sync_tooltip" xml:space="preserve">
+    <value>{0} files in {1} sync items, last updated {2}</value>
+  </data>
+  <data name="status_sync_tooltip_outdated" xml:space="preserve">
+    <value>The following items are outdated:</value>
+  </data>
+  <data name="sync_deleting_directory" xml:space="preserve">
+    <value>Deleting directory {0}</value>
+  </data>
+  <data name="sync_deleting_file" xml:space="preserve">
+    <value>Deleting file {0}</value>
+  </data>
+  <data name="sync_deleting_leftovers_tmp" xml:space="preserve">
+    <value>&lt;deleting leftover file from forced abort: {0}&gt;</value>
+  </data>
+  <data name="sync_hash_comparison_failed" xml:space="preserve">
+    <value>Hash comparison failed for {0}. Expected: {1}, got: {2}</value>
+  </data>
+  <data name="sync_hash_failed" xml:space="preserve">
+    <value>hash verification failed</value>
+  </data>
+  <data name="sync_hash_failed_long" xml:space="preserve">
+    <value>Problem verifying {0}. This might be a repository error, or someone is messing with your connection. Please contact your repository admin with the contents of this message:\n\n{1}</value>
+  </data>
+  <data name="sync_hash_no_hash" xml:space="preserve">
+    <value>{0} has no hash</value>
+  </data>
+  <data name="sync_hash_ok" xml:space="preserve">
+    <value>{0}: hash OK({1})</value>
+  </data>
+  <data name="warn_disk_space" xml:space="preserve">
+    <value>Disk space?</value>
+  </data>
+  <data name="warn_disk_space_long" xml:space="preserve">
+    <value>You seem to be running out of disk space on {0}. Advanced calculations indicate you might not be able to sync everything: \n\n{1} free, but \n{2} needed (plus change for temporary files).\n\nDo you still want to sync?</value>
+  </data>
+  <data name="warn_verify" xml:space="preserve">
+    <value>Verify?</value>
+  </data>
+  <data name="warn_verify_long" xml:space="preserve">
+    <value>Running a full sync will take longer, since it will verify checksums.\n\nThis is usually not needed, except when you suspect corruption. You can cancel at any time.\n\nAre you sure this is what you want?</value>
+  </data>
+</root>

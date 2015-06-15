@@ -32,11 +32,13 @@ namespace Catflap
                 if (e.Key == Key.System && e.SystemKey == Key.F4)
                     e.Handled = true;
             });
+
+            this.Title = Text.t("busy_window_title");
         }
 
         public static TResult WithBusyWindow<TResult>(Func<TResult> any)
         {
-            return WithBusyWindow("Busy!", any);
+            return WithBusyWindow(Text.t("busy"), any);
         }
 
         public static void WithBusyWindow(string text, Action any)

@@ -29,6 +29,10 @@ namespace Catflap
         {
             InitializeComponent();
 
+            Title = Text.t("pubkeywindow_window_title");
+            infotext.Text = Text.t("pubkeywindow_infotext");
+            btnGo.Content = Text.t("pubkeywindow_button_go_start");
+
             ThemeManager.ChangeAppStyle(Application.Current,
                 MainWindow.accentOK,
                 ThemeManager.AppThemes.First(x => x.Name == "BaseLight"));
@@ -62,7 +66,7 @@ namespace Catflap
             if (pubStr == "")
             {
                 btnGo.IsEnabled = false;
-                btnGo.Content = "enter key";
+                btnGo.Content = Text.t("pubkeywindow_button_go_start");
                 return;
             }
             try
@@ -74,12 +78,12 @@ namespace Catflap
             catch (Exception)
             {
                 btnGo.IsEnabled = false;
-                btnGo.Content = "invalid public key";
+                btnGo.Content = Text.t("pubkeywindow_button_go_invalid");
                 return;
             }
 
             btnGo.IsEnabled = true;
-            btnGo.Content = "save!";
+            btnGo.Content = Text.t("pubkeywindow_button_go_ok");
         }
     }
 }

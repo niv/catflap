@@ -43,6 +43,9 @@ namespace Catflap
             gridSetupWindow.Background = myBrush;
 
             txtUrl.Focus();
+
+            this.Title = Text.t("setup_window_title");
+            btnGo.Content = Text.t("setup_button_go");
         }
 
         private void OnWindowLoaded(object sender, RoutedEventArgs e)
@@ -107,8 +110,8 @@ namespace Catflap
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error retrieving manifest data from " + url + ": " + ex.Message, "This doesn't look like a valid repository");
-                Console.WriteLine(ex.ToString());
+                MessageBox.Show(Text.t("setup_manifest_invalid_long", url, ex.Message),
+                    Text.t("setup_manifest_invalid"));
                 return false;
             }
 
@@ -118,11 +121,9 @@ namespace Catflap
                 var diff = mf.warnWhenSetupWithoutFiles.Select(x => new FileInfo(x).Name.ToLowerInvariant()).Except(currentContents);
                 if (diff.Count() > 0)
                 {
-                    var setupAnyways = await this.ShowMessageAsync("Expected files missing?",
-                        "This manifest claims it needs to be run in a directory containing certain " +
-                        "files, but we're missing the following:\n\n" +
-                        string.Join(", ", diff) + "\n\n" +
-                        "Do you want to continue anyways?", MessageDialogStyle.AffirmativeAndNegative);
+                    var setupAnyways = await this.ShowMessageAsync(Text.t("setup_expected_missing"),
+                        Text.t("setup_expected_missing_long", string.Join(", ", diff)),
+                        MessageDialogStyle.AffirmativeAndNegative);
 
                     if (MessageDialogResult.Negative == setupAnyways)
                         return false;
@@ -147,11 +148,9 @@ namespace Catflap
                 if (untracked.Count() > 0)
                 {
                     var ret = MessageBox.Show(
-                        "THIS REPOSITORY RECOMMENDS TO START IN A EMPTY DIRECTORY.\n\n" +
-                        "You are setting up in a directory that already contains data that is not tracked by this repository:\n\n" +
-                        String.Join("\n", untracked.Take(10)) + "\n..\n\n" +
-                        "Do you want to continue anyways?",
-                        "Untracked files in directory, continue anyways?", MessageBoxButton.YesNo);
+                        Text.t("setup_warn_untracked_long", String.Join("\n", untracked.Take(10))),
+                        Text.t("setup_warn_untracked"),
+                        MessageBoxButton.YesNo);
                     if (ret == MessageBoxResult.No)
                         return false;
                 }
@@ -163,9 +162,9 @@ namespace Catflap
 
             if (mf.runAction != null && mf.runAction.execute != "")
             {
-                var wantShortcut = await this.ShowMessageAsync("Create desktop shortcut?",
-                    "Do you want me to create a desktop shortcut for you?\n" +
-                    "I will only ask once. You can this yourself later by clicking 'more' in the title bar.",
+                var wantShortcut = await this.ShowMessageAsync(
+                    Text.t("setup_shortcut_ask"),
+                    Text.t("setup_shortcut_ask_long"),
                     MessageDialogStyle.AffirmativeAndNegative);
 
                 if (MessageDialogResult.Affirmative == wantShortcut)

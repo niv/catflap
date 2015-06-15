@@ -14,7 +14,7 @@
     <Grid Margin="0,0,0,0">
         <Button x:Name="btnGo" Style="{DynamicResource AccentedSquareButtonStyle}" Content="enter key" Margin="132,0,132,10"  IsDefault="True" RenderTransformOrigin="0.48,0.44" FontSize="15" FontWeight="Normal" BorderThickness="1" Click="btnGo_Click" Height="32" VerticalAlignment="Bottom" IsEnabled="False"/>
         <TextBox x:Name="publicKey" Margin="10,105,10,0" TextWrapping="Wrap" FontFamily="Courier New" TextChanged="publicKey_TextChanged" Height="10" VerticalAlignment="Top" TextAlignment="Center" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" />
-        <TextBlock  Margin="10,10,10,0" VerticalAlignment="Top" Height="90" Text="The remote repository is signed.&#xA;&#xA;Please ask the repository maintainer for the public key,&#xA;and copy/paste it into this text box." TextAlignment="Center" FontSize="14" />
+        <TextBlock x:Name="infotext"  Margin="10,10,10,0" VerticalAlignment="Top" Height="90" Text="The remote repository is signed.&#xA;&#xA;Please ask the repository maintainer for the public key,&#xA;and copy/paste it into this text box." TextAlignment="Center" FontSize="14" />
         <!-- Content="" -->
 
     </Grid>

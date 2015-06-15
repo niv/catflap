@@ -136,6 +136,12 @@
     <Compile Include="BusyWindow.xaml.cs">
       <DependentUpon>BusyWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Resources\Texts_English.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Texts_English.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Text.cs" />
     <Compile Include="TrustDBWindow.xaml.cs">
       <DependentUpon>TrustDBWindow.xaml</DependentUpon>
     </Compile>
@@ -209,6 +215,10 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Texts_English.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Texts_English.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <None Include="App.config">
       <SubType>Designer</SubType>

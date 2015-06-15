@@ -368,7 +368,7 @@ namespace Catflap
         {
             return Task.Run(delegate()
             {
-                BusyWindow.WithBusyWindow("Refreshing manifest!", () =>
+                BusyWindow.WithBusyWindow(Text.t("busy_manifest"), () =>
                 {
                     if (this.AlwaysAssumeCurrent)
                     {
@@ -413,12 +413,12 @@ namespace Catflap
             this.ManifestSecurityStatus = new Catflap.Security.VerifyResponse();
 
             // Try to fetch signature file!
-            BusyWindow.WithBusyWindow("Refreshing manifest", () => RefreshManifestResource(SignatureFile));
+            BusyWindow.WithBusyWindow(Text.t("busy_manifest"), () => RefreshManifestResource(SignatureFile));
 
             /* Convenience trust weakening bad-bad-bad of the day: Always retrieve trustDB if it is over SSL.
              * We need to add a (compile) toggle to disable this in the future. */
             if (!File.Exists(AppPath + "/" + TrustDBFile) && wc.BaseAddress.StartsWith("https://"))
-                BusyWindow.WithBusyWindow("Refreshing manifest", () => RefreshManifestResource(TrustDBFile, true));
+                BusyWindow.WithBusyWindow(Text.t("busy_manifest"), () => RefreshManifestResource(TrustDBFile, true));
 
             bool HaveTrustedKeys = File.Exists(AppPath + "/" + TrustDBFile);
             bool HaveSignature = File.Exists(AppPath + "/" + SignatureFile);
@@ -479,10 +479,10 @@ namespace Catflap
                     return Task<bool>.Run(() =>
                     {
                         if (f.name.EndsWith("/") && Directory.Exists(RootPath + "/" + f.name)) {
-                            dm.Invoke("Deleting directory " + f.name);
+                            dm.Invoke(Text.t("sync_deleting_directory", f.name));
                             Directory.Delete(RootPath + "/" + f.name, true);
                         } else if (File.Exists(RootPath + "/" + f.name)) {
-                            dm.Invoke("Deleting file " + f.name);
+                            dm.Invoke(Text.t("sync_deleting_file", f.name));
                             File.Delete(RootPath + "/" + f.name);
                         }
                         return true;
@@ -510,7 +510,7 @@ namespace Catflap
                 var di = new DirectoryInfo(TmpPath).GetFiles("*", SearchOption.TopDirectoryOnly);
                 foreach (var tmpfile in di)
                 {
-                    OnDownloadMessage("<deleting leftover file from forced abort: " + tmpfile.Name + ">", true);
+                    OnDownloadMessage(Text.t("sync_deleting_leftovers_tmp", tmpfile.Name), true);
                     File.Delete(tmpfile.FullName);
                 }
             }
@@ -614,7 +614,7 @@ namespace Catflap
                         // due to gpg signing.
                         if (f.hashes == null || !f.hashes.ContainsKey(file.ToLowerInvariant()))
                         {
-                            OnDownloadMessage(file + " has no hash", false);
+                            OnDownloadMessage(Text.t("sync_hash_no_hash", file), false);
                             return true;
                         }
                             
@@ -622,14 +622,15 @@ namespace Catflap
                         if (hash != f.hashes[file.ToLowerInvariant()])
                         {
                             lastHashFailed = true;
-                            lastHashFailedMessage = "Hash comparison failed for " +
-                                file.ToLowerInvariant() + ". Expected: " +
-                                f.hashes[file.ToLowerInvariant()] + ", got: " + hash;
+                            lastHashFailedMessage = Text.t("sync_hash_comparison_failed",
+                                file.ToLowerInvariant(),
+                                f.hashes[file.ToLowerInvariant()],
+                                hash);
                             OnDownloadMessage(lastHashFailedMessage, false);
                             return false;
                         }
 
-                        OnDownloadMessage(file + ": hash OK (" + f.hashes[file.ToLowerInvariant()] + ")", false);
+                        OnDownloadMessage(Text.t("sync_hash_ok", file, f.hashes[file.ToLowerInvariant()]), false);
 
                         return true;
                     }, cts);
@@ -642,18 +643,16 @@ namespace Catflap
                     {
                         if (lastHashFailed)
                         {
-                            OnDownloadMessage("hash verification failed", true);
+                            OnDownloadMessage(Text.t("sync_hash_failed"), true);
 
-                            throw new Exception("Problem verifying " + lastHashFileFailed + ". " +
-                                " This might be a repository error, or someone is messing with your connection. " +
-                                "Please contact your repository admin " +
-                                "with the contents of this message:\n\n" + lastHashFailedMessage);
+                            throw new Exception(Text.t("sync_hash_failed_long", lastHashFileFailed,
+                                lastHashFailedMessage));
                             
                         }
 
                         if (x.InnerException is TaskCanceledException)
                         {
-                            OnDownloadMessage("cancelled", true);
+                            OnDownloadMessage(Text.t("status_cancelled"), true);
                             break;
                         }
 
@@ -677,7 +676,7 @@ namespace Catflap
 
                     if (cts.IsCancellationRequested)
                     {
-                        OnDownloadMessage("cancelled", true);
+                        OnDownloadMessage(Text.t("status_cancelled"), true);
                         break;
                     }
                         

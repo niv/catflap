@@ -23,6 +23,7 @@ using vbAccelerator.Components.Shell;
 using System.Text;
 using System.Windows.Input;
 using System.Windows.Media.Effects;
+using System.Resources;
 
 namespace Catflap
 {
@@ -92,18 +93,18 @@ namespace Catflap
             {
                 if (repository.LatestManifest.runAction == null)
                 {
-                    btnRun.Content = "nothing to do";
+                    btnRun.Content = Text.t("run_no_action");
                     wantEnabled = false;
                 }
                 else
                 {
-                    btnRun.Content = "run";
+                    btnRun.Content = Text.t("run_action_run");
                     wantEnabled = true;
                 }
             }
             else
             {
-                btnRun.Content = "sync";
+                btnRun.Content = Text.t("run_action_sync");
                 wantEnabled = true;
             }
 
@@ -166,8 +167,8 @@ namespace Catflap
             {
                 if (repository.LatestManifest != null)
                 {
-                    
-                    labelDLSize.ToolTip = string.Format("{0} files in {1} sync items, last updated {2}",
+
+                    labelDLSize.ToolTip = Text.t("status_sync_tooltip",
                         repository.LatestManifest.sync.Select(f => f.count > 0 ? f.count : 1).Sum(),
                         repository.LatestManifest.sync.Count(),
                         repository.LatestManifest.sync.Select(f => f.mtime).Max().PrettyInterval()
@@ -175,7 +176,7 @@ namespace Catflap
 
                     if (repository.Status.directoriesToVerify.Any() || repository.Status.filesToVerify.Any())
                     {
-                        labelDLSize.ToolTip += "\nThe following items are outdated:";
+                        labelDLSize.ToolTip += "\n" + Text.t("status_sync_tooltip_outdated");
                         repository.Status.directoriesToVerify.ForEach(e => labelDLSize.ToolTip += "\n" + e.name);
                         repository.Status.filesToVerify.ForEach(e => labelDLSize.ToolTip += "\n" + e.name);
                     }
@@ -190,15 +191,15 @@ namespace Catflap
                     else if (repository.Status.guesstimatedBytesToVerify > 0 || repository.Status.maxBytesToVerify > 0)
                     {
                         if (repository.Status.guesstimatedBytesToVerify < 1)
-                            labelDLSize.Text = "objects need syncing";
+                            labelDLSize.Text = Text.t("status_sync_objects_need_syncing");
                         else
-                            labelDLSize.Text += string.Format("{0} need syncing",
+                            labelDLSize.Text += Text.t("status_sync_n_need_syncing",
                                 repository.Status.guesstimatedBytesToVerify.BytesToHuman()
                             );
                     }
                     else
                     {
-                        labelDLSize.Text = repository.Status.sizeOnRemote.BytesToHuman() + " in sync";
+                        labelDLSize.Text = Text.t("status_n_in_sync", repository.Status.sizeOnRemote.BytesToHuman());
                     }
 
 
@@ -255,6 +256,12 @@ namespace Catflap
 
         public MainWindow() {
             InitializeComponent();
+
+            btnVerify.Content = Text.t("mainwindow_button_verify");
+            btnOpenInExplorer.Content = Text.t("mainwindow_button_openfolder");
+            btnMakeShortcut.Content = Text.t("mainwindow_button_shortcut");
+            btnShowHideLog.Content = Text.t("mainwindow_button_more");
+            logFlyout.Header = Text.t("mainwindow_logflyout_header");
 
             this.Visibility = System.Windows.Visibility.Hidden;
 
@@ -452,20 +459,16 @@ namespace Catflap
                 {
                     // WebException wex = (WebException) err;
 
-                    MessageBox.Show("Could not retrieve repository manifest: " + err.Message +
-                                    ". Switching to offline mode.");
+                    MessageBox.Show(Text.t("err_manifest_network_failure_offline_mode"), err.Message);
                     repository.AlwaysAssumeCurrent = true;
                     goto Retry;
                 }
                 else if (err is ValidationException)
                 {
-                    MessageBox.Show("There are problems with the repository manifest " +
-                                    "(This is probably not your fault, it needs to be fixed in the repository!):" +
-                                    "\n\n" + err.Message);
+                    MessageBox.Show(Text.t("err_manifest_parse_error", err.Message));
                 }
                 else
-                    MessageBox.Show("There has been some problem downloading/parsing the repository manifest:\n\n" +
-                                    err.ToString());
+                    MessageBox.Show(Text.t("err_manifest_network_failure_exit", err.ToString()));
 
                 Application.Current.Shutdown();
                 return;
@@ -493,7 +496,9 @@ namespace Catflap
             /* Verify if we need to restart ourselves. */
             if (repository.RequireRestart)
             {
-                await this.ShowMessageAsync("Restart required", "The updater needs to restart.");
+                await this.ShowMessageAsync(
+                    Text.t("binary_updated_restart_required"),
+                    Text.t("binary_updated_restart_required_long"));
 
                 System.Diagnostics.Process.Start(Application.ResourceAssembly.Location);
                 Application.Current.Shutdown();
@@ -501,7 +506,7 @@ namespace Catflap
 
             if (!IgnoreRepositoryLock && repository.LatestManifest.locked != "")
             {
-                await this.ShowMessageAsync("Repository locked", repository.LatestManifest.locked);
+                await this.ShowMessageAsync(Text.t("repository_locked"), repository.LatestManifest.locked);
                 Application.Current.Shutdown();
             }
 
@@ -520,29 +525,23 @@ namespace Catflap
             {
                 case Security.VerifyResponse.VerifyResponseStatus.NOT_CHECKED:
                     signatureStatus.Source = new BitmapImage(new Uri("pack://application:,,,/Resources/padlock-red.png"));
-                    signatureStatus.ToolTip = "Remote repository is not signed. This is okay if you don't expect it to be.";
+                    signatureStatus.ToolTip = Text.t("repository_crypto_not_signed_long");
                     break;
 
                 case Security.VerifyResponse.VerifyResponseStatus.SIGNATURE_DOES_NOT_VERIFY:
-                    await this.ShowMessageAsync("Signature verification failed",
-                        "Could not verify manifest signature.\n\n" +
-                        "Either the signature is out of date, or someone is messing with you (VERY BAD).\n\n" +
-                        "Contact the repo maintainer! Aborting.");
+                    await this.ShowMessageAsync(Text.t("repository_crypto_signature_incorrect"),
+                        Text.t("repository_crypto_signature_incorrect_long"));
                     Application.Current.Shutdown();
                     break;
                     
                 case Security.VerifyResponse.VerifyResponseStatus.OK:
                     signatureStatus.Source = new BitmapImage(new Uri("pack://application:,,,/Resources/padlock-white.png"));
-                    signatureStatus.ToolTip = "Signature checks out! We will verify that any downloaded data " +
-                        "has not been tampered with in-flight.";
+                    signatureStatus.ToolTip = Text.t("repository_crypto_signature_ok_long");
                     break;
 
                 case Security.VerifyResponse.VerifyResponseStatus.NO_LOCAL_SIGNATURE:
-                    await this.ShowMessageAsync("Signature missing",
-                        "Remote repository was signed in the past, but isn't anymore.\n\n" +
-                        "This means that either the repository maintainer removed the " +
-                        "signature, or someone is messing with you (VERY BAD).\n\n" +
-                        "Contact the repo maintainer! Aborting.");
+                    await this.ShowMessageAsync(Text.t("repository_crypto_signature_missing"),
+                        Text.t("repository_crypto_signature_missing_long"));
                     Application.Current.Shutdown();
                     break;
 
@@ -550,16 +549,12 @@ namespace Catflap
                 // Repository.VerifyManifest
                 case Security.VerifyResponse.VerifyResponseStatus.NO_LOCAL_PUBKEY:
                     signatureStatus.Source = new BitmapImage(new Uri("pack://application:,,,/Resources/padlock-red.png"));
-                    signatureStatus.ToolTip = "The remote repository is signed, but you are missing the " +
-                        "public key locally. We cannot verify that downloaded data has not been tampered with.";
+                    signatureStatus.ToolTip = Text.t("repository_crypto_pubkey_missing_long");
                     break;
 
                 case Security.VerifyResponse.VerifyResponseStatus.PUBKEY_MISMATCH:
-                    await this.ShowMessageAsync("Signing key mismatch",
-                        "Remote repository was signed with a different key than we were expecting.\n\n" +
-                        "Either the remote maintainer has changed the signing key, " +
-                        "or someone is messing with you (VERY BAD).\n\n" +
-                        "Contact the repo maintainer! Aborting.");
+                    await this.ShowMessageAsync(Text.t("repository_crypto_pubkey_mismatch"),
+                        Text.t("repository_crypto_pubkey_mismatch_long"));
                     Application.Current.Shutdown();
                     break;
 
@@ -613,13 +608,13 @@ namespace Catflap
 
             if (wasCancel)
             {
-                SetGlobalStatus(true, "ABORTED");
-                SetUIProgressState(false, -1, "ABORTED (" + bytesOnNetwork.BytesToHuman() + " of actual network traffic)");
+                SetGlobalStatus(true, Text.t("status_aborted"));
+                SetUIProgressState(false, -1, Text.t("status_aborted_n_traffic", bytesOnNetwork.BytesToHuman()));
             } 
             else
             {
                 SetGlobalStatus(true, "100%", 1);
-                SetUIProgressState(false, 1, "Done (" + bytesOnNetwork.BytesToHuman() + " of actual network traffic)");
+                SetUIProgressState(false, 1, Text.t("status_done_n_traffic", bytesOnNetwork.BytesToHuman()));
                 Logger.Info("Verify/download complete.");
 
                 await UpdateRootManifest(!repository.Simulate);
@@ -632,7 +627,7 @@ namespace Catflap
         private async Task RunAction()
         {
             Accent old = SetTheme(accentBusy);
-            SetGlobalStatus(true, "Running");
+            SetGlobalStatus(true, Text.t("status_running"));
             SetUIState(false);
             try
             {
@@ -641,7 +636,7 @@ namespace Catflap
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error executing runAction: " + ex.Message);
+                MessageBox.Show(Text.t("run_error", ex.Message));
             }
             finally
             {
@@ -657,13 +652,9 @@ namespace Catflap
             long needed = repository.Status.guesstimatedBytesToVerify + (200 * 1024 * 1024);
             if (free < needed)
             {
-                var ret = await this.ShowMessageAsync("Disk space?",
-                        "You seem to be running out of disk space on " + rootPath + ". " +
-                        "Advanced calculations indicate you might not be able to " +
-                        "sync everything: \n\n" +
-                        free.BytesToHuman() + " free, but \n" +
-                        repository.Status.guesstimatedBytesToVerify.BytesToHuman() + " needed (plus change for temporary files).\n\n" +
-                        "Do you still want to run this sync?",
+                var ret = await this.ShowMessageAsync(Text.t("warn_disk_space"),
+                    Text.t("warn_disk_space_long", rootPath, free.BytesToHuman(),
+                        repository.Status.guesstimatedBytesToVerify.BytesToHuman()),
                     MessageDialogStyle.AffirmativeAndNegative);
                 if (MessageDialogResult.Negative == ret)
                     return;
@@ -679,10 +670,8 @@ namespace Catflap
         {
             if (repository.Status.current)
             {
-                var ret = await this.ShowMessageAsync("Verify?", "Running a full sync will take longer, " +
-                    "since it will verify checksums.\n\n" +
-                    "This is usually not needed, except when you suspect corruption. You can cancel at any time.\n\n" +
-                    "Are you sure this is what you want?",
+                var ret = await this.ShowMessageAsync(Text.t("warn_verify"),
+                    Text.t("warn_verify_long"),
                     MessageDialogStyle.AffirmativeAndNegative);
                 if (MessageDialogResult.Negative == ret)
                     return;
@@ -691,7 +680,8 @@ namespace Catflap
 
             if (fullVerify && repository.Simulate)
             {
-                await this.ShowMessageAsync("Cannot simulate", "Full verify does not support simulate-mode, sorry!");
+                await this.ShowMessageAsync(Text.t("err_cannot_simulate"),
+                    Text.t("err_cannot_simulate_long"));
                 return;
             }
 
@@ -739,15 +729,16 @@ namespace Catflap
         private void btnMakeShortcut_Click(object sender, RoutedEventArgs e)
         {
             repository.MakeDesktopShortcut();
-            this.ShowMessageAsync("Shortcut created", "A shortcut to update & run this repository was created on your Desktop.\n\n" +
-                "Feel free to rename it and/or change the icon.");
+            this.ShowMessageAsync(Text.t("shortcut_created"), Text.t("shortcut_created_long"));
         }
 
         private void btnSignatureStatus_Click(object sender, RoutedEventArgs e)
         {
-            string msg = this.signatureStatus.ToolTip.ToString();
+            string msg = "";
+            if (this.signatureStatus.ToolTip != null)
+                msg = this.signatureStatus.ToolTip.ToString();
             if (repository.ManifestSecurityStatus.signingKey != null)
-                msg += "\n\nSigning key:\n" + repository.ManifestSecurityStatus.signingKey;
+                msg += "\n\n" + Text.t("repository_crypto_signing_key") + "\n" + repository.ManifestSecurityStatus.signingKey;
 
             this.ShowMessageAsync("", msg);
         }
