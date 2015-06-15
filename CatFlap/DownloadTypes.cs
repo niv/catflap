@@ -367,7 +367,6 @@ namespace Catflap
                 if (ee.Data != null)
                 {
                     stdErr += ee.Data + "\n";
-                    Console.WriteLine("STDERR: " + ee.Data);
                     dm.Invoke("ERROR: " + ee.Data);
                 }
             };

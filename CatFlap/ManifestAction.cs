@@ -62,8 +62,6 @@ namespace Catflap
                 var cmd = SubstituteVars(repository, this.execute);
                 var args = SubstituteVars(repository, this.arguments) + (" " + string.Join(" ", additionalArgs)).TrimEnd(' ');
 
-                Console.WriteLine("verb: " + this.verb);
-
                 Process pProcess = new System.Diagnostics.Process();
                 pProcess.StartInfo.FileName = cmd;
 

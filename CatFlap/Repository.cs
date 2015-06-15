@@ -64,6 +64,7 @@ namespace Catflap
             {
                 this.Username = u; this.Password = p;
                 wc.Credentials = new NetworkCredential(Username, Password);
+                Logger.Info("%user% = " + u);
                 System.IO.File.WriteAllText(AppPath + "\\auth", Username + ":" + Password);
             }
         }
@@ -160,6 +161,10 @@ namespace Catflap
             this.RootPath = rootPath.NormalizePath();
             this.AppPath = appPath.NormalizePath();
             this.TmpPath = this.AppPath + "\\temp";
+
+            Logger.Info("%app% = " + AppPath);
+            Logger.Info("%root% = " + RootPath);
+            Logger.Info("%temp% = " + TmpPath);
 
             this.Security = new Security(AppPath);
 
@@ -271,6 +276,7 @@ namespace Catflap
 
         public Manifest GetManifestFromRemote()
         {
+            Logger.Info("Getting manifest.");
             FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location);
             string jsonStr = wc.DownloadString("catflap.json?catflap=" + fvi.FileVersion);
             System.IO.File.WriteAllText(AppPath + "\\catflap.remote.json", jsonStr);
@@ -297,7 +303,8 @@ namespace Catflap
 
         private bool RefreshManifestResource(string filename, bool neverOverwrite = false)
         {
-            Console.WriteLine("RefreshManifestResource(" + filename + ")");
+            Logger.Info("RefreshManifestResource(\"" + filename + "\")");
+
             if (File.Exists(AppPath + "/" + filename) && neverOverwrite)
                 return true;
 
@@ -342,10 +349,10 @@ namespace Catflap
                     case HttpStatusCode.NotFound:
                         if (File.Exists(AppPath + "/" + filename))
                             File.Delete(AppPath + "/" + filename);
-                        break;
+                       return false;
                 }
 
-                Console.WriteLine("while getting manifest resource: " + wex.ToString());
+                Logger.Info("while getting manifest resource: " + wex.ToString());
                 return false;
             }
 
@@ -593,15 +600,23 @@ namespace Catflap
                         // Do not error hard on missing manifest hashes, since that can be trusted
                         // due to gpg signing.
                         if (f.hashes == null || !f.hashes.ContainsKey(file.ToLowerInvariant()))
+                        {
+                            OnDownloadMessage(file + " has no hash", false);
                             return true;
+                        }
+                            
 
                         if (hash != f.hashes[file.ToLowerInvariant()])
                         {
                             lastHashFailed = true;
-                            lastHashFailedMessage = "Hash comparison failed. Expected: " +
+                            lastHashFailedMessage = "Hash comparison failed for " +
+                                file.ToLowerInvariant() + ". Expected: " +
                                 f.hashes[file.ToLowerInvariant()] + ", got: " + hash;
+                            OnDownloadMessage(lastHashFailedMessage, false);
                             return false;
                         }
+
+                        OnDownloadMessage(file + ": hash OK (" + f.hashes[file.ToLowerInvariant()] + ")", false);
 
                         return true;
                     }, cts);

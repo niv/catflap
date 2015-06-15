@@ -37,20 +37,6 @@ namespace Catflap
 
         private bool CloseAfterSync = false;
 
-        private void Log(String str, bool showMessageBox = false) {
-            Console.WriteLine(str);
-
-            logTextBox.Dispatcher.Invoke((Action)(() =>
-            {
-            logTextBox.Text += DateTime.Now.ToString("HH:mm:ss") + "> " + str + "\n";
-                logTextBox.ScrollToEnd();
-
-            if (showMessageBox)
-                this.ShowMessageAsync("Log", str);
-            }));
-        }
-
-
         private static string[] resourcesToUnpack =
         {
             "rsync.exe.gz" , "cygwin1.dll.gz",  "cyggcc_s-1.dll.gz", "kill.exe.gz",
@@ -276,13 +262,27 @@ namespace Catflap
             var fi = new FileInfo(Assembly.GetExecutingAssembly().Location);
             rootPath = Directory.GetCurrentDirectory();
 
-            Log("%root% = " + rootPath);
             appPath = rootPath + "\\" + fi.Name + ".catflap";
-            Log("%app% = " + appPath);
             Directory.SetCurrentDirectory(rootPath);
+
+            Logger.OnLogMessage += (string msg) =>
+                logTextBox.Dispatcher.Invoke((Action)(() =>
+                {
+                    logTextBox.Text += msg;
+                    logTextBox.ScrollToEnd();
+                }));
+
+            Assembly assembly = Assembly.GetExecutingAssembly();
+            FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
+            string major = String.Join(".", fvi.FileVersion.Split('.').Take(3));
+            string point = String.Join(".", fvi.FileVersion.Split('.').Skip(3));
+            btnHelp.Content = "catflap v" + major + (point == "0" ? "" : "." + point);
+
+            Logger.Info("Version: " + btnHelp.Content);
 
             if (!File.Exists(appPath + "\\catflap.json"))
             {
+                Logger.Info("First time setup.");
                 var sw = new SetupWindow();
                 if (!sw.SetupOk)
                 {
@@ -295,18 +295,12 @@ namespace Catflap
                 }
             }
 
-            Assembly assembly = Assembly.GetExecutingAssembly();
-            FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
-            string major = String.Join(".", fvi.FileVersion.Split('.').Take(3));
-            string point = String.Join(".", fvi.FileVersion.Split('.').Skip(3));
-            btnHelp.Content = major + (point == "0" ? "" : "." + point);
-
             foreach (string src in resourcesToPurge)
             {
                 var x = appPath + "\\" + src;
                 if (File.Exists(x))
                 {
-                    Log("Deleting obsolete bundled file: " + src);
+                    Logger.Info("Deleting obsolete bundled file: " + src);
                     File.Delete(x);
                 }                    
             }
@@ -319,7 +313,7 @@ namespace Catflap
 
                 if (!File.Exists(appPath + "\\" + dst) || File.GetLastWriteTime(appPath + "\\" + dst) != File.GetLastWriteTime(fi.FullName))
                 {
-                    Log("Extracting bundled file: " + src);
+                    Logger.Info("Extracting bundled file: " + src);
                     App.ExtractResource(src, appPath + "\\" + dst);
                     File.SetLastWriteTime(appPath + "\\" + dst, File.GetLastWriteTime(fi.FullName));
                 }
@@ -345,13 +339,19 @@ namespace Catflap
 
             this.repository = new Repository(rootPath, appPath);
 
+            if (File.Exists(appPath + "/log.txt"))
+                File.Delete(appPath + "/log.txt");
+
+            if (Directory.Exists(appPath))
+                Logger.OnLogMessage += (string msg) => System.IO.File.AppendAllText(appPath + "/log.txt", msg);
+
             this.repository.OnDownloadStatusInfoChanged += OnDownloadStatusInfoChangedHandler;
 
             this.repository.OnDownloadMessage += (string message, bool show) =>
             {
                 if (show)
                     labelDownloadStatus.Dispatcher.Invoke((Action)(() => labelDownloadStatus.Text = message.Trim()));
-                Log(message);
+                Logger.Info(message);
             };
 
             if (App.mArgs.Contains("-nolock"))
@@ -478,7 +478,7 @@ namespace Catflap
                 repository.CurrentManifest != null && repository.CurrentManifest.revision != null ? repository.CurrentManifest.revision.ToString() : "?",
                 repository.LatestManifest != null && repository.LatestManifest.revision != null ? repository.LatestManifest.revision.ToString() : "?"
             );
-            Log("Revision: " + revText);
+            Logger.Info("Revision: " + revText);
 
             /*if (repository.Status.current)
                 btnDownload.Content = "verify";
@@ -594,8 +594,8 @@ namespace Catflap
 
                 SetGlobalStatus(false, "ERROR");
                 SetUIProgressState(false, -1, null);
-                Log("Error while downloading: " + eee.Message, true);
-                Console.WriteLine(eee.ToString());
+                Logger.Info("Error while downloading: " + eee.Message);
+                this.ShowMessageAsync("Error while downloading", eee.Message);
 
                 return;
             }
@@ -617,7 +617,7 @@ namespace Catflap
             {
                 SetGlobalStatus(true, "100%", 1);
                 SetUIProgressState(false, 1, "Done (" + bytesOnNetwork.BytesToHuman() + " of actual network traffic)");
-                Log("Verify/download complete.");
+                Logger.Info("Verify/download complete.");
 
                 await UpdateRootManifest(!repository.Simulate);
             }
