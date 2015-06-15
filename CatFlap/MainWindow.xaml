@@ -22,14 +22,16 @@
             <Controls:Flyout Header="Log" Position="Right" Width="400" x:Name="logFlyout" Opacity="0.9" >
                 <Grid Margin="0,0,0,0">
                     <TextBox x:Name="logTextBox" Height="356" TextWrapping="Wrap" Text="" VerticalAlignment="Bottom" Margin="0,0,0,50" IsReadOnly="True" VerticalScrollBarVisibility="Visible" FontSize="9"/>
-                    <Button x:Name="btnVerify" Content="verify" Click="btnVerify_Click" VerticalAlignment="Bottom"  HorizontalAlignment="Left" Margin="10" Height="18" />
+                    <Button x:Name="btnVerify" Content="verify" Click="btnVerify_Click" VerticalAlignment="Bottom"  HorizontalAlignment="Left" Margin="10,10,10,10" Height="18" />
                     <Button x:Name="btnOpenInExplorer" Content="open folder" Click="btnOpenFolder_Click" VerticalAlignment="Bottom"  HorizontalAlignment="Left" Margin="60,10,10,10" Height="18" />
-                    <Button x:Name="btnMakeShortcut" Content="create desktop shortcut" Click="btnMakeShortcut_Click" VerticalAlignment="Bottom"  HorizontalAlignment="Right" Margin="10" Height="18" />
+                    <Button x:Name="btnMakeShortcut" Content="create shortcut" Click="btnMakeShortcut_Click" VerticalAlignment="Bottom"  HorizontalAlignment="Right" Margin="10,10,10,10" Height="18" />
+
+                    <Label x:Name="btnHelp" Content="?" ToolTip="Catflap website." Margin="10,-15,10,10" VerticalAlignment="top"  HorizontalAlignment="right" MouseLeftButtonDown="btnHelp_Click" Cursor="Hand" />
                 </Grid>
             </Controls:Flyout>
         </Controls:FlyoutsControl>
     </Controls:MetroWindow.Flyouts>
-    
+
     <Controls:MetroWindow.LeftWindowCommands>
         <Controls:WindowCommands>
             <Button x:Name="btnSignatureStatus" Click="btnSignatureStatus_Click">
@@ -40,7 +42,6 @@
 
     <Controls:MetroWindow.RightWindowCommands>
         <Controls:WindowCommands>
-            <Button x:Name="btnHelp" Content="?" Click="btnHelp_Click" ToolTip="Catflap website." />
             <Button x:Name="btnShowHideLog" Content="more" Click="btnShowHideLog_Click" />
         </Controls:WindowCommands>
     </Controls:MetroWindow.RightWindowCommands>
