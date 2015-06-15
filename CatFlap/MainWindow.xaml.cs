@@ -256,6 +256,8 @@ namespace Catflap
         public MainWindow() {
             InitializeComponent();
 
+            this.Visibility = System.Windows.Visibility.Hidden;
+
             labelDownloadStatus.Text = "";
             btnCancel.Visibility = System.Windows.Visibility.Hidden;
 
@@ -468,6 +470,7 @@ namespace Catflap
                 Application.Current.Shutdown();
                 return;
             }
+            this.Visibility = System.Windows.Visibility.Visible;
             
             RefreshBackgroundImage();
 

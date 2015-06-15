@@ -364,40 +364,43 @@ namespace Catflap
         {
             return Task.Run(delegate()
             {
-                if (this.AlwaysAssumeCurrent)
+                BusyWindow.WithBusyWindow("Refreshing manifest!", () =>
                 {
-                    if (File.Exists(AppPath + "\\catflap.json"))
+                    if (this.AlwaysAssumeCurrent)
                     {
-                        LatestManifest = JsonConvert.DeserializeObject<Manifest>(System.IO.File.ReadAllText(AppPath + "\\catflap.json"));
-                        CurrentManifest = LatestManifest;
-                    }
-                    else
-                    {
-                        throw new Exception("Cannot use AlwaysAssumeCurrent with no local manifest.");
-                    }
-                }
-                else
-                {
-                    LatestManifest = AuthPolicy.Execute(() => GetManifestFromRemote());
-
-                    if (setNewAsCurrent)
-                    {
-                        System.IO.File.WriteAllText(AppPath + "\\catflap.json", JsonConvert.SerializeObject(LatestManifest));
-                        CurrentManifest = LatestManifest;
-                    }
-                    else
                         if (File.Exists(AppPath + "\\catflap.json"))
-                            CurrentManifest = JsonConvert.DeserializeObject<Manifest>(System.IO.File.ReadAllText(AppPath + "\\catflap.json"));
+                        {
+                            LatestManifest = JsonConvert.DeserializeObject<Manifest>(System.IO.File.ReadAllText(AppPath + "\\catflap.json"));
+                            CurrentManifest = LatestManifest;
+                        }
+                        else
+                        {
+                            throw new Exception("Cannot use AlwaysAssumeCurrent with no local manifest.");
+                        }
+                    }
+                    else
+                    {
+                        LatestManifest = AuthPolicy.Execute(() => GetManifestFromRemote());
 
-                    Console.WriteLine(LatestManifest);
+                        if (setNewAsCurrent)
+                        {
+                            System.IO.File.WriteAllText(AppPath + "\\catflap.json", JsonConvert.SerializeObject(LatestManifest));
+                            CurrentManifest = LatestManifest;
+                        }
+                        else
+                            if (File.Exists(AppPath + "\\catflap.json"))
+                                CurrentManifest = JsonConvert.DeserializeObject<Manifest>(System.IO.File.ReadAllText(AppPath + "\\catflap.json"));
 
-                    RefreshManifestResource("catflap.bgimg");
-                    RefreshManifestResource("favicon.ico");
+                        Console.WriteLine(LatestManifest);
 
-                    VerifyManifest();
-                }
+                        RefreshManifestResource("catflap.bgimg");
+                        RefreshManifestResource("favicon.ico");
+                    }
 
-                UpdateStatus();
+                    UpdateStatus();
+                });
+
+                VerifyManifest();
             });
         }
 
@@ -406,12 +409,12 @@ namespace Catflap
             this.ManifestSecurityStatus = new Catflap.Security.VerifyResponse();
 
             // Try to fetch signature file!
-            RefreshManifestResource(SignatureFile);
+            BusyWindow.WithBusyWindow("Refreshing manifest", () => RefreshManifestResource(SignatureFile));
 
             /* Convenience trust weakening bad-bad-bad of the day: Always retrieve trustDB if it is over SSL.
              * We need to add a (compile) toggle to disable this in the future. */
             if (!File.Exists(AppPath + "/" + TrustDBFile) && wc.BaseAddress.StartsWith("https://"))
-                RefreshManifestResource(TrustDBFile, true);
+                BusyWindow.WithBusyWindow("Refreshing manifest", () => RefreshManifestResource(TrustDBFile, true));
 
             bool HaveTrustedKeys = File.Exists(AppPath + "/" + TrustDBFile);
             bool HaveSignature = File.Exists(AppPath + "/" + SignatureFile);

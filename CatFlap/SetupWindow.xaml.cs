@@ -103,7 +103,7 @@ namespace Catflap
 
             try
             {
-                mf = repo.AuthPolicy.Execute(() => repo.GetManifestFromRemote());
+                mf = BusyWindow.WithBusyWindow(() => repo.AuthPolicy.Execute(() => repo.GetManifestFromRemote()));
             }
             catch (Exception ex)
             {

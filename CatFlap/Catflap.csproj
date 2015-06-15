@@ -133,6 +133,9 @@
     <Compile Include="Job.cs" />
     <Compile Include="DownloadTypes.cs" />
     <Compile Include="Logging.cs" />
+    <Compile Include="BusyWindow.xaml.cs">
+      <DependentUpon>BusyWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="TrustDBWindow.xaml.cs">
       <DependentUpon>TrustDBWindow.xaml</DependentUpon>
     </Compile>
@@ -152,6 +155,10 @@
     </Compile>
     <Compile Include="ShellLink.cs" />
     <Page Include="ExceptionMessageBox.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="BusyWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
