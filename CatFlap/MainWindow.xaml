@@ -33,7 +33,7 @@
     </Controls:MetroWindow.Flyouts>
 
     <Controls:MetroWindow.LeftWindowCommands>
-        <Controls:WindowCommands>
+        <Controls:WindowCommands x:Name="signatureStatusContainer">
             <Button x:Name="btnSignatureStatus" Click="btnSignatureStatus_Click">
                 <Image x:Name="signatureStatus" HorizontalAlignment="Left" VerticalAlignment="Top" Source="Resources/padlock-white.png" Grid.Column="1" Height="15" Width="15" />
             </Button>

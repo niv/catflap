@@ -521,11 +521,14 @@ namespace Catflap
             labelDownloadStatus.Effect = effect;
             signatureStatus.Effect = effect;
 
+            signatureStatusContainer.Width = double.NaN;
+            signatureStatusContainer.Visibility = System.Windows.Visibility.Visible;
+
             switch (repository.ManifestSecurityStatus.Status)
             {
                 case Security.VerifyResponse.VerifyResponseStatus.NOT_CHECKED:
-                    signatureStatus.Source = new BitmapImage(new Uri("pack://application:,,,/Resources/padlock-red.png"));
-                    signatureStatus.ToolTip = Text.t("repository_crypto_not_signed_long");
+                    signatureStatusContainer.Width = 0;
+                    signatureStatusContainer.Visibility = System.Windows.Visibility.Hidden;
                     break;
 
                 case Security.VerifyResponse.VerifyResponseStatus.SIGNATURE_DOES_NOT_VERIFY:
