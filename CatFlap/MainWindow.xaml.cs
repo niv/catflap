@@ -263,7 +263,7 @@ namespace Catflap
             btnShowHideLog.Content = Text.t("mainwindow_button_more");
             logFlyout.Header = Text.t("mainwindow_logflyout_header");
 
-            this.Visibility = System.Windows.Visibility.Hidden;
+            this.Visibility = System.Windows.Visibility.Collapsed;
 
             labelDownloadStatus.Text = "";
             btnCancel.Visibility = System.Windows.Visibility.Hidden;
