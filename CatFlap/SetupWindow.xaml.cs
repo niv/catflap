@@ -176,17 +176,6 @@ namespace Catflap
 
         private void txtUrl_TextChanged(object sender, TextChangedEventArgs e)
         {
-            if (txtUrl.Text.StartsWith("http://", StringComparison.InvariantCulture))
-            {
-                txtUrl.Text = txtUrl.Text.Replace("http://", "");
-                txtUrl.Select(txtUrl.Text.Length, txtUrl.Text.Length);
-            }
-                
-            if (txtUrl.Text.StartsWith("https://", StringComparison.InvariantCulture))
-            {
-                txtUrl.Text = txtUrl.Text.Replace("https://", "");
-                txtUrl.Select(txtUrl.Text.Length, txtUrl.Text.Length);
-            }
         }
     }
 }
