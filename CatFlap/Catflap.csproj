@@ -124,6 +124,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="EmbeddedResources.cs" />
     <Compile Include="ExceptionMessageBox.xaml.cs">
       <SubType>Code</SubType>
       <DependentUpon>ExceptionMessageBox.xaml</DependentUpon>

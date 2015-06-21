@@ -59,19 +59,6 @@ namespace Catflap
             window.ShowDialog();
         }
 
-
-        public static void ExtractResource(string resource, string destination)
-        {
-            Stream stream = Application.Current.GetType().Assembly.GetManifestResourceStream("Catflap.Resources." + resource);
-            if (resource.EndsWith(".gz"))
-                stream = new GZipStream(stream, CompressionMode.Decompress);
-
-            var dest = File.Create(destination);
-            stream.CopyTo(dest);
-            dest.Close();
-        }
-
-
         private Job job = new Job();
         private List<Process> trackedProcesses = new List<Process>();
         protected override void OnExit(ExitEventArgs e)

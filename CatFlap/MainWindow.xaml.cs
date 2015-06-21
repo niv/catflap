@@ -38,18 +38,6 @@ namespace Catflap
 
         private bool CloseAfterSync = false;
 
-        private static string[] resourcesToUnpack =
-        {
-            "rsync.exe.gz" , "cygwin1.dll.gz",  "cyggcc_s-1.dll.gz", "kill.exe.gz",
-            // minisign
-            "minisign.exe.gz"
-        };
-        private static string[] resourcesToPurge =
-        {
-            "cygpopt-0.dll",
-            // gpgv
-            "gpgv.exe.gz", "cygz.dll.gz", "cygintl-8.dll.gz", "cygiconv-2.dll.gz", "cygbz2-1.dll.gz"
-        };
 
         // UI colour states:
         // green/blue - all ok, repo up to date
@@ -304,29 +292,7 @@ namespace Catflap
                 }
             }
 
-            foreach (string src in resourcesToPurge)
-            {
-                var x = appPath + "\\" + src;
-                if (File.Exists(x))
-                {
-                    Logger.Info("Deleting obsolete bundled file: " + src);
-                    File.Delete(x);
-                }                    
-            }
-
-            foreach (string src in resourcesToUnpack)
-            {
-                var dst = src;
-                if (dst.EndsWith(".gz"))
-                    dst = dst.Substring(0, dst.Length - 3);
-
-                if (!File.Exists(appPath + "\\" + dst) || File.GetLastWriteTime(appPath + "\\" + dst) != File.GetLastWriteTime(fi.FullName))
-                {
-                    Logger.Info("Extracting bundled file: " + src);
-                    App.ExtractResource(src, appPath + "\\" + dst);
-                    File.SetLastWriteTime(appPath + "\\" + dst, File.GetLastWriteTime(fi.FullName));
-                }
-            }
+            EmbeddedResources.Update(appPath);
             
             this.Activated += new EventHandler((o, ea) =>
             {
