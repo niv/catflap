@@ -413,6 +413,7 @@ namespace Catflap
             this.ManifestSecurityStatus = new Catflap.Security.VerifyResponse();
 
             // Try to fetch signature file!
+            if (!AlwaysAssumeCurrent)
             BusyWindow.WithBusyWindow(Text.t("busy_manifest"), () => RefreshManifestResource(SignatureFile));
 
             /* Convenience trust weakening bad-bad-bad of the day: Always retrieve trustDB if it is over SSL.
