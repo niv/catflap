@@ -342,6 +342,8 @@ namespace Catflap
             }
             catch (WebException wex)
             {
+                if (wex.Response != null)
+                {
                 Logger.Info("=> " + ((HttpWebResponse)wex.Response).StatusCode);
 
                 switch (((HttpWebResponse)wex.Response).StatusCode)
@@ -354,6 +356,7 @@ namespace Catflap
                         if (File.Exists(AppPath + "/" + filename))
                             File.Delete(AppPath + "/" + filename);
                        return false;
+                }
                 }
 
                 Logger.Info("while getting manifest resource: " + wex.ToString());
