@@ -423,7 +423,7 @@ namespace Catflap
                 {
                     // WebException wex = (WebException) err;
 
-                    MessageBox.Show(Text.t("err_manifest_network_failure_offline_mode"), err.Message);
+                    MessageBox.Show(Text.t("err_manifest_network_failure_offline_mode", err.Message), err.Message);
                     repository.AlwaysAssumeCurrent = true;
                     goto Retry;
                 }
