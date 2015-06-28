@@ -20,7 +20,14 @@ namespace Catflap
                 return "<missing translation: " + key + ">";
 
             t = t.Replace("\\n", "\n");
-            return String.Format(t, args);
+            try
+            {
+                return String.Format(t, args);
+            }
+            catch (Exception e)
+            {
+                return t + " (fmtex: " + e.Message + ")";
+            }
         }
     }
 }
