@@ -32,8 +32,6 @@ namespace Catflap
         private Repository repository;
         private Dictionary<string, string> resolvedVariables = new Dictionary<string, string>();
        
-        private string rootPath;
-        private string appPath;
         private bool IgnoreRepositoryLock = false;
 
         private bool CloseAfterSync = false;
@@ -203,9 +201,9 @@ namespace Catflap
             myBrush.Stretch = Stretch.Uniform;
             Image image = new Image();
 
-            if (File.Exists(appPath + "/catflap.bgimg"))
+            if (File.Exists(repository.AppPath + "/catflap.bgimg"))
             {
-                var bytes = System.IO.File.ReadAllBytes(appPath + "/catflap.bgimg");
+                var bytes = System.IO.File.ReadAllBytes(repository.AppPath + "/catflap.bgimg");
                 var ms = new MemoryStream(bytes);
                 var bi = new BitmapImage();
                 bi.BeginInit();
@@ -226,9 +224,9 @@ namespace Catflap
                 labelDownloadStatus.Foreground = fgBrush;
             }
 
-            if (File.Exists(appPath + "/favicon.ico"))
+            if (File.Exists(repository.AppPath + "/favicon.ico"))
             {
-                var bytes = System.IO.File.ReadAllBytes(appPath + "/favicon.ico");
+                var bytes = System.IO.File.ReadAllBytes(repository.AppPath + "/favicon.ico");
                 var ms = new MemoryStream(bytes);
                 var bi = new BitmapImage();
                 bi.BeginInit();
@@ -257,9 +255,9 @@ namespace Catflap
             btnCancel.Visibility = System.Windows.Visibility.Hidden;
 
             var fi = new FileInfo(Assembly.GetExecutingAssembly().Location);
-            rootPath = Directory.GetCurrentDirectory();
+            string rootPath = Directory.GetCurrentDirectory();
 
-            appPath = rootPath + "\\" + fi.Name + ".catflap";
+            string appPath = rootPath + "\\" + fi.Name + ".catflap";
             Directory.SetCurrentDirectory(rootPath);
 
             Logger.OnLogMessage += (string msg) =>
@@ -617,12 +615,12 @@ namespace Catflap
 
         private async void btnRun_Click(object sender, RoutedEventArgs e)
         {
-            long free = (long) Native.GetDiskFreeSpace(rootPath);
+            long free = (long) Native.GetDiskFreeSpace(repository.RootPath);
             long needed = repository.Status.guesstimatedBytesToVerify + (200 * 1024 * 1024);
             if (free < needed)
             {
                 var ret = await this.ShowMessageAsync(Text.t("warn_disk_space"),
-                    Text.t("warn_disk_space_long", rootPath, free.BytesToHuman(),
+                    Text.t("warn_disk_space_long", repository.RootPath, free.BytesToHuman(),
                         repository.Status.guesstimatedBytesToVerify.BytesToHuman()),
                     MessageDialogStyle.AffirmativeAndNegative);
                 if (MessageDialogResult.Negative == ret)
