@@ -327,6 +327,8 @@ namespace Catflap
                 Logger.Info(message);
             };
 
+            Logger.Info("argv: " + String.Join(" ", App.mArgs));
+
             if (App.mArgs.Contains("-nolock"))
             {
                 App.mArgs = App.mArgs.Where(x => x != "-nolock").ToArray();
