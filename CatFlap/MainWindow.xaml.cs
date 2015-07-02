@@ -171,7 +171,7 @@ namespace Catflap
 
                     if (repository.AlwaysAssumeCurrent)
                     {
-                        labelDLSize.Text = "-nocheck";
+                        labelDLSize.Text = Text.t("status_offline");
                     }
 
                     else if (repository.Status.guesstimatedBytesToVerify > 0 || repository.Status.maxBytesToVerify > 0)

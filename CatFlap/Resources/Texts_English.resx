@@ -279,6 +279,9 @@ and copy/paste it into this text box.</value>
   <data name="status_n_in_sync" xml:space="preserve">
     <value>{0} in sync</value>
   </data>
+  <data name="status_offline" xml:space="preserve">
+    <value>Offline mode</value>
+  </data>
   <data name="status_running" xml:space="preserve">
     <value>Running</value>
   </data>
