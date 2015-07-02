@@ -392,7 +392,7 @@ namespace Catflap
             await Task.Delay(100);
             WindowState = WindowState.Minimized;
 
-            var t = RunAction();
+            var t = RunAction(repository.LatestManifest.runAction);
             if (waitForExit)
                 await t;
             else
@@ -591,15 +591,15 @@ namespace Catflap
                 this.Close();
         }
 
-        private async Task RunAction()
+        private async Task RunAction(Manifest.ManifestAction action)
         {
             Accent old = SetTheme(accentBusy);
             SetGlobalStatus(true, Text.t("status_running"));
             SetUIState(false);
             try
             {
-                await repository.LatestManifest.runAction.Run(repository,
-                    repository.LatestManifest.runAction.passArguments ? App.mArgs : new string[] { });
+                await action.Run(repository,
+                    action.passArguments ? App.mArgs : new string[] { });
             }
             catch (Exception ex)
             {
@@ -628,7 +628,7 @@ namespace Catflap
             }
 
             if (repository.Status.current)
-                await RunAction();
+                await RunAction(repository.LatestManifest.runAction);
             else
                 await Sync(false);
         }
