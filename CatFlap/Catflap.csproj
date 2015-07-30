@@ -237,6 +237,7 @@
     <EmbeddedResource Include="Resources\cyggcc_s-1.dll.gz" />
     <EmbeddedResource Include="Resources\kill.exe.gz" />
     <EmbeddedResource Include="Resources\minisign.exe.gz" />
+    <EmbeddedResource Include="Resources\cygz.dll.gz" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.5">

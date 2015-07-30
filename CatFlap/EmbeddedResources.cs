@@ -14,7 +14,7 @@ namespace Catflap
     {
         private static string[] resourcesToUnpack =
         {
-            "rsync.exe.gz" , "cygwin1.dll.gz",  "cyggcc_s-1.dll.gz", "kill.exe.gz",
+            "rsync.exe.gz" , "cygwin1.dll.gz",  "cyggcc_s-1.dll.gz", "kill.exe.gz", "cygz.dll.gz", 
             // minisign
             "minisign.exe.gz"
         };
@@ -22,7 +22,7 @@ namespace Catflap
         {
             "cygpopt-0.dll",
             // gpgv
-            "gpgv.exe.gz", "cygz.dll.gz", "cygintl-8.dll.gz", "cygiconv-2.dll.gz", "cygbz2-1.dll.gz"
+            "gpgv.exe.gz", "cygiconv-2.dll.gz", "cygintl-8.dll.gz", "cygbz2-1.dll.gz"
         };
 
         private static void ExtractResource(string resource, string destination)

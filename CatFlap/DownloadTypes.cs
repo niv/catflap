@@ -42,7 +42,7 @@ namespace Catflap
 
             /* Compression helps a lot with speeding up transfers, obviously; esp. empty or sparse files.
              * Level 1 is enough to get nearly all the speed advantage while not hammering slow clients or servers. */
-            "--compress --compress-level=1 " +
+            "--new-compress --compress --compress-level=1 " +
 
             /* This is quite expensive for the server. We turn it off by default. You can still configure it in
              * the manifest if you require that kind of accuracy - but that's what verify is for.
