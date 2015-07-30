@@ -160,7 +160,7 @@ namespace Catflap
                         /* Lets wait for a generous amount of time to wait for rsync to gracefully
                          * terminate. This can happen on slow disks.
                          */
-                        p.WaitForExit(20000);
+                        p.WaitForExit(30000);
 
                         App.KillProcessAndChildren(p.Id);
                         p.WaitForExit();
