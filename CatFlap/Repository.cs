@@ -570,7 +570,8 @@ namespace Catflap
                         if (bytesReceived > -1) info.currentBytes = bytesReceived;
                         if (bytesTotal > -1) info.currentTotalBytes = bytesTotal;
                         if (bytesPerSecond > -1) info.currentBps = bytesPerSecond;
-                        info.currentPercentage = bytesTotal > 0 ? (bytesReceived / (bytesTotal / 100.0)) / 100 : 0;
+                        info.currentPercentage = ((float)percentage) / 100.0;
+                        info.currentPercentage = info.currentPercentage.Clamp(0, 1);
 
                         if (fname != info.currentFile)
                         {
