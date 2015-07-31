@@ -65,6 +65,10 @@ namespace Catflap
         private string rsyncFlagsVerify = "--checksum";
         private string rsyncFlagsNoVerify = "";
 
+        // NEWTRANSFER (excludingsyncitem/)a/b/c/d.file
+        // - from custom patch.
+        private Regex rxRsyncNewTransfer = new Regex(@"^NEWTRANSFER (.+)$");
+
         /*
             stdout:            0   0%    0.00kB/s    0:00:00
             stdout:      2916352   2%    2.75MB/s    0:00:47
@@ -287,20 +291,27 @@ namespace Catflap
 
                                 dpc.Invoke(cancelled ? "<cancelling>" : thisFilename, percentage, bytesDone, thisFileTotalSize, (int)rate);
                             }
+                            else if ((mr = rxRsyncNewTransfer.Match(ee.Data)).Success)
+                            {
+                                string fname = mr.Groups[1].Value;
+                                if (isDir)
+                                    if (fname == "." || fname == "./")
+                                        fname = targetFileName;
+                                    else if (isDir)
+                                        fname = targetFileName + fname;
+                                    else
+                                        fname = targetFileName;
 
-                            // new file
+                                thisFilename = fname;
+                                // dm.Invoke(fname, true);
+                            }
+
+                            // transfer complete / hash
                             else if ((mr = rxRsyncNewFile.Match(ee.Data)).Success)
                             {
                                 string flags = mr.Groups[1].Value;
                                 thisFileTotalSize = long.Parse(mr.Groups[2].Value, CultureInfo.InvariantCulture);
-                                string fname = mr.Groups[3].Value;
-                                //if (isDir)
-                                if (fname == "." || fname == "./")
-                                    fname = targetFileName;
-                                else if (isDir)
-                                    fname = targetFileName + fname;
-                                else
-                                    fname = targetFileName;
+                                //string fname = mr.Groups[3].Value;
 
                                 // YXcstpogz
                                 // X: update type (< > c .)
@@ -322,14 +333,13 @@ namespace Catflap
                                     case 'd': typeStr = "directory"; break;
                                 }*/
 
-                                thisFilename = action + " " + fname;
                                 var flagStr = flags.Substring(2).Replace(".", "").Replace("+", "").Trim();
                                 if (flagStr != "")
                                     thisFilename += " [" + flagStr + "]";
 
                                 dm.Invoke(thisFilename, true);
 
-                                if (!dvc.Invoke(fname, mr.Groups[4].Value.ToLowerInvariant()))
+                                if (!dvc.Invoke(thisFilename, mr.Groups[4].Value.ToLowerInvariant()))
                                 {
                                     cts.Cancel();
                                 }
