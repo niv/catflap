@@ -320,24 +320,13 @@ namespace Catflap
                                 var action = "";
                                 switch (flags[0])
                                 {
-                                    case '*': action = "deleting"; break;
-                                    case '<': action = "sending"; break;
+                                    case '*': action = "[deleting] "; break;
+                                    case '<': action = "[sending] "; break;
                                     case '>': action = ""; break;
-                                    case 'c': action = "creating"; break;
+                                    case 'c': action = "[creating] "; break;
                                 }
 
-                                /*var typeStr = "";
-                                switch (flags[1])
-                                {
-                                    case 'f': typeStr = "file"; break;
-                                    case 'd': typeStr = "directory"; break;
-                                }*/
-
-                                var flagStr = flags.Substring(2).Replace(".", "").Replace("+", "").Trim();
-                                if (flagStr != "")
-                                    thisFilename += " [" + flagStr + "]";
-
-                                dm.Invoke(thisFilename, true);
+                                dm.Invoke(action + thisFilename, true);
 
                                 if (!dvc.Invoke(thisFilename, mr.Groups[4].Value.ToLowerInvariant()))
                                 {
