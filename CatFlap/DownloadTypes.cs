@@ -32,7 +32,7 @@ namespace Catflap
             "--one-file-system --copy-links " +
             
             /* We need to preserve +x so that .exe files can actually be run. */
-            "--no-owner --no-group --no-acls --no-xattrs --no-perms --executability " +
+            "--no-owner --no-group --no-acls --no-xattrs --perms --executability --chmod=ugo=rwx " +
 
             /* Remove empty dirs by default to keep it clean. */
             "--prune-empty-dirs " +

@@ -208,17 +208,6 @@ namespace Catflap
                 UpdateStatus();
         }
 
-        private void EnsureWriteable(string obj)
-        {
-            new FileInfo(obj) { IsReadOnly = false }.Refresh();
-
-            foreach (FileInfo e in Utils.GetDirectoryElements(obj))
-            {
-                e.IsReadOnly = false;
-                e.Refresh();
-            }
-        }
-
         public RepositoryStatus Status { get; private set; }
 
 
@@ -549,124 +538,120 @@ namespace Catflap
                 {
                     info.currentFile = f.name;
 
-                    // Hacky: Make sure we can write to our target. This is mostly due to rsync
-                    // sometimes setting "ReadOnly" on .exe files when the remote is configured
-                    // not quite correctly and only affects updating the updater itself.
-                    try
-                    {
-                        // new FileInfo(rootPath + "/" + f.name) {IsReadOnly = false}.Refresh();
-                        EnsureWriteable(RootPath + "/" + f.name);
-                    }
-                    catch (Exception e)
-                    {
-                    }
+                    Utils.FixPermissions(RootPath + "/" + f.name);
 
                     bool lastHashFailed = false;
                     string lastHashFileFailed = "";
                     string lastHashFailedMessage = "";
 
-                    var t = RunSyncItem(f, verifyUpdateFull, Simulate, delegate(string fname, int percentage, long bytesReceived, long bytesTotal, long bytesPerSecond)
-                    {
-                        if (bytesReceived > -1) info.currentBytes = bytesReceived;
-                        if (bytesTotal > -1) info.currentTotalBytes = bytesTotal;
-                        if (bytesPerSecond > -1) info.currentBps = bytesPerSecond;
-                        info.currentPercentage = ((float)percentage) / 100.0;
-                        info.currentPercentage = info.currentPercentage.Clamp(0, 1);
-
-                        if (fname != info.currentFile)
-                        {
-                            info.globalBytesCurrent += bytesTotalPrev;
-                            bytesTotalPrev = bytesTotal;
-                            info.globalFileCurrent++;
-                            info.currentFile = fname;
-                        }
-                        UpdateStatus(true);
-
-                        info.globalFileTotal = Status.fileCountToVerify;
-
-                        var bytesDone = info.globalBytesCurrent + bytesReceived;
-                        info.globalPercentage = globalBytesTotalStart > 0 ? (bytesDone / (globalBytesTotalStart / 100.0)) / 100 : 1;
-
-                        info.globalPercentage = info.globalPercentage.Clamp(0, 1);
-
-                        OnDownloadStatusInfoChanged(info);
-
-                    }, delegate(bool wasError, string str, long bytesOnNetwork)
-                    {
-                        if (wasError)
-                        {
-                            throw new Exception(str);
-                        }
-                        UpdateStatus();
-
-                        info.currentFile = null;
-                        info.currentBytesOnNetwork += bytesOnNetwork;
-
-                        OnDownloadStatusInfoChanged(info);
-
-                    }, delegate(string message, bool show)
-                    {
-                        OnDownloadMessage(message, show);
-
-                    }, delegate(string file, string hash)
-                    {
-                        if (lastHashFailed)
-                            return false;
-
-                        lastHashFileFailed = file;
-
-                        // Do not error hard on missing manifest hashes, since that can be trusted
-                        // due to gpg signing.
-                        if (f.hashes == null || !f.hashes.ContainsKey(file.ToLowerInvariant()))
-                        {
-                            OnDownloadMessage(Text.t("sync_hash_no_hash", file), false);
-                            return true;
-                        }
-                            
-
-                        if (hash != f.hashes[file.ToLowerInvariant()])
-                        {
-                            lastHashFailed = true;
-                            lastHashFailedMessage = Text.t("sync_hash_comparison_failed",
-                                file.ToLowerInvariant(),
-                                f.hashes[file.ToLowerInvariant()],
-                                hash);
-                            OnDownloadMessage(lastHashFailedMessage, false);
-                            return false;
-                        }
-
-                        OnDownloadMessage(Text.t("sync_hash_ok", file, f.hashes[file.ToLowerInvariant()]), false);
-
-                        return true;
-                    }, cts);
-
                     try
                     {
-                        t.Wait();
-                    }
-                    catch (System.AggregateException x)
-                    {
-                        if (lastHashFailed)
+                        var t = RunSyncItem(f, verifyUpdateFull, Simulate, delegate(string fname, int percentage, long bytesReceived, long bytesTotal, long bytesPerSecond)
                         {
-                            OnDownloadMessage(Text.t("sync_hash_failed"), true);
+                            if (bytesReceived > -1) info.currentBytes = bytesReceived;
+                            if (bytesTotal > -1) info.currentTotalBytes = bytesTotal;
+                            if (bytesPerSecond > -1) info.currentBps = bytesPerSecond;
+                            info.currentPercentage = ((float)percentage) / 100.0;
+                            info.currentPercentage = info.currentPercentage.Clamp(0, 1);
 
-                            throw new Exception(Text.t("sync_hash_failed_long", lastHashFileFailed,
-                                lastHashFailedMessage));
+                            if (fname != info.currentFile)
+                            {
+                                info.globalBytesCurrent += bytesTotalPrev;
+                                bytesTotalPrev = bytesTotal;
+                                info.globalFileCurrent++;
+                                info.currentFile = fname;
+                            }
+                            UpdateStatus(true);
+
+                            info.globalFileTotal = Status.fileCountToVerify;
+
+                            var bytesDone = info.globalBytesCurrent + bytesReceived;
+                            info.globalPercentage = globalBytesTotalStart > 0 ? (bytesDone / (globalBytesTotalStart / 100.0)) / 100 : 1;
+
+                            info.globalPercentage = info.globalPercentage.Clamp(0, 1);
+
+                            OnDownloadStatusInfoChanged(info);
+
+                        }, delegate(bool wasError, string str, long bytesOnNetwork)
+                        {
+                            if (wasError)
+                            {
+                                throw new Exception(str);
+                            }
+                            UpdateStatus();
+
+                            info.currentFile = null;
+                            info.currentBytesOnNetwork += bytesOnNetwork;
+
+                            OnDownloadStatusInfoChanged(info);
+
+                        }, delegate(string message, bool show)
+                        {
+                            OnDownloadMessage(message, show);
+
+                        }, delegate(string file, string hash)
+                        {
+                            if (lastHashFailed)
+                                return false;
+
+                            lastHashFileFailed = file;
+
+                            // Do not error hard on missing manifest hashes, since that can be trusted
+                            // due to gpg signing.
+                            if (f.hashes == null || !f.hashes.ContainsKey(file.ToLowerInvariant()))
+                            {
+                                OnDownloadMessage(Text.t("sync_hash_no_hash", file), false);
+                                return true;
+                            }
                             
-                        }
 
-                        if (x.InnerException is TaskCanceledException)
+                            if (hash != f.hashes[file.ToLowerInvariant()])
+                            {
+                                lastHashFailed = true;
+                                lastHashFailedMessage = Text.t("sync_hash_comparison_failed",
+                                    file.ToLowerInvariant(),
+                                    f.hashes[file.ToLowerInvariant()],
+                                    hash);
+                                OnDownloadMessage(lastHashFailedMessage, false);
+                                return false;
+                            }
+
+                            OnDownloadMessage(Text.t("sync_hash_ok", file, f.hashes[file.ToLowerInvariant()]), false);
+
+                            return true;
+                        }, cts);
+
+                        try
                         {
-                            OnDownloadMessage(Text.t("status_cancelled"), true);
-                            break;
+                            t.Wait();
                         }
+                        catch (System.AggregateException x)
+                        {
+                            if (lastHashFailed)
+                            {
+                                OnDownloadMessage(Text.t("sync_hash_failed"), true);
 
-                        else
-                            throw x;
+                                throw new Exception(Text.t("sync_hash_failed_long", lastHashFileFailed,
+                                    lastHashFailedMessage));
+                            
+                            }
+
+                            if (x.InnerException is TaskCanceledException)
+                            {
+                                OnDownloadMessage(Text.t("status_cancelled"), true);
+                                break;
+                            }
+
+                            else
+                                throw x;
+                        }
+                        var ret = t.Result;
                     }
-                    var ret = t.Result;
 
-
+                    finally
+                    {
+                        Utils.FixPermissions(RootPath + "/" + f.name);
+                    }
 
                     // Verify hashes
                     // Security.VerifyHashes(f.hashes)
