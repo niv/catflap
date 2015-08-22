@@ -12,17 +12,24 @@ namespace Catflap
 {
     class EmbeddedResources
     {
-        private static string[] resourcesToUnpack =
+        private static Dictionary<string, string> resourcesToUnpack = new Dictionary<string, string>();
+
+        static EmbeddedResources()
         {
-            "rsync.exe.gz" , "cygwin1.dll.gz",  "cyggcc_s-1.dll.gz", "kill.exe.gz", "cygz.dll.gz", 
-            // minisign
-            "minisign.exe.gz"
-        };
+            resourcesToUnpack.Add("rsync.exe.gz", "bin");
+            resourcesToUnpack.Add("cygwin1.dll.gz", "bin");
+            resourcesToUnpack.Add("cyggcc_s-1.dll.gz", "bin");
+            resourcesToUnpack.Add("kill.exe.gz", "bin");
+            resourcesToUnpack.Add("cygz.dll.gz", "bin");
+            resourcesToUnpack.Add("minisign.exe.gz", "bin");
+
+            resourcesToUnpack.Add("fstab", "etc");
+        }
+
         private static string[] resourcesToPurge =
         {
-            "cygpopt-0.dll",
-            // gpgv
-            "gpgv.exe.gz", "cygiconv-2.dll.gz", "cygintl-8.dll.gz", "cygbz2-1.dll.gz"
+            "cygpopt-0.dll", "gpgv.exe", "cygiconv-2.dll", "cygintl-8.dll", "cygbz2-1.dll",
+            "rsync.exe", "cygwin1.dll",  "cyggcc_s-1.dll", "kill.exe", "cygz.dll", "minisign.exe"
         };
 
         private static void ExtractResource(string resource, string destination)
@@ -42,7 +49,7 @@ namespace Catflap
 
             foreach (string src in resourcesToPurge)
             {
-                var x = toPath + "\\" + src;
+                var x = toPath + Path.DirectorySeparatorChar + src;
                 if (File.Exists(x))
                 {
                     Logger.Info("Deleting obsolete bundled file: " + src);
@@ -50,17 +57,24 @@ namespace Catflap
                 }
             }
 
-            foreach (string src in resourcesToUnpack)
+            foreach (KeyValuePair<string, string> src in resourcesToUnpack)
             {
-                var dst = src;
-                if (dst.EndsWith(".gz"))
-                    dst = dst.Substring(0, dst.Length - 3);
+                var packedFn = src.Key;
+                var dstDir = src.Value;
 
-                if (!File.Exists(toPath + "\\" + dst) || File.GetLastWriteTime(toPath + "\\" + dst) != File.GetLastWriteTime(fi.FullName))
+                var dstFn = packedFn;
+                if (dstFn.EndsWith(".gz"))
+                    dstFn = dstFn.Substring(0, dstFn.Length - 3);
+
+                var dstPath = toPath + Path.DirectorySeparatorChar + dstDir;
+                var dstPathWithFn = dstPath + Path.DirectorySeparatorChar + dstFn;
+
+                if (!File.Exists(dstPathWithFn) || File.GetLastWriteTime(dstPathWithFn) != File.GetLastWriteTime(fi.FullName))
                 {
                     Logger.Info("Extracting bundled file: " + src);
-                    ExtractResource(src, toPath + "\\" + dst);
-                    File.SetLastWriteTime(toPath + "\\" + dst, File.GetLastWriteTime(fi.FullName));
+                    Directory.CreateDirectory(dstPath);
+                    ExtractResource(packedFn, dstPathWithFn);
+                    File.SetLastWriteTime(dstPathWithFn, File.GetLastWriteTime(fi.FullName));
                 }
             }
         }

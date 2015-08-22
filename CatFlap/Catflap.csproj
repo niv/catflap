@@ -238,6 +238,7 @@
     <EmbeddedResource Include="Resources\kill.exe.gz" />
     <EmbeddedResource Include="Resources\minisign.exe.gz" />
     <EmbeddedResource Include="Resources\cygz.dll.gz" />
+    <EmbeddedResource Include="Resources\fstab" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.5">

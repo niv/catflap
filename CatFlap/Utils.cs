@@ -72,6 +72,8 @@ namespace Catflap
             fileSecurity = fileInfo.GetAccessControl();
             fileSecurity.SetAccessRuleProtection(false, false);
 
+            fileSecurity.SetOwner(WindowsIdentity.GetCurrent().User);
+
             /*
              * Only fetch the explicit rules since I want to keep the inherited ones. Not 
              * sure if the target type matters in this case since I am not examining the
@@ -96,6 +98,24 @@ namespace Catflap
             fileInfo.SetAccessControl(fileSecurity);
         }
 
-
+        public static bool IsUserAdministrator()
+        {
+            bool isAdmin;
+            try
+            {
+                WindowsIdentity user = WindowsIdentity.GetCurrent();
+                WindowsPrincipal principal = new WindowsPrincipal(user);
+                isAdmin = principal.IsInRole(WindowsBuiltInRole.Administrator);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                isAdmin = false;
+            }
+            catch (Exception ex)
+            {
+                isAdmin = false;
+            }
+            return isAdmin;
+        }
     }
 }

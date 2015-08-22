@@ -31,8 +31,8 @@ namespace Catflap
             /* */
             "--one-file-system --copy-links " +
             
-            /* We need to preserve +x so that .exe files can actually be run. */
-            "--no-owner --no-group --no-acls --no-xattrs --perms --executability --chmod=ugo=rwx " +
+            /* Disable all permission handling. This works hand in hand with /etc/fstab */
+            "--no-owner --no-group --no-acls --no-xattrs --no-perms " +
 
             /* Remove empty dirs by default to keep it clean. */
             "--prune-empty-dirs " +
@@ -112,7 +112,7 @@ namespace Catflap
         private void SIGTERM(int id)
         {
             var pProcess = new System.Diagnostics.Process();
-            pProcess.StartInfo.FileName = appPath + "\\kill.exe";
+            pProcess.StartInfo.FileName = appPath + "\\bin\\kill.exe";
             pProcess.StartInfo.Arguments = "" + id;
             pProcess.StartInfo.CreateNoWindow = true;
             pProcess.StartInfo.UseShellExecute = false;
@@ -237,7 +237,7 @@ namespace Catflap
             dm.Invoke("(rsync) " + va);
             
             Process pProcess = new System.Diagnostics.Process();
-            pProcess.StartInfo.FileName = appPath + "\\rsync.exe";
+            pProcess.StartInfo.FileName = appPath + "\\bin\\rsync.exe";
             pProcess.StartInfo.Arguments = va;
             pProcess.StartInfo.CreateNoWindow = true;
             pProcess.StartInfo.UseShellExecute = false;

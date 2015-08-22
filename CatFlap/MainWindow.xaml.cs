@@ -346,7 +346,29 @@ namespace Catflap
                 this.repository.AlwaysAssumeCurrent = true;
             }
 
-            if (App.mArgs.Contains("-run"))
+            if (App.mArgs.Contains("-fixperm"))
+            {
+                if (!Utils.IsUserAdministrator())
+                {
+                    MessageBox.Show("-fixperm requires Administator privileges, but " +
+                        "I can't request those myself.\n\nTry 'Run as administrator' with a shortcut.");
+                }
+                else if (MessageBox.Show(
+                    "This resets all permissions on the current repository to the currently logged in user, " +
+                    "removes all custom object ACLs and only allows inherited access rights " +
+                    "(those of the parent directory " + Directory.GetParent(rootPath) + ") to apply.\n\n" +
+                    "!! This is a destructive operation and cannot be undone.\n" +
+                    "!! This will not touch any files outside of the repository root " + rootPath + ".\n\n" +
+                    "Continue?",
+                    "Force-reset permissions on complete repository?",
+                    MessageBoxButton.OKCancel) == MessageBoxResult.OK)
+                {
+                    Utils.FixPermissions(rootPath);
+                    MessageBox.Show("All done. Exiting.");
+                }
+                Application.Current.Shutdown();
+            }
+            else if (App.mArgs.Contains("-run"))
             {
                 App.mArgs = App.mArgs.Where(x => x != "-run").ToArray();
                 UpdateAndRun(false);
