@@ -9,6 +9,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{044215
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".build", ".build", "{B725C3CD-D98F-4EAB-BA9E-EC3C714ACE9D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FixPermissions", "FixPermissions\FixPermissions.csproj", "{D24BE29C-F22D-430E-9870-3EE20E16A3C9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -31,6 +33,16 @@ Global
 		{AFA52DCE-2494-428A-BBA3-23683F1B86DE}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{AFA52DCE-2494-428A-BBA3-23683F1B86DE}.Release|Win32.ActiveCfg = Release|Any CPU
 		{AFA52DCE-2494-428A-BBA3-23683F1B86DE}.Release|Win32.Build.0 = Release|Any CPU
+		{D24BE29C-F22D-430E-9870-3EE20E16A3C9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D24BE29C-F22D-430E-9870-3EE20E16A3C9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D24BE29C-F22D-430E-9870-3EE20E16A3C9}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{D24BE29C-F22D-430E-9870-3EE20E16A3C9}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{D24BE29C-F22D-430E-9870-3EE20E16A3C9}.Debug|Win32.ActiveCfg = Debug|Any CPU
+		{D24BE29C-F22D-430E-9870-3EE20E16A3C9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D24BE29C-F22D-430E-9870-3EE20E16A3C9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D24BE29C-F22D-430E-9870-3EE20E16A3C9}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{D24BE29C-F22D-430E-9870-3EE20E16A3C9}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{D24BE29C-F22D-430E-9870-3EE20E16A3C9}.Release|Win32.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
