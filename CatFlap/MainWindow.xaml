@@ -26,7 +26,7 @@
                     <Button x:Name="btnOpenInExplorer" Content="open folder" Click="btnOpenFolder_Click" VerticalAlignment="Bottom"  HorizontalAlignment="Left" Margin="60,10,10,10" Height="18" />
                     <Button x:Name="btnMakeShortcut" Content="create shortcut" Click="btnMakeShortcut_Click" VerticalAlignment="Bottom"  HorizontalAlignment="Right" Margin="10,10,10,10" Height="18" />
 
-                    <Label x:Name="btnHelp" Content="?" ToolTip="Catflap website." Margin="10,-15,10,10" VerticalAlignment="top"  HorizontalAlignment="right" MouseLeftButtonDown="btnHelp_Click" Cursor="Hand" />
+                    <Label x:Name="btnHelp" Content="?" ToolTip="Catflap website." Margin="10,-10,10,10" VerticalAlignment="top"  HorizontalAlignment="right" MouseLeftButtonDown="btnHelp_Click" Cursor="Hand" />
                     <Label x:Name="btnLogfile" Content="Open logfile" ToolTip="Open this log in your favourite text editor." Margin="10,-10,10,10" VerticalAlignment="top"  HorizontalAlignment="Left" MouseLeftButtonDown="btnLogfile_Click" Cursor="Hand" />
                 </Grid>
             </Controls:Flyout>
