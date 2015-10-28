@@ -72,7 +72,7 @@ namespace Catflap
             }
                 
             var pProcess = new System.Diagnostics.Process();
-            pProcess.StartInfo.FileName = AppPath + "\\minisign.exe";
+            pProcess.StartInfo.FileName = AppPath + "\\bin\\minisign.exe";
             pProcess.StartInfo.EnvironmentVariables.Add("CYGWIN", "nodosfilewarning");
 
             pProcess.StartInfo.Arguments = "-q -V " +
