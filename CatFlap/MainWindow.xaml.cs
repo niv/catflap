@@ -733,5 +733,13 @@ namespace Catflap
 
             this.ShowMessageAsync("", msg);
         }
+
+        private void btnLogfile_Click(object sender, MouseButtonEventArgs e)
+        {
+            Process myProcess = new Process();
+            myProcess.StartInfo.UseShellExecute = true;
+            myProcess.StartInfo.FileName = repository.AppPath + "/log.txt";
+            myProcess.Start();
+        }
     }
 }
