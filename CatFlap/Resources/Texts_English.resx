@@ -321,6 +321,9 @@ and copy/paste it into this text box.</value>
   <data name="sync_hash_ok" xml:space="preserve">
     <value>{0}: hash OK({1})</value>
   </data>
+  <data name="sync_will_be_deleted" xml:space="preserve">
+    <value>will be deleted</value>
+  </data>
   <data name="warn_disk_space" xml:space="preserve">
     <value>Disk space?</value>
   </data>

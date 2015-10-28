@@ -163,8 +163,15 @@ namespace Catflap
                     if (repository.Status.directoriesToVerify.Any() || repository.Status.filesToVerify.Any())
                     {
                         labelDLSize.ToolTip += "\n" + Text.t("status_sync_tooltip_outdated");
-                        repository.Status.directoriesToVerify.ForEach(e => labelDLSize.ToolTip += "\n" + e.name);
-                        repository.Status.filesToVerify.ForEach(e => labelDLSize.ToolTip += "\n" + e.name);
+                        foreach (var e in (repository.Status.directoriesToVerify.Concat(repository.Status.filesToVerify)))
+                        {
+                            labelDLSize.ToolTip += "\n" + e.name;
+                            var tt = e.ToTransfer(repository);
+                            if (tt > 1024)
+                                labelDLSize.ToolTip += " ~ " + tt.BytesToHuman();
+                            else if (e.type == "delete")
+                                labelDLSize.ToolTip += " (" + Text.t("sync_will_be_deleted") + ")";
+                        }
                     }
 
                     labelDLSize.Text = "";
