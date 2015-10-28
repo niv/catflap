@@ -237,24 +237,18 @@ namespace Catflap
                 dirsToCheck  = outdated.Where(f => f.name.EndsWith("/"));
                 filesToCheck = outdated.Where(f => !f.name.EndsWith("/"));
 
-                long outdatedSizeLocally = outdated.Select(n => n.SizeOnDisk(this)).Sum();
-                long outdatedSizeRemote = outdated.Select(n => n.size).Sum();
-
-                ret.guesstimatedBytesToVerify = outdatedSizeRemote - outdatedSizeLocally;
-                ret.maxBytesToVerify = outdatedSizeRemote;
-
-                ret.guesstimatedBytesToVerify = ret.guesstimatedBytesToVerify.Clamp(0);
-                ret.maxBytesToVerify = ret.maxBytesToVerify.Clamp(0);
+                ret.guesstimatedBytesToVerify = outdated.Sum(n => n.ToTransfer(this)).Clamp(0);
+                ret.maxBytesToVerify = outdated.Sum(n => n.size).Clamp(0);
 
                 ret.directoryCountToVerify = dirsToCheck.Count();
-                ret.fileCountToVerify = dirsToCheck.Select(n => n.count).Sum() + filesToCheck.Count();
+                ret.fileCountToVerify = dirsToCheck.Sum(n => n.count) + filesToCheck.Count();
             }
 
             ret.directoriesToVerify = dirsToCheck.ToList();
             ret.filesToVerify = filesToCheck.ToList();
 
-            ret.sizeOnRemote = LatestManifest.sync.Select(n => n.size).Sum();
-            ret.sizeOnDisk = LatestManifest.sync.Select(n => n.SizeOnDisk(this)).Sum();
+            ret.sizeOnRemote = LatestManifest.sync.Sum(n => n.size);
+            ret.sizeOnDisk = LatestManifest.sync.Sum(n => n.SizeOnDisk(this));
 
             ret.current = LatestManifest != null && CurrentManifest != null &&
                 ret.fileCountToVerify == 0 &&

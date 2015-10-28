@@ -62,6 +62,20 @@ namespace Catflap
                 return !isOutdated(repository);
             }
 
+            // Returns the number of bytes that need to be transferred AT THE VERY LEAST
+            // to bring this sync item uptodate. This is used for estimating to-transfer
+            // data.
+            public long ToTransfer(Repository repository)
+            {
+                if (isCurrent(repository))
+                    return 0;
+
+                if (this.type == "delete")
+                    return 0;
+
+                return (this.size - SizeOnDisk(repository)).Clamp(0);
+            }
+
             public long SizeOnDisk(Repository repository)
             {
                 long sz = 0;
