@@ -207,6 +207,12 @@ and copy/paste it into this text box.</value>
   <data name="repository_crypto_signature_ok_long" xml:space="preserve">
     <value>Signature checks out! We will verify that any downloaded data has not been tampered with in-flight.</value>
   </data>
+  <data name="repository_crypto_signature_outdated" xml:space="preserve">
+    <value>Signature too old</value>
+  </data>
+  <data name="repository_crypto_signature_outdated_long" xml:space="preserve">
+    <value>The remote repository version is OLDER than the local version.This means that either the repository maintainer messed up, or someone is trying to force you to a older revision.\n\nContact the repo maintainer! Aborting.</value>
+  </data>
   <data name="repository_crypto_signing_key" xml:space="preserve">
     <value>Signing key</value>
   </data>

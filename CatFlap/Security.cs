@@ -34,6 +34,9 @@ namespace Catflap
                 // We have no (local) key.
                 // File was signed but we have no keyring
                 NO_LOCAL_PUBKEY,
+
+                // Signature was outdated (i.e. replay attack)
+                SIGNATURE_OUTDATED,
             };
 
             public VerifyResponseStatus Status;

@@ -439,7 +439,18 @@ namespace Catflap
             }
 
             if (expectRepoSigned)
+            {
                 this.ManifestSecurityStatus = Security.VerifySignature(SignatureFile, "catflap.remote.json");
+
+                // Never allow revision downgrades
+                if (CurrentManifest.timestamp > LatestManifest.timestamp)
+                {
+                    var t = new Security.VerifyResponse();
+                    t.Status = Catflap.Security.VerifyResponse.VerifyResponseStatus.SIGNATURE_OUTDATED;
+                    this.ManifestSecurityStatus = t;
+                }
+            }
+                
         }
 
         private Task<bool> RunSyncItem(Manifest.SyncItem f,

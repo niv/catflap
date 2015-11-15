@@ -25,6 +25,11 @@ namespace Catflap
         // The manifest file version. Do not touch.
         public int version;
 
+        // Manifest timestamp that is auto-added by the shell tooling.
+        // This is checked to prevent "replay" attacks for signed repositories
+        // so they cannot be downgraded.
+        public int timestamp;
+
         // Optional title, which will be displayed in the title bar.
         public string title;
 

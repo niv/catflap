@@ -556,6 +556,12 @@ namespace Catflap
                     Application.Current.Shutdown();
                     break;
 
+                case Security.VerifyResponse.VerifyResponseStatus.SIGNATURE_OUTDATED:
+                    await this.ShowMessageAsync(Text.t("repository_crypto_signature_outdated"),
+                        Text.t("repository_crypto_signature_outdated_long"));
+                    Application.Current.Shutdown();
+                    break;
+
                 default:
                     throw new Exception("Internal error: Unhandled case for Repository.SignatureStatusType. This is a bug.");
             }
