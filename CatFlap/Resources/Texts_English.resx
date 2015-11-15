@@ -210,6 +210,9 @@ and copy/paste it into this text box.</value>
   <data name="repository_crypto_signing_key" xml:space="preserve">
     <value>Signing key</value>
   </data>
+  <data name="repository_crypto_trusted_comment" xml:space="preserve">
+    <value>Comment</value>
+  </data>
   <data name="repository_locked" xml:space="preserve">
     <value>Repository locked.</value>
   </data>

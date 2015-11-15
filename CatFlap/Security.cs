@@ -38,6 +38,7 @@ namespace Catflap
 
             public VerifyResponseStatus Status;
             public string signingKey;
+            public string trustedComment;
         };
         
         
@@ -50,6 +51,7 @@ namespace Catflap
 
 
         private static Regex RegexKeyMismatch = new Regex(@"^Signature key id in (.+?) is ([A-F0-9]+)\s+but the key id in (.+?) is ([A-F0-9]+)");
+        private static Regex RegexVerified = new Regex(@"^Signature and comment signature verified");
 
         public VerifyResponse VerifySignature(string sigFile, string dataFile)
         {
@@ -75,7 +77,7 @@ namespace Catflap
             pProcess.StartInfo.FileName = AppPath + "\\bin\\minisign.exe";
             pProcess.StartInfo.EnvironmentVariables.Add("CYGWIN", "nodosfilewarning");
 
-            pProcess.StartInfo.Arguments = "-q -V " +
+            pProcess.StartInfo.Arguments = "-Q -V " +
                 " -p \"" + keyring.ShellEscape() + "\" " + 
                 " -x \"" + sigFile.ShellEscape() + "\" " +
                 " -m \"" + dataFile.ShellEscape() + "\" ";
@@ -83,32 +85,40 @@ namespace Catflap
             pProcess.StartInfo.CreateNoWindow = true;
             pProcess.StartInfo.UseShellExecute = false;
             pProcess.StartInfo.WorkingDirectory = AppPath;
-            // pProcess.StartInfo.RedirectStandardOutput = true;
+            pProcess.StartInfo.RedirectStandardOutput = true;
             pProcess.StartInfo.RedirectStandardError = true;
             pProcess.Start();
             pProcess.WaitForExit();
 
-            var all = pProcess.StandardError.ReadToEnd();
-
-            Match mr;
-            if ((mr = RegexKeyMismatch.Match(all)).Success)
+            var stdout = pProcess.StandardOutput.ReadToEnd();
+            var stderr = pProcess.StandardError.ReadToEnd();
+            
+            if (pProcess.ExitCode == 0)
             {
-                var rxdataFile = mr.Groups[0].Value;
-                var curKey = mr.Groups[1].Value;
-                var rxsigFile = mr.Groups[2].Value;
-                var newKey = mr.Groups[3].Value;
+                ret.Status = VerifyResponse.VerifyResponseStatus.OK;
+                ret.trustedComment = stdout.Trim();
 
-                ret.Status = VerifyResponse.VerifyResponseStatus.PUBKEY_MISMATCH;
-            } else
-                ret.Status = pProcess.ExitCode == 0 ?
-                    ret.Status = VerifyResponse.VerifyResponseStatus.OK :
-                    ret.Status = VerifyResponse.VerifyResponseStatus.SIGNATURE_DOES_NOT_VERIFY;
+            } else {
+                Match mr;
+                if ((mr = RegexKeyMismatch.Match(stderr)).Success)
+                {
+                    /*var rxdataFile = mr.Groups[0].Value;
+                    var curKey = mr.Groups[1].Value;
+                    var rxsigFile = mr.Groups[2].Value;
+                    var newKey = mr.Groups[3].Value;*/
+                    ret.Status = VerifyResponse.VerifyResponseStatus.PUBKEY_MISMATCH;
+
+                } else
+                ret.Status = VerifyResponse.VerifyResponseStatus.SIGNATURE_DOES_NOT_VERIFY;
+            }
 
             byte[] keyringData = Convert.FromBase64String(System.IO.File.ReadAllLines(AppPath + "/" + keyring)[1]);
             keyringData = keyringData.Skip(2).Take(8).Reverse().ToArray();
             ret.signingKey = BitConverter.ToString(keyringData).ToUpperInvariant();
 
-            Logger.Info("VerifySignature(\"" + dataFile + "\") = " + ret.Status + ", key: " + ret.signingKey);
+            Logger.Info("VerifySignature(\"" + dataFile + "\") = " + ret.Status +
+                ", key: " + ret.signingKey +
+                ", comment: " + ret.trustedComment);
 
             return ret;
         }

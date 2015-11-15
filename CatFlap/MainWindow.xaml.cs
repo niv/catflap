@@ -736,7 +736,11 @@ namespace Catflap
             if (this.signatureStatus.ToolTip != null)
                 msg = this.signatureStatus.ToolTip.ToString();
             if (repository.ManifestSecurityStatus.signingKey != null)
-                msg += "\n\n" + Text.t("repository_crypto_signing_key") + "\n" + repository.ManifestSecurityStatus.signingKey;
+                msg += "\n\n" +
+                    Text.t("repository_crypto_signing_key") + "\n" +
+                    repository.ManifestSecurityStatus.signingKey + "\n" +
+                    Text.t("repository_crypto_trusted_comment") + "\n" +
+                    repository.ManifestSecurityStatus.trustedComment;
 
             this.ShowMessageAsync("", msg);
         }
