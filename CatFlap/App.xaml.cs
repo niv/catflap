@@ -22,6 +22,28 @@ namespace Catflap
     {
         public static string[] mArgs = new string[] {};
 
+        [STAThread]
+        public static void Main()
+        {
+            bool mutexCreated = false;
+            string mutexName = Assembly.GetExecutingAssembly().Location.
+                Replace('/', '_').Replace('\\', '_');
+
+            var mutex = new Mutex(true, mutexName, out mutexCreated);
+
+            if (mutexCreated)
+            {
+                var app = new App();
+                app.InitializeComponent();
+                app.Run();
+            } else {
+                MessageBox.Show("There is already a catflap running for this directory. " +
+                    "Running multiple instances for the same directory at once is not supported.");
+            }
+
+            mutex.Close();
+        }
+
         protected override void OnStartup(StartupEventArgs e)
         {
             this.ShutdownMode = System.Windows.ShutdownMode.OnMainWindowClose;
