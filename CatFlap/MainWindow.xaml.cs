@@ -581,6 +581,8 @@ namespace Catflap
         {
             cts = new CancellationTokenSource();
 
+            btnCancel.Content = "stop";
+            btnCancel.IsEnabled = true;
             btnCancel.Visibility = System.Windows.Visibility.Visible;
             SetUIState(false);
             SetGlobalStatus(true, null, 0);
@@ -708,7 +710,11 @@ namespace Catflap
         private void btnCancel_Click(object sender, RoutedEventArgs e)
         {
             if (cts != null && !cts.IsCancellationRequested)
+            {
                 cts.Cancel();
+                btnCancel.Content = "stopping (patience!)";
+                btnCancel.IsEnabled = false;
+            }
         }
 
         protected override async void OnClosing(CancelEventArgs e)
