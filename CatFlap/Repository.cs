@@ -215,7 +215,7 @@ namespace Catflap
         public void UpdateStatus(bool limit = false)
         {
             // Limit checks to x/second.
-            if (limit && Status.directoriesToVerify != null && (DateTime.Now - updateLimiterLast) < TimeSpan.FromSeconds(1))
+            if (limit && Status.directoriesToVerify != null && (DateTime.Now - updateLimiterLast) < TimeSpan.FromSeconds(3))
                 return;
 
             updateLimiterLast = DateTime.Now;
