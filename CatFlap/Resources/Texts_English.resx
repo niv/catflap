@@ -129,6 +129,12 @@
   <data name="busy_manifest" xml:space="preserve">
     <value>Refreshing manifest!</value>
   </data>
+  <data name="busy_sync_n_need_syncing" xml:space="preserve">
+    <value>{0} remaining</value>
+  </data>
+  <data name="busy_sync_objects_need_syncing" xml:space="preserve">
+    <value>Busy</value>
+  </data>
   <data name="busy_window_title" xml:space="preserve">
     <value>Please wait!</value>
   </data>

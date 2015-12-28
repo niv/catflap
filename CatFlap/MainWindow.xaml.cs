@@ -97,59 +97,45 @@ namespace Catflap
             btnRun.IsEnabled = enabled && wantEnabled;
         }
 
-        private void SetUIProgressState(bool indeterminate, double percentage = -1, string message = null)
-        {
-            // globalProgress.IsIndeterminate = indeterminate;
-            if (percentage >= 0)
-            {
-                // int p = (int) (percentage * 100).Clamp(0, 100);
-                // labelDLSize.Text = p + "%";
-                // globalProgress.Value = (percentage * 100).Clamp(0, 100);
-            }
+        enum UIState {
+            Unchanged,
+            Busy,
+            OK,
+            Error
+        };
 
+        private void RefreshProgress(UIState state = UIState.Unchanged, string message = null)
+        {
             if (message != null)
                 labelDownloadStatus.Dispatcher.Invoke((Action)(() => labelDownloadStatus.Text = message.Trim()));
 
+            bool busy = state == UIState.Busy || cts != null;
+
             taskBarItemInfo.Dispatcher.Invoke((Action)(() =>
             {
-                if (indeterminate)
+                if (busy)
                 {
                     taskBarItemInfo.ProgressState = TaskbarItemProgressState.Indeterminate;
                 }                    
                 else
                 {
-                    if (percentage == -1)
-                        taskBarItemInfo.ProgressState = TaskbarItemProgressState.None;
-                    else
-                    {
-                        taskBarItemInfo.ProgressState = TaskbarItemProgressState.Normal;
-                        taskBarItemInfo.ProgressValue = percentage.Clamp(0, 1);
-                    }
+                    taskBarItemInfo.ProgressState = TaskbarItemProgressState.None;
                 }
             }));
-        }
 
-        private void SetGlobalStatus(bool lastOperationOK = true, string message = null, double percent = -1, string progressMsg = null)
-        {
-            if (cts != null)
-                 SetTheme(accentBusy);
-            else if (!lastOperationOK)
+            if (busy)
+                SetTheme(accentBusy);
+            else if (state == UIState.Error)
                 SetTheme(accentError);
-            else if (repository.Status.current)
-                SetTheme(accentOK);
-            else
-                SetTheme(accentWarning);
+            else if (state == UIState.OK)
+            {
+                if (repository.Status.current)
+                    SetTheme(accentOK);
+                else
+                    SetTheme(accentWarning);
+            }
 
             this.Dispatcher.Invoke(() =>
-            {
-                var title = repository.LatestManifest != null && repository.LatestManifest.title != null ? repository.LatestManifest.title : "Catflap";
-                if (message != null)
-                    this.Title = message;
-                else
-                    this.Title = title;
-            });
-
-            labelDLSize.Dispatcher.Invoke(() =>
             {
                 if (repository.LatestManifest != null)
                 {
@@ -176,6 +162,9 @@ namespace Catflap
 
                     labelDLSize.Text = "";
 
+                    this.Title = repository.LatestManifest != null && repository.LatestManifest.title != null ?
+                        repository.LatestManifest.title : "Catflap";
+
                     if (repository.AlwaysAssumeCurrent)
                     {
                         labelDLSize.Text = Text.t("status_offline");
@@ -184,11 +173,13 @@ namespace Catflap
                     else if (repository.Status.guesstimatedBytesToVerify > 0 || repository.Status.maxBytesToVerify > 0)
                     {
                         if (repository.Status.guesstimatedBytesToVerify < 1)
-                            labelDLSize.Text = Text.t("status_sync_objects_need_syncing");
+                            labelDLSize.Text = Text.t(busy ? "busy_sync_objects_need_syncing" : "status_sync_objects_need_syncing");
                         else
-                            labelDLSize.Text += Text.t("status_sync_n_need_syncing",
+                            labelDLSize.Text += Text.t(busy ? "busy_sync_n_need_syncing" : "status_sync_n_need_syncing",
                                 repository.Status.guesstimatedBytesToVerify.BytesToHuman()
                             );
+
+                        this.Title = labelDLSize.Text;
                     }
                     else
                     {
@@ -200,6 +191,7 @@ namespace Catflap
                 else
                     labelDLSize.Text = "?";
             });
+
         }
 
         private void RefreshBackgroundImage()
@@ -304,7 +296,7 @@ namespace Catflap
                 if (repository.LatestManifest != null)
                 {
                     repository.UpdateStatus();
-                    this.SetGlobalStatus();
+                    this.RefreshProgress(UIState.Unchanged);
                 }
             });
 
@@ -313,7 +305,7 @@ namespace Catflap
                 {
                     await UpdateRootManifest();
                     repository.UpdateStatus();
-                    this.SetGlobalStatus();
+                    this.RefreshProgress(UIState.OK);
                 }
             });
 
@@ -406,19 +398,12 @@ namespace Catflap
                 if (info.currentPercentage > 0)
                     msg += ", " + ((int)(info.currentPercentage * 100)) + "%";
 
-                SetUIProgressState(info.globalFileTotal == 0, info.globalPercentage, msg);
+                this.RefreshProgress(UIState.Busy, msg);
             }
             else
             {
-                SetUIProgressState(info.globalFileTotal == 0, info.globalPercentage, null);
-            }
-
-            if (info.globalFileTotal > 0)
-                SetGlobalStatus(true, string.Format("{0}%", (int)(info.globalPercentage * 100).Clamp(0, 100), info.globalPercentage));
-            else
-            {
-                SetGlobalStatus(true);
-            }              
+                this.RefreshProgress(UIState.Busy);
+            }          
         }
 
         private async void UpdateAndRun(bool waitForExit)
@@ -446,7 +431,7 @@ namespace Catflap
 
         private async Task UpdateRootManifest(bool setNewAsCurrent = false)
         {
-            SetUIProgressState(true);
+            RefreshProgress(UIState.Busy);
             SetUIState(false);
 
             Retry:
@@ -479,8 +464,7 @@ namespace Catflap
             
             RefreshBackgroundImage();
 
-            SetGlobalStatus(true);
-            SetUIProgressState(false);
+            RefreshProgress(UIState.OK);
 
             var revText = string.Format("{0} -> {1}",
                 repository.CurrentManifest != null && repository.CurrentManifest.revision != null ? repository.CurrentManifest.revision.ToString() : "?",
@@ -585,14 +569,13 @@ namespace Catflap
             btnCancel.IsEnabled = true;
             btnCancel.Visibility = System.Windows.Visibility.Visible;
             SetUIState(false);
-            SetGlobalStatus(true, null, 0);
-            SetUIProgressState(true);
+            RefreshProgress(UIState.Busy);
 
             long bytesOnNetwork = 0;
             try
             {
                 bytesOnNetwork = await repository.UpdateEverything(fullVerify, cts);
-                SetUIProgressState(false, 1, null);
+                RefreshProgress(UIState.Busy);
             }
             catch (Exception eee)
             {
@@ -603,8 +586,8 @@ namespace Catflap
                 {
                 }
 
-                SetGlobalStatus(false, "ERROR");
-                SetUIProgressState(false, -1, null);
+                RefreshProgress(UIState.Error);
+
                 Logger.Info("Error while downloading: " + eee.Message);
                 this.ShowMessageAsync("Error while downloading", eee.Message);
 
@@ -621,13 +604,13 @@ namespace Catflap
 
             if (wasCancel)
             {
-                SetGlobalStatus(true, Text.t("status_aborted"));
-                SetUIProgressState(false, -1, Text.t("status_aborted_n_traffic", bytesOnNetwork.BytesToHuman()));
+                // SetGlobalStatus(true, Text.t("status_aborted"));
+                RefreshProgress(UIState.OK, Text.t("status_aborted_n_traffic", bytesOnNetwork.BytesToHuman()));
             } 
             else
             {
-                SetGlobalStatus(true, "100%", 1);
-                SetUIProgressState(false, 1, Text.t("status_done_n_traffic", bytesOnNetwork.BytesToHuman()));
+                // SetGlobalStatus(true, "100%", 1);
+                RefreshProgress(UIState.OK, Text.t("status_done_n_traffic", bytesOnNetwork.BytesToHuman()));
                 Logger.Info("Verify/download complete.");
 
                 await UpdateRootManifest(!repository.Simulate);
@@ -640,7 +623,7 @@ namespace Catflap
         private async Task RunAction(Manifest.ManifestAction action)
         {
             Accent old = SetTheme(accentBusy);
-            SetGlobalStatus(true, Text.t("status_running"));
+            RefreshProgress(UIState.Busy);
             SetUIState(false);
             try
             {
@@ -655,7 +638,7 @@ namespace Catflap
             {
                 SetUIState(true);
                 SetTheme(old);
-                SetGlobalStatus(true);
+                RefreshProgress(UIState.OK);
             }
         }
 
