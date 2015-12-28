@@ -100,6 +100,8 @@ namespace Catflap
             public long currentTotalBytes;
             public long currentBps;
             public long currentBytesOnNetwork;
+
+            public string details;
         }
         
         public struct RepositoryStatus
@@ -137,7 +139,8 @@ namespace Catflap
         public bool RequireRestart = false;
 
         public delegate void DownloadStatusInfoChanged(DownloadStatusInfo dsi);
-        public delegate void DownloadProgressChanged(string fullFileName, int percentage = -1, long bytesReceived = -1, long bytesTotal = -1, long bytesPerSecond = -1);
+        public delegate void DownloadProgressChanged(string fullFileName, int percentage = -1,
+            long bytesReceived = -1, long bytesTotal = -1, long bytesPerSecond = -1, string details = "");
         public delegate void DownloadEnd(bool wasError, string message, long bytesOnNetwork);
         public delegate void DownloadMessage(string message, bool showInProgressIndicator = false);
         public delegate bool DownloadVerifyChecksum(string file, string hash);
@@ -381,8 +384,6 @@ namespace Catflap
                             if (File.Exists(AppPath + "\\catflap.json"))
                                 CurrentManifest = JsonConvert.DeserializeObject<Manifest>(System.IO.File.ReadAllText(AppPath + "\\catflap.json"));
 
-                        Console.WriteLine(LatestManifest);
-
                         RefreshManifestResource("catflap.bgimg");
                         RefreshManifestResource("favicon.ico");
                     }
@@ -547,13 +548,16 @@ namespace Catflap
                     string lastHashFileFailed = "";
                     string lastHashFailedMessage = "";
 
-                    var t = RunSyncItem(f, verifyUpdateFull, Simulate, delegate(string fname, int percentage, long bytesReceived, long bytesTotal, long bytesPerSecond)
+                    var t = RunSyncItem(f, verifyUpdateFull, Simulate, delegate(string fname, int percentage,
+                        long bytesReceived, long bytesTotal, long bytesPerSecond, string details)
                     {
                         if (bytesReceived > -1) info.currentBytes = bytesReceived;
                         if (bytesTotal > -1) info.currentTotalBytes = bytesTotal;
                         if (bytesPerSecond > -1) info.currentBps = bytesPerSecond;
                         info.currentPercentage = ((float)percentage) / 100.0;
                         info.currentPercentage = info.currentPercentage.Clamp(0, 1);
+
+                        info.details = details;
 
                         if (fname != info.currentFile)
                         {

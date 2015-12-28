@@ -398,6 +398,11 @@ namespace Catflap
                 if (info.currentPercentage > 0)
                     msg += ", " + ((int)(info.currentPercentage * 100)) + "%";
 
+                if (info.details != "")
+                    labelDownloadStatus.Dispatcher.Invoke(() => {
+                        labelDownloadStatus.ToolTip = info.details;
+                    });
+
                 this.RefreshProgress(UIState.Busy, msg);
             }
             else

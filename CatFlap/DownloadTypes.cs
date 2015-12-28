@@ -80,7 +80,7 @@ namespace Catflap
             stdout:     19333120  14%    2.46MB/s    0:00:46
             stdout:     28988893 100%   16.61MB/s    0:00:12 (xfr#1, to-chk=0/1)
          */
-        private Regex rxRsyncProgress = new Regex(@"^\s*(\d+)\s+(\d+)%\s+(\d+\.\d+)([kM]B/s)\s+(.+)$");
+        private Regex rxRsyncProgress = new Regex(@"^\s*(\d+)\s+(\d+)%\s+(\d+\.\d+)([kM]B/s)\s+([0-9:]+)(?:\s+(.+))?$");
 
         // NEWFILE .d..t...... 4096 ./
         // NEWFILE >f..T...... 80060515 silm_portraits.hak
@@ -284,12 +284,17 @@ namespace Catflap
                                 double rate = double.Parse(mr.Groups[3].Value, CultureInfo.InvariantCulture);
                                 string rateDesc = mr.Groups[4].Value;
                                 string eta = mr.Groups[5].Value;
+                                string details = mr.Groups[6].Value;
+                                if (details == null)
+                                    details = "";
+                                details = details.Trim();
+
                                 if (rateDesc == "kB/s")
                                     rate *= 1024;
                                 if (rateDesc == "MB/s")
                                     rate *= 1024 * 1024;
 
-                                dpc.Invoke(cancelled ? "<cancelling>" : thisFilename, percentage, bytesDone, thisFileTotalSize, (int)rate);
+                                dpc.Invoke(cancelled ? "<cancelling>" : thisFilename, percentage, bytesDone, thisFileTotalSize, (int)rate, details);
                             }
                             else if ((mr = rxRsyncNewTransfer.Match(ee.Data)).Success)
                             {
