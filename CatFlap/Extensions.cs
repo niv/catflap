@@ -132,5 +132,11 @@ namespace Catflap
         {
             return str.Replace("\\", "\\\\").TrimEnd('\\');
         }
+
+        public static long SizeOnDisk(this DirectoryInfo dir)
+        {
+            return dir.GetFiles().Sum(fi => fi.Length) +
+                   dir.GetDirectories().Sum(di => SizeOnDisk(di));
+        }
     }
 }

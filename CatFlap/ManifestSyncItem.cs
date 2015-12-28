@@ -81,7 +81,10 @@ namespace Catflap
                 long sz = 0;
 
                 if (this.name.EndsWith("/"))
-                    sz = (Utils.GetDirectoryElements(repository.RootPath + "/" + this.name).Sum(file => file.Length));
+                {
+                    if (Directory.Exists(repository.RootPath + "/" + this.name))
+                        sz += new DirectoryInfo(repository.RootPath + "/" + this.name).SizeOnDisk();                        
+                }                   
 
                 else
                 {
@@ -97,7 +100,7 @@ namespace Catflap
                     if (Directory.Exists(repository.TmpPath))
                     {
                         sz += Directory.EnumerateFiles(repository.TmpPath).
-                            Where(x => new FileInfo(x).Name.StartsWith(fileInfo.Name)).
+                            Where(x => new FileInfo(x).Name.ToLowerInvariant().StartsWith(fileInfo.Name.ToLowerInvariant())).
                             Select(x => new FileInfo(x).Length).Sum();
                     }
                         // Otherwise, check for partials
