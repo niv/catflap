@@ -322,8 +322,15 @@ namespace Catflap
             if (File.Exists(appPath + "/log.txt"))
                 File.Delete(appPath + "/log.txt");
 
-            if (Directory.Exists(appPath))
-                Logger.OnLogMessage += (string msg) => System.IO.File.AppendAllText(appPath + "/log.txt", msg);
+            if (appPath != null && Directory.Exists(appPath))
+                Logger.OnLogMessage += (string msg) => {
+                    if (msg != null)
+                        try
+                        {
+                            System.IO.File.AppendAllText(appPath + "/log.txt", msg);
+                        }
+                        catch (IOException) { } // Cannot write log file. Weird but nothing to be done about it.
+                };
 
             this.repository.OnDownloadStatusInfoChanged += OnDownloadStatusInfoChangedHandler;
 
