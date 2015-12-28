@@ -712,6 +712,8 @@ namespace Catflap
                 cts.Cancel();
                 e.Cancel = true;
                 CloseAfterSync = true;
+                btnCancel.Content = "stopping (patience!)";
+                btnCancel.IsEnabled = false;
             }
         }
 
