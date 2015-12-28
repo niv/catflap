@@ -309,7 +309,7 @@ namespace Catflap
             });
 
             this.KeyDown += new KeyEventHandler(async (o, kea) => {
-                if (kea.Key == Key.F5)
+                if (kea.Key == Key.F5 && cts == null)
                 {
                     await UpdateRootManifest();
                     repository.UpdateStatus();
