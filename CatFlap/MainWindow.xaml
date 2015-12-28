@@ -60,9 +60,8 @@
         <TextBlock x:Name="labelDownloadStatus" Margin="0,0,0,50" Text="{}{0} - {1}% of {2} at {3}/s" Padding="5,0" Panel.ZIndex="100" FontSize="10" Grid.ColumnSpan="2" TextAlignment="Center" Height="17" VerticalAlignment="Bottom" />
 
         <Button x:Name="btnRun" Content="" Margin="106,0,106,11" Click="btnRun_Click" FontWeight="Bold" Style="{StaticResource AccentedSquareButtonStyle}" Height="36" VerticalAlignment="Bottom" IsDefault="True" BorderThickness="1" Opacity="0.9" Grid.ColumnSpan="2" IsEnabled="False"/>
-
-        <Button x:Name="btnCancel" Content="Stop" Style="{StaticResource AccentedSquareButtonStyle}" Margin="106,0,106,11" BorderThickness="1" Opacity="0.9" Click="btnCancel_Click" Panel.ZIndex="2"  VerticalAlignment="Bottom"  Height="36">
-        </Button>
+        <Button x:Name="btnCancel" Content="stop" Style="{StaticResource AccentedSquareButtonStyle}" Margin="106,0,106,11" BorderThickness="1" Opacity="0.9" Grid.ColumnSpan="2" Click="btnCancel_Click" Height="36" VerticalAlignment="Bottom" Panel.ZIndex="2" FontWeight="Bold" />
+        <ProgressBar IsHitTestVisible="False" x:Name="progressIndeterminate" Height="34" Value="50" BorderThickness="0" IsIndeterminate="True"  Panel.ZIndex="3" Opacity="0.3" VerticalAlignment="Bottom" Margin="107,0,107,12" />
     </Grid>
 
 

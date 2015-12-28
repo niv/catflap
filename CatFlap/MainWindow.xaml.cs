@@ -137,6 +137,8 @@ namespace Catflap
 
             this.Dispatcher.Invoke(() =>
             {
+                progressIndeterminate.Visibility = busy ? Visibility.Visible : Visibility.Hidden;
+
                 if (repository.LatestManifest != null)
                 {
 
